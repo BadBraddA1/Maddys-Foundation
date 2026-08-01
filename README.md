@@ -18,8 +18,9 @@ Inspired in tone by Mighty Maddy — original brand, copy, and design.
 | App | Next.js 16 + Tailwind 4 |
 | DB | Turso `maddys-foundation` (group `braddcorp`) |
 | Auth | Clerk — staff only (`publicMetadata.role = "admin"`) |
-| Host | Vercel project `maddys-foundation` |
-| Repo | `BadBraddA1/Maddys-Foundation` |
+| Host | Vercel project `maddys-foundation` → [maddys-foundation.vercel.app](https://maddys-foundation.vercel.app) |
+| Repo | [`BadBraddA1/Maddys-Foundation`](https://github.com/BadBraddA1/Maddys-Foundation) |
+| Turso | `maddys-foundation` in group `braddcorp` |
 
 ## Local setup
 
