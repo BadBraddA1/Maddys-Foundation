@@ -75,19 +75,8 @@ function PhotoGreenTentCard(props: {
         }}
       />
 
-      {/* 2) Even green tent — above photo, below text.
-          Satori often drops `opacity` on divs; use rgba + display:flex AND an SVG img. */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: 1200,
-          height: 630,
-          display: "flex",
-          backgroundColor: `rgba(28, 61, 50, ${TENT_OPACITY})`,
-        }}
-      />
+      {/* 2) Even green tent as SVG <img> — above photo, below text.
+          Satori often drops div opacity / rgba overlays; image layers are reliable. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={greenTentDataUrl()}
