@@ -1,6 +1,6 @@
 # Stripe setup plan
 
-Wire Stripe for **donations** (replace / complement `NEXT_PUBLIC_DONATE_URL`) and later **event fees** (replace optional PayPal.me links). Use **test** keys until go-live.
+Wire Stripe for **donations** (replace / complement `NEXT_PUBLIC_DONATE_URL`) and **event fees**. Use **test** keys until go-live.
 
 ## Status
 
@@ -85,7 +85,7 @@ Add the same three for Preview + Production (test keys first; swap to `pk_live_`
 ## What we’ll build with them (app work)
 
 1. **Donate** — Stripe Checkout (or Payment Element) on `/donate` instead of only an external URL.
-2. **Event fees** — Checkout for an event’s `fee_cents` instead of `paypal_link`.
+2. **Event fees** — Checkout for an event’s `fee_cents` via Stripe.
 3. **Webhook** — `/api/stripe/webhook` verifies `STRIPE_WEBHOOK_SECRET`, then marks registration paid / records donation in Turso.
 
 ## Checklist before live mode
@@ -98,5 +98,5 @@ Add the same three for Preview + Production (test keys first; swap to `pk_live_`
 
 ## Related
 
-- Current placeholder: `NEXT_PUBLIC_DONATE_URL` (external link until Stripe ships)
-- Event fees today: Stripe Checkout when `STRIPE_SECRET_KEY` is set; otherwise pending + optional `paypal_link`
+- Current placeholder: `NEXT_PUBLIC_DONATE_URL` (Venmo / external link until Stripe donate ships)
+- Event fees: Stripe Checkout only (`STRIPE_SECRET_KEY` required for paid registration)

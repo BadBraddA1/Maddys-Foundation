@@ -12,7 +12,6 @@ type Props = {
   feeLabel: string | null
   /** Base event fee in cents (team entry before add-ons). */
   feeCents: number
-  paypalLink: string | null
   /** When > 1, collect a full team and require payment before confirmation. */
   teamSize: number | null
   requirePayment: boolean
@@ -34,7 +33,6 @@ export function RegisterForm({
   eventTitle,
   feeLabel,
   feeCents,
-  paypalLink,
   teamSize,
   requirePayment,
 }: Props) {
@@ -236,21 +234,10 @@ export function RegisterForm({
             registration. If you leave without paying, your details are not kept
             — you&apos;ll need to fill the form again.
           </p>
-          {paypalLink ? (
-            <a
-              href={paypalLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="motion-press mt-6 inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink sm:w-auto"
-            >
-              Pay {feeLabel} via PayPal
-            </a>
-          ) : (
-            <p className="mt-6 text-sm text-muted">
-              Online checkout couldn&apos;t be started. Try submitting the form
-              again, or email us if this keeps happening.
-            </p>
-          )}
+          <p className="mt-6 text-sm text-muted">
+            Online checkout couldn&apos;t be started. Try submitting the form
+            again, or email us if this keeps happening.
+          </p>
           <p className="mt-4 text-sm text-muted">
             Keep this email handy once you&apos;ve paid: {email.trim()}.
           </p>
@@ -275,19 +262,6 @@ export function RegisterForm({
           Thanks, {first}. We&apos;ve saved your spot for{" "}
           <span className="font-medium text-ink">{eventTitle}</span>.
         </p>
-        {feeLabel && paypalLink ? (
-          <p className="mt-4 text-sm text-ink/75">
-            Contribution: {feeLabel}.{" "}
-            <a
-              href={paypalLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-accent-ink underline decoration-accent underline-offset-4"
-            >
-              Pay via PayPal
-            </a>
-          </p>
-        ) : null}
         <Link
           href={`/events/${eventSlug}`}
           className="mt-6 inline-flex min-h-11 items-center text-sm font-medium text-ink underline underline-offset-4"
@@ -628,9 +602,6 @@ export function RegisterForm({
       {feeLabel && !isTeam ? (
         <p className="text-sm text-muted">
           Suggested contribution: <strong className="text-ink">{feeLabel}</strong>
-          {paypalLink
-            ? " — you\u2019ll get a PayPal link after registering."
-            : null}
         </p>
       ) : null}
       {error ? (

@@ -125,7 +125,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Interior header (`SiteHeaderSolid`): brand + nav only (no countdown widget crowding the bar)
 - Event dates format in `America/Chicago`
 - Her Story: Maddy’s bio (Herculaneum High, sports, sister Lydia) + day-on-the-green invite; purpose = scholarships (Herculaneum & DeSoto)
-- Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
+- Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, **31 team capacity**, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 - Stripe: Checkout on paid registration + `/api/stripe/webhook` confirms roster; unpaid drafts are deleted on cancel/expire and never shown in admin
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))

@@ -125,7 +125,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               eventTitle={event.title}
               feeLabel={fee}
               feeCents={event.fee_cents}
-              paypalLink={event.paypal_link}
               teamSize={teamSize}
               requirePayment={requirePayment}
             />

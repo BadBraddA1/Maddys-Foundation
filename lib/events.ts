@@ -15,7 +15,6 @@ export type EventRow = {
   open_at: string | null
   close_at: string | null
   fee_cents: number
-  paypal_link: string | null
   /** When set (e.g. 4), registration is for a full team of that size. */
   team_size: number | null
   cover_image_url: string | null
@@ -56,7 +55,6 @@ function mapEvent(row: SqlRow): EventRow {
     open_at: row.open_at == null ? null : String(row.open_at),
     close_at: row.close_at == null ? null : String(row.close_at),
     fee_cents: Number(row.fee_cents ?? 0),
-    paypal_link: row.paypal_link == null ? null : String(row.paypal_link),
     team_size: row.team_size == null ? null : Number(row.team_size),
     cover_image_url:
       row.cover_image_url == null ? null : String(row.cover_image_url),

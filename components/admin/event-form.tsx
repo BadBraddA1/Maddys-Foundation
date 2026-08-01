@@ -41,7 +41,6 @@ export function EventForm({ event }: Props) {
   const [teamSize, setTeamSize] = useState(
     event?.team_size != null ? String(event.team_size) : "",
   )
-  const [paypalLink, setPaypalLink] = useState(event?.paypal_link ?? "")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -69,7 +68,6 @@ export function EventForm({ event }: Props) {
       open_at: openAt ? new Date(openAt).toISOString() : null,
       close_at: closeAt ? new Date(closeAt).toISOString() : null,
       fee_cents: Number.isFinite(fee_cents) ? fee_cents : 0,
-      paypal_link: paypalLink || null,
       team_size:
         team_size != null && Number.isFinite(team_size) && team_size > 1
           ? team_size
@@ -269,24 +267,6 @@ export function EventForm({ event }: Props) {
             e.g. 4 for a scramble. Blank = individual registration.
           </p>
         </div>
-      </div>
-      <div>
-        <label htmlFor={`${formId}-paypal`} className="block text-sm font-medium text-ink">
-          PayPal.me link
-        </label>
-        <input
-          id={`${formId}-paypal`}
-          name="paypal_link"
-          type="url"
-          inputMode="url"
-          className={field}
-          value={paypalLink}
-          onChange={(e) => setPaypalLink(e.target.value)}
-          aria-describedby={`${formId}-paypal-hint`}
-        />
-        <p id={`${formId}-paypal-hint`} className="mt-1.5 text-sm text-muted">
-          Optional. Shown as the pay step when a fee is set (e.g. PayPal.me/you/500).
-        </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

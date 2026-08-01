@@ -8,7 +8,7 @@ export const runtime = "nodejs"
 
 type Ctx = { params: Promise<{ id: string; registrationId: string }> }
 
-/** Mark a registration paid + confirmed (e.g. after PayPal clears). */
+/** Mark a registration paid + confirmed (manual override if needed). */
 export async function POST(_req: Request, ctx: Ctx) {
   let admin
   try {
