@@ -72,12 +72,11 @@ When the domain is purchased:
 
 ## Brand assets
 
-## Brand assets
-
 - Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` source
 - Maddy photo: responsive WebP (`maddy-640/960.webp` + `maddy.webp`) with JPEG fallback
 - Favicon / apple-touch: real PNG (`app/icon.png`, `app/apple-icon.png`)
 - Type: Literata (display) + Source Sans 3 (body) — major-third scale; limited weights
+- Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
 
 ## Useful paths
