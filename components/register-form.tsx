@@ -265,7 +265,7 @@ export function RegisterForm({
           <p className="text-sm font-medium text-danger">{error}</p>
           <button
             type="button"
-            className="text-sm font-medium text-accent-ink underline underline-offset-4"
+            className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline underline-offset-4"
             onClick={() => setError(null)}
           >
             Dismiss

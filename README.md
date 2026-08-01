@@ -98,7 +98,8 @@ When the domain is purchased:
 - Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
 - A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
-- Home hero header: clip-path animates in over the photo; after scrolling past `[data-home-hero]`, a frosted glass sticky bar portals to `document.body` (so hero `contain` can’t trap `fixed` over the image) and slides down
+- Home hero header: clip-path animates in over the photo; after scrolling past `[data-home-hero]`, a solid sticky bar portals to `document.body` (so hero `contain` can’t trap `fixed` over the image) and slides down
+- A11y harden: darker `--accent-ink` on CTAs (≥4.5:1), mobile menu closes on navigate, register Dismiss is ≥44px tall
 - Home page: centered featured countdown to the next upcoming event (between purpose and events) — not in site header chrome
 - Interior header (`SiteHeaderSolid`): brand + nav only (no countdown widget crowding the bar)
 

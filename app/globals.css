@@ -12,7 +12,8 @@
   --muted: oklch(0.38 0.028 85);
   --line: oklch(0.88 0.012 95);
   --accent: oklch(0.68 0.11 85);
-  --accent-ink: oklch(0.30 0.055 70);
+  /* Darkened for ≥4.5:1 on accent CTAs / skip-link (~5.2:1) */
+  --accent-ink: oklch(0.25 0.06 70);
   --accent-soft: oklch(0.94 0.04 90);
   --deep: oklch(0.27 0.035 250);
   --deep-mid: oklch(0.34 0.03 245);
@@ -80,14 +81,6 @@ html {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }
 
@@ -337,9 +330,7 @@ a {
 }
 
 .hero-header-sticky .hero-header-sticky-inner {
-  background: color-mix(in oklab, var(--surface) 72%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--surface);
   transform: translateY(-110%);
   transition: transform 0.45s var(--ease-out-quart);
 }

@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { MobileNav } from "@/components/mobile-nav"
 
 const links = [
   { href: "/story", label: "Her Story" },
@@ -50,16 +51,6 @@ export function PrimaryNav({
       ? "text-on-deep hover:bg-on-deep-hover"
       : "text-ink hover:bg-bg"
 
-  const panel =
-    tone === "light"
-      ? "border-on-deep-border bg-deep text-on-deep"
-      : "border-line bg-surface text-ink"
-
-  const mobileLink =
-    tone === "light"
-      ? "text-on-deep hover:bg-on-deep-hover"
-      : "text-ink hover:bg-bg"
-
   return (
     <nav aria-label="Primary">
       <ul className="hidden items-center gap-1 md:flex">
@@ -75,36 +66,7 @@ export function PrimaryNav({
         ))}
       </ul>
 
-      <details className="relative md:hidden">
-        <summary
-          className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center border text-sm font-medium transition [&::-webkit-details-marker]:hidden ${
-            tone === "light"
-              ? "border-on-deep-border bg-deep/80 text-on-deep"
-              : "border-line bg-surface text-ink"
-          }`}
-        >
-          <span className="sr-only">Menu</span>
-          <span aria-hidden="true" className="flex flex-col gap-1.5">
-            <span className="block h-0.5 w-4 bg-current" />
-            <span className="block h-0.5 w-4 bg-current" />
-            <span className="block h-0.5 w-4 bg-current" />
-          </span>
-        </summary>
-        <ul
-          className={`nav-panel-enter absolute right-0 z-[var(--z-dropdown)] mt-2 min-w-[12.5rem] border py-1 ${panel}`}
-        >
-          {links.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className={`flex min-h-11 items-center px-4 text-base font-medium ${mobileLink}`}
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </details>
+      <MobileNav tone={tone} />
     </nav>
   )
 }

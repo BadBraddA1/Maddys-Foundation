@@ -12,6 +12,7 @@ Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink 
 | Surface | `--surface` | `oklch(0.99 0.005 95)` | Panels / header |
 | Ink / muted / line | `--ink` `--muted` `--line` | hue ~85–95 | Text & rules; muted darkened for AA on tinted washes |
 | Accent | `--accent` | `oklch(0.68 0.11 85)` | Primary CTAs, focus, selection |
+| Accent ink | `--accent-ink` | `oklch(0.25 0.06 70)` | Text on accent (≥4.5:1) |
 | Accent soft | `--accent-soft` | `oklch(0.94 0.04 90)` | Quiet section wash |
 | Deep (fog) | `--deep` `--deep-mid` | hue ~245–250 | Hero/footer — cool for photo |
 | On-deep ramp | `--on-deep` … `--on-deep-faint` | warm off-white | Text/borders on deep (no raw `white/*`) |
@@ -61,5 +62,7 @@ CTAs & fields: squared (`.field-control`); no pills.
 
 - Signature: soft photo settle + short rise (≤0.55s, light blur) — never opacity-0 gated
 - Stagger capped (~120ms); feedback via `.motion-press` on primary actions
-- No decorative glass, shadows, or scroll-section fades
-- Ease-out-quart; `prefers-reduced-motion` clears animation
+- No decorative glass, shadows, or scroll-section fades; past-hero sticky is solid `--surface`
+- Ease-out-quart; `prefers-reduced-motion` disables named motion classes (not a blanket `*` kill of all transitions)
+- Mobile nav disclosure closes on route change / link click
+- Primary CTA text (`--accent-ink` on `--accent`) meets WCAG AA ≥4.5:1
