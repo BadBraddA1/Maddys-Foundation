@@ -23,6 +23,7 @@
     "stripe": "^22.4.0"
   },
   "devDependencies": {
+    "@imgly/background-removal-node": "^1.4.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
