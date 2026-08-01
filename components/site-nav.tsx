@@ -21,16 +21,10 @@ export function BrandMark({
       href="/"
       className={`flex min-h-11 items-center gap-2.5 sm:gap-3 ${text}`}
     >
-      {/* Plain img: tiny WebP; low priority so it never steals the hero LCP slot. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/logo-96.webp"
-        alt="Madalyn Robinson Foundation"
-        width={44}
-        height={44}
-        decoding="async"
-        fetchPriority="low"
-        className={`h-11 w-11 shrink-0 rounded-full bg-surface object-cover ring-1 ${ring}`}
+      {/* CSS mark — avoids Next Flight image preload competing with the hero LCP. */}
+      <span
+        aria-hidden="true"
+        className={`brand-mark-logo h-11 w-11 shrink-0 rounded-full bg-surface ring-1 ${ring}`}
       />
       <span className="min-w-0 font-display text-base leading-tight tracking-tight sm:text-lg md:text-xl">
         <span className="sm:hidden">Maddy&apos;s</span>

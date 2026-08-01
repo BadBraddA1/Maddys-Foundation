@@ -93,7 +93,7 @@ export function NextEventCountdown({ targetIso, title, href }: Props) {
               </span>
             ))}
           </span>
-          <span className="mt-8 inline-flex min-h-11 items-center font-sans text-sm font-medium text-muted underline decoration-line underline-offset-4 group-hover:text-accent-ink">
+          <span className="mx-auto mt-8 inline-flex min-h-11 items-center font-sans text-sm font-medium text-muted underline decoration-line underline-offset-4 group-hover:text-accent-ink">
             Event details & RSVP →
           </span>
         </Link>

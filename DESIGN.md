@@ -65,6 +65,7 @@ CTAs & fields: squared (`.field-control`); no pills.
 - Admin event create/edit mirrors public form labeling; mobile nav exposes `aria-expanded`
 - Staff admin shell includes skip-to-content
 - Distill: purpose section keeps one CTA (Give); countdown is a single link; hero chrome is one tree
+- Polish: CSS brand mark (no logo image preload); stable header padding; event dates in America/Chicago
 
 ## Motion
 

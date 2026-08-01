@@ -149,6 +149,14 @@ p {
   text-transform: uppercase;
 }
 
+/* Logo lockup — CSS so Flight doesn’t preload it ahead of the hero photo */
+.brand-mark-logo {
+  background-image: url("/brand/logo-96.webp");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
 a {
   color: inherit;
 }

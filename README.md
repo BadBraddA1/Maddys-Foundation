@@ -105,8 +105,9 @@ When the domain is purchased:
 - Home page: quieter centered countdown (one link; days/hours/minutes) between purpose and events
 - Polish: nav noun “Her Story” everywhere; Register vs Details CTA hierarchy; dead countdown layouts removed; spacing on purpose scale; selection on deep uses accent
 - Harden: home `<main>` wraps hero; skip lands on `#hero-copy`; admin form labels + hints; mobile `aria-expanded`; admin skip link
-- Distill: purpose keeps Give only; dropped duplicate hero preload tags; logo `fetchPriority="low"`
+- Distill: purpose keeps Give only; dropped duplicate hero preload tags; logo via CSS (no LCP competition)
 - Interior header (`SiteHeaderSolid`): brand + nav only (no countdown widget crowding the bar)
+- Event dates format in `America/Chicago`
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 

@@ -5,7 +5,7 @@ import { BrandMark, PrimaryNav } from "@/components/site-nav"
 
 /**
  * Single fixed home chrome — scrim over the photo, solid after the hero leaves.
- * One nav tree (no portal / duplicate BrandMark). Requires no CSS `contain` on the hero.
+ * One nav tree; padding stays stable so the bar doesn’t jump when it solidifies.
  */
 export function HeroHeaderChrome() {
   const [ready, setReady] = useState(false)
@@ -43,11 +43,17 @@ export function HeroHeaderChrome() {
       <div
         className={
           pastHero
-            ? "hero-header-bar-inner border-b border-line bg-surface"
-            : "hero-header-bar-inner bg-gradient-to-b from-deep/75 from-30% via-deep/35 to-transparent pb-8"
+            ? "hero-header-bar-inner relative border-b border-line bg-surface"
+            : "hero-header-bar-inner relative border-b border-transparent"
         }
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
+        {!pastHero ? (
+          <div
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-deep/75 from-30% via-deep/35 to-transparent"
+            aria-hidden="true"
+          />
+        ) : null}
+        <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
           <BrandMark tone={tone} />
           <PrimaryNav tone={tone} />
         </div>

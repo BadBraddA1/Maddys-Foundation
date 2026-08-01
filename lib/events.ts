@@ -72,6 +72,7 @@ export function formatEventDate(iso: string): string {
   const d = new Date(toEventIso(iso))
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
     weekday: "long",
     month: "long",
     day: "numeric",
