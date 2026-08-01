@@ -10,12 +10,14 @@ Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink 
 | --- | --- | --- | --- |
 | Page | `--bg` | `oklch(0.975 0.008 95)` | Body — sunflower-tinted off-white |
 | Surface | `--surface` | `oklch(0.99 0.005 95)` | Panels / header |
-| Ink / muted / line | `--ink` `--muted` `--line` | hue ~85–95 | Text & rules |
+| Ink / muted / line | `--ink` `--muted` `--line` | hue ~85–95 | Text & rules; muted darkened for AA on tinted washes |
 | Accent | `--accent` | `oklch(0.68 0.11 85)` | Primary CTAs, focus, selection |
 | Accent soft | `--accent-soft` | `oklch(0.94 0.04 90)` | Quiet section wash |
 | Deep (fog) | `--deep` `--deep-mid` | hue ~245–250 | Hero/footer — cool for photo |
 | On-deep ramp | `--on-deep` … `--on-deep-faint` | warm off-white | Text/borders on deep (no raw `white/*`) |
 | Danger / success | `--danger` `--success` (+ soft) | semantic | Errors & registration success |
+
+On soft-tinted panels (success/danger), secondary copy uses `text-ink/75` — not gray `muted` on a colored wash.
 
 No cream/sand paper stack — chroma leans brand gold, not generic warm beige.
 
@@ -33,16 +35,19 @@ Display: `clamp` max ≤ 4.25rem; letter-spacing ≥ -0.025em on H1.
 Body measure: `--measure` 65ch (`.prose-measure`).  
 On-dark: `.on-dark` bumps leading + tracking.  
 Labels: `.label-caps` reserved for rare chrome only — **no section kickers**.  
-CTAs: squared, `font-medium` (not pill / semibold shout). Accent ≤10% of surface.
+UI chrome: ≥ `text-sm` (14px) on mobile; `font-medium` for CTAs/links (not semibold shout).  
+CTAs & fields: squared (`.field-control`); no pills.
 
 ## Layout
 
 - Full-bleed hero with Maddy photo as the dominant plane
 - Phone-first chrome: short wordmark + disclosure nav under `md`; ≥44px targets; safe-area insets
 - Hero header sits on a deep top scrim so nav contrast does not depend on the photo
+- Skip link → `#main` on every shell (`SkipLink` in headers)
 - Content width ~68ch for story prose
 - Events as quiet list rows, not card grids; primary CTAs full-width on small screens
 - Admin: utilitarian tables, same tokens, denser spacing
+- Z-index: `--z-dropdown` / `--z-sticky` / `--z-skip`
 - LCP: responsive WebP hero (`maddy-640/960.webp`); chrome uses `logo-96.webp`; fonts limited to used weights
 
 ## Resilience
@@ -55,6 +60,6 @@ CTAs: squared, `font-medium` (not pill / semibold shout). Accent ≤10% of surfa
 ## Motion
 
 - Signature: soft photo settle + short rise (≤0.55s, light blur) — never opacity-0 gated
-- Stagger capped (~120ms); feedback via `.motion-press` only
+- Stagger capped (~120ms); feedback via `.motion-press` on primary actions
 - No decorative glass, shadows, or scroll-section fades
 - Ease-out-quart; `prefers-reduced-motion` clears animation

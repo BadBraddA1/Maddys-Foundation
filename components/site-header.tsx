@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { SkipLink } from "@/components/skip-link"
 
 const links = [
   { href: "/story", label: "Her Story" },
@@ -32,7 +33,7 @@ function BrandMark({
       <span className="min-w-0 font-display text-base leading-tight tracking-tight sm:text-lg md:text-xl">
         <span className="sm:hidden">Maddy&apos;s</span>
         <span className="hidden sm:inline">Madalyn Robinson</span>
-        <span className={`mt-0.5 block font-sans text-xs font-normal ${sub}`}>
+        <span className={`mt-0.5 block font-sans text-sm font-normal leading-snug ${sub}`}>
           Foundation
         </span>
       </span>
@@ -77,13 +78,13 @@ function PrimaryNav({
 
       <details className="relative md:hidden">
         <summary
-          className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center border text-sm font-semibold transition [&::-webkit-details-marker]:hidden ${
+          className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center border text-sm font-medium transition [&::-webkit-details-marker]:hidden ${
             tone === "light"
               ? "border-on-deep-border bg-deep/80 text-on-deep"
               : "border-line bg-surface text-ink"
           }`}
         >
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">Menu</span>
           <span aria-hidden="true" className="flex flex-col gap-1.5">
             <span className="block h-0.5 w-4 bg-current" />
             <span className="block h-0.5 w-4 bg-current" />
@@ -91,7 +92,7 @@ function PrimaryNav({
           </span>
         </summary>
         <ul
-          className={`nav-panel-enter absolute right-0 z-50 mt-2 min-w-[12.5rem] border py-1 ${panel}`}
+          className={`nav-panel-enter absolute right-0 z-[var(--z-dropdown)] mt-2 min-w-[12.5rem] border py-1 ${panel}`}
         >
           {links.map((link) => (
             <li key={link.href}>
@@ -112,25 +113,31 @@ function PrimaryNav({
 /** Overlay header for the photo hero — sits on a deep scrim so contrast holds. */
 export function SiteHeader() {
   return (
-    <header className="absolute inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]">
-      <div className="bg-gradient-to-b from-deep from-40% via-deep/85 to-transparent pb-10">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
-          <BrandMark tone="light" />
-          <PrimaryNav tone="light" />
+    <>
+      <SkipLink />
+      <header className="absolute inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]">
+        <div className="bg-gradient-to-b from-deep from-40% via-deep/85 to-transparent pb-10">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
+            <BrandMark tone="light" />
+            <PrimaryNav tone="light" />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   )
 }
 
 /** Solid header for interior pages. */
 export function SiteHeaderSolid() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8">
-        <BrandMark tone="dark" />
-        <PrimaryNav tone="dark" />
-      </div>
-    </header>
+    <>
+      <SkipLink />
+      <header className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-surface pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8">
+          <BrandMark tone="dark" />
+          <PrimaryNav tone="dark" />
+        </div>
+      </header>
+    </>
   )
 }

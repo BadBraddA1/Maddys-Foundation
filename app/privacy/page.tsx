@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8">
+      <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8">
         <h1 className="font-display">Privacy</h1>
         <div className="prose-measure mt-8 space-y-5 text-muted leading-relaxed">
           <p>

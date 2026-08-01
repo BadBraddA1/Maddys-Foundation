@@ -10,18 +10,23 @@ export default async function AdminLayout({
   if (!clerkConfigured()) {
     return (
       <div className="mx-auto max-w-xl px-5 py-24">
-        <h1 className="font-display text-3xl">Staff admin</h1>
-        <p className="mt-4 text-muted">
-          Clerk is not configured yet. Create a Clerk application, set{" "}
-          <code className="text-ink">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> and{" "}
-          <code className="text-ink">CLERK_SECRET_KEY</code> in Vercel /{" "}
-          <code className="text-ink">.env.local</code>, then set{" "}
-          <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
-          on your user.
-        </p>
-        <Link href="/" className="mt-8 inline-block text-sm font-semibold underline">
-          ← Home
-        </Link>
+        <main id="main">
+          <h1 className="font-display text-3xl">Staff admin</h1>
+          <p className="mt-4 text-muted">
+            Clerk is not configured yet. Create a Clerk application, set{" "}
+            <code className="text-ink">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> and{" "}
+            <code className="text-ink">CLERK_SECRET_KEY</code> in Vercel /{" "}
+            <code className="text-ink">.env.local</code>, then set{" "}
+            <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
+            on your user.
+          </p>
+          <Link
+            href="/"
+            className="mt-8 inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline underline-offset-4"
+          >
+            ← Home
+          </Link>
+        </main>
       </div>
     )
   }
@@ -30,21 +35,24 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="border-b border-line bg-surface">
+      <header className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
           <div className="flex items-center gap-4">
             <Link href="/admin" className="font-display text-lg">
               Staff
             </Link>
-            <Link href="/" className="text-sm text-muted hover:text-ink">
+            <Link
+              href="/"
+              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+            >
               View site
             </Link>
           </div>
           <div className="flex items-center gap-3">
             {admin ? (
-              <span className="text-xs text-muted">{admin.email}</span>
+              <span className="text-sm text-muted">{admin.email}</span>
             ) : (
-              <span className="text-xs text-danger">
+              <span className="text-sm text-danger">
                 Signed in, but role is not admin
               </span>
             )}
@@ -52,7 +60,9 @@ export default async function AdminLayout({
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-5 py-10">{children}</div>
+      <main id="main" className="mx-auto max-w-5xl px-5 py-10">
+        {children}
+      </main>
     </div>
   )
 }

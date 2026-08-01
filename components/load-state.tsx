@@ -13,7 +13,7 @@ export function LoadError({
       role="alert"
     >
       <p className="font-medium text-ink">{title}</p>
-      <p className="mt-2 text-sm text-muted">{message}</p>
+      <p className="mt-2 text-sm text-ink/75">{message}</p>
       <Link
         href="/"
         className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline underline-offset-4"

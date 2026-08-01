@@ -46,7 +46,7 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <div className="border-t border-on-deep-border px-5 py-4 text-center text-xs text-on-deep-faint sm:px-6 md:px-8">
+      <div className="border-t border-on-deep-border px-5 py-4 text-center text-sm text-on-deep-faint sm:px-6 md:px-8">
         © {new Date().getFullYear()} {siteName} · {host}
       </div>
     </footer>

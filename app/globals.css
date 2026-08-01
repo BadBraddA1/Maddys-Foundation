@@ -8,7 +8,8 @@
   --bg: oklch(0.975 0.008 95);
   --surface: oklch(0.99 0.005 95);
   --ink: oklch(0.23 0.025 85);
-  --muted: oklch(0.42 0.025 85);
+  /* Darker muted for ≥4.5:1 on tinted bg / soft washes */
+  --muted: oklch(0.38 0.028 85);
   --line: oklch(0.88 0.012 95);
   --accent: oklch(0.68 0.11 85);
   --accent-ink: oklch(0.30 0.055 70);
@@ -25,6 +26,11 @@
   --success: oklch(0.45 0.09 145);
   --success-soft: oklch(0.95 0.03 145);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* Semantic z-index */
+  --z-dropdown: 50;
+  --z-sticky: 40;
+  --z-skip: 60;
 
   /* Modular scale — major third (1.25) */
   --text-xs: 0.75rem;
@@ -163,14 +169,34 @@ a {
   position: absolute;
   left: 1rem;
   top: 0;
-  z-index: 60;
+  z-index: var(--z-skip);
   transform: translateY(-120%);
-  border-radius: 0.25rem;
   background: var(--accent);
   color: var(--accent-ink);
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
+}
+
+/* Squared field control — matches CTA geometry */
+.field-control {
+  margin-top: 0.375rem;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.625rem 0.75rem;
+  outline: none;
+}
+
+.field-control:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.field-control[aria-invalid="true"] {
+  border-color: var(--danger);
 }
 
 .skip-link:focus {

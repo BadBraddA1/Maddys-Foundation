@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 py-24 md:px-8">
+      <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 py-24 md:px-8">
         <h1 className="font-display">Page not found</h1>
         <p className="mt-4 text-lg text-muted">
           That link doesn&apos;t lead anywhere — let&apos;s get you back to the
@@ -14,7 +14,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="mt-8 inline-flex min-h-11 w-full max-w-xs items-center justify-center bg-deep px-6 text-sm font-medium text-on-deep"
+          className="mt-8 motion-press inline-flex min-h-11 w-full max-w-xs items-center justify-center bg-deep px-6 text-sm font-medium text-on-deep"
         >
           Home
         </Link>

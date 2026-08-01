@@ -122,12 +122,12 @@ export function RegisterForm({
         aria-live="polite"
       >
         <h2 className="font-display text-2xl text-ink">You&apos;re registered</h2>
-        <p className="mt-3 break-words text-muted">
+        <p className="mt-3 break-words text-ink/75">
           Thanks, {first}. We&apos;ve saved your spot for{" "}
-          <span className="text-ink">{eventTitle}</span>.
+          <span className="font-medium text-ink">{eventTitle}</span>.
         </p>
         {feeLabel && paypalLink ? (
-          <p className="mt-4 text-sm text-muted">
+          <p className="mt-4 text-sm text-ink/75">
             Suggested contribution: {feeLabel}.{" "}
             <a
               href={paypalLink}
@@ -149,8 +149,7 @@ export function RegisterForm({
     )
   }
 
-  const input =
-    "mt-1.5 w-full min-w-0 rounded-sm border border-line bg-surface px-3 py-2.5 text-ink outline-none ring-accent focus:ring-2 aria-invalid:border-danger"
+  const input = "field-control"
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
@@ -251,7 +250,7 @@ export function RegisterForm({
           onChange={(e) => setNotes(e.target.value)}
           className={input}
         />
-        <p className="mt-1 text-xs text-muted">
+        <p className="mt-1 text-sm text-muted">
           {notes.length}/{NOTES_MAX}
         </p>
       </div>

@@ -46,10 +46,10 @@ export default async function EventDetailPage({ params }: Props) {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8 md:py-24">
+      <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <Link
           href="/events"
-          className="text-sm font-medium text-muted hover:text-ink"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-muted hover:text-ink"
         >
           ← All events
         </Link>
@@ -82,7 +82,7 @@ export default async function EventDetailPage({ params }: Props) {
           {open ? (
             <Link
               href={`/events/${event.slug}/register`}
-              className="inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink sm:w-auto"
+              className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink sm:w-auto"
             >
               Register for this event
             </Link>

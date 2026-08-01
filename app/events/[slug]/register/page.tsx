@@ -37,12 +37,12 @@ export default async function RegisterPage({ params }: Props) {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
-      <main className="mx-auto w-full max-w-xl flex-1 px-5 py-16 md:px-8 md:py-24">
+      <main id="main" className="mx-auto w-full max-w-xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <Link
           href={`/events/${event.slug}`}
-          className="text-sm font-medium text-muted hover:text-ink"
+          className="inline-flex min-h-11 max-w-full items-center text-sm font-medium text-muted hover:text-ink"
         >
-          ← {event.title}
+          <span className="truncate">← {event.title}</span>
         </Link>
         <h1 className="mt-6 font-display">Register</h1>
         <p className="mt-2 text-muted">{formatEventDate(event.starts_at)}</p>

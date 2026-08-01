@@ -77,6 +77,7 @@ When the domain is purchased:
 - Favicon / apple-touch: real PNG (`app/icon.png`, `app/apple-icon.png`)
 - Type: Literata (display) + Source Sans 3 (body) — major-third scale; limited weights
 - Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
+- A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
 
 ## Useful paths

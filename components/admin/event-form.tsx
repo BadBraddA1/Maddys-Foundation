@@ -93,8 +93,7 @@ export function EventForm({ event }: Props) {
     }
   }
 
-  const field =
-    "mt-1.5 w-full min-w-0 rounded-sm border border-line bg-surface px-3 py-2 text-ink outline-none focus:ring-2 focus:ring-accent"
+  const field = "field-control"
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">

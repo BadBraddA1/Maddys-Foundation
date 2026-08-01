@@ -14,7 +14,7 @@ export default function DonatePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8 md:py-24">
+      <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <h1 className="font-display">
           Every gift matters
         </h1>
@@ -35,7 +35,7 @@ export default function DonatePage() {
             Donate now
           </a>
         ) : (
-          <div className="mt-10 rounded-sm border border-line bg-surface px-6 py-5">
+          <div className="mt-10 border border-line bg-surface px-6 py-5">
             <p className="font-medium text-ink">Donation link coming soon</p>
             <p className="mt-2 text-sm text-muted">
               We&apos;re connecting the foundation&apos;s giving account. In the
@@ -43,7 +43,7 @@ export default function DonatePage() {
             </p>
             <Link
               href="/events"
-              className="mt-4 inline-block text-sm font-semibold text-accent-ink underline decoration-accent underline-offset-4"
+              className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent underline-offset-4"
             >
               See upcoming events →
             </Link>

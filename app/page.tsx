@@ -17,9 +17,6 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <a href="#main" className="skip-link">
-        Skip to content
-      </a>
       <section className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep [contain:layout_paint]">
         <HeroPhoto />
         {/* Bottom wash for copy + top is handled by header scrim */}
@@ -56,7 +53,7 @@ export default async function HomePage() {
               href="/story"
               className="motion-press inline-flex min-h-11 items-center justify-center border border-on-deep-border px-6 py-3 text-center text-sm font-medium text-on-deep hover:bg-on-deep-hover"
             >
-              Her story
+              Her Story
             </Link>
           </div>
         </div>

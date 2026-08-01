@@ -67,23 +67,23 @@ export default async function AdminHomePage() {
                   registered
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3 text-sm font-semibold">
+              <div className="flex flex-wrap gap-3 text-sm font-medium">
                 <Link
                   href={`/admin/events/${event.id}`}
-                  className="underline underline-offset-4"
+                  className="inline-flex min-h-11 items-center underline underline-offset-4"
                 >
                   Edit
                 </Link>
                 <Link
                   href={`/admin/events/${event.id}/registrations`}
-                  className="underline underline-offset-4"
+                  className="inline-flex min-h-11 items-center underline underline-offset-4"
                 >
                   Roster
                 </Link>
                 {event.is_published ? (
                   <Link
                     href={`/events/${event.slug}`}
-                    className="text-muted underline underline-offset-4"
+                    className="inline-flex min-h-11 items-center text-muted underline underline-offset-4"
                   >
                     Public
                   </Link>
