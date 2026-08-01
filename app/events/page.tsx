@@ -75,11 +75,7 @@ export default async function EventsPage() {
                       ) : null}
                     </div>
                     <Link
-                      href={
-                        open
-                          ? `/events/${event.slug}/register`
-                          : `/events/${event.slug}`
-                      }
+                      href={`/events/${event.slug}`}
                       className={
                         open
                           ? "motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-accent px-5 text-center text-sm font-medium text-accent-ink sm:w-auto"
