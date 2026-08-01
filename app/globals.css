@@ -174,7 +174,7 @@ a {
 
 @keyframes hero-drift {
   from {
-    transform: scale(1.05);
+    transform: scale(1.04);
   }
   to {
     transform: scale(1);

@@ -18,7 +18,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 sm:px-6 md:flex-row md:items-end md:justify-between md:px-8">
         <div className="flex items-start gap-4">
           <Image
-            src="/brand/logo.jpg"
+            src="/brand/logo-96.webp"
             alt=""
             width={56}
             height={56}

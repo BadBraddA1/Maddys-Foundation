@@ -1,5 +1,5 @@
-import Image from "next/image"
 import Link from "next/link"
+import { HeroPhoto } from "@/components/hero-photo"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { formatEventDate, listPublishedEvents } from "@/lib/events"
@@ -20,15 +20,8 @@ export default async function HomePage() {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <section className="relative min-h-[100svh] overflow-hidden bg-deep text-white">
-        <Image
-          src="/brand/maddy.jpg"
-          alt="Madalyn Robinson"
-          fill
-          priority
-          className="animate-hero-drift object-cover object-[center_12%] sm:object-[center_18%] md:object-[center_20%]"
-          sizes="100vw"
-        />
+      <section className="relative min-h-[100svh] overflow-hidden bg-deep text-white [contain:layout_paint]">
+        <HeroPhoto />
         {/* Bottom wash for copy + top is handled by header scrim */}
         <div
           className="absolute inset-0 bg-gradient-to-t from-deep from-15% via-deep/70 via-45% to-deep/30"

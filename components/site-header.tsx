@@ -22,7 +22,7 @@ function BrandMark({
       className={`flex min-h-11 items-center gap-2.5 sm:gap-3 ${text}`}
     >
       <Image
-        src="/brand/logo.jpg"
+        src="/brand/logo-96.webp"
         alt="Madalyn Robinson Foundation"
         width={44}
         height={44}

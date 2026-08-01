@@ -24,12 +24,14 @@ const literata = Literata({
   subsets: ["latin"],
   variable: "--font-literata",
   display: "swap",
+  weight: ["400", "600"],
 })
 
 const sourceSans = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-source-sans",
   display: "swap",
+  weight: ["400", "500", "600"],
 })
 
 export const metadata: Metadata = {

@@ -41,6 +41,7 @@ CTAs: squared, `font-medium` (not pill / semibold shout). Accent ≤10% of surfa
 - Content width ~68ch for story prose
 - Events as quiet list rows, not card grids; primary CTAs full-width on small screens
 - Admin: utilitarian tables, same tokens, denser spacing
+- LCP: responsive WebP hero (`maddy-640/960.webp`); chrome uses `logo-96.webp`; fonts limited to used weights
 
 ## Resilience
 

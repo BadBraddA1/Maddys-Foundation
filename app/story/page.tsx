@@ -55,14 +55,14 @@ export default function StoryPage() {
               </Link>
             </div>
           </div>
-          <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-deep">
+          <div className="relative aspect-[4/5] overflow-hidden bg-deep">
             <Image
-              src="/brand/maddy.jpg"
+              src="/brand/maddy-960.webp"
               alt="Madalyn Robinson smiling outdoors"
               fill
               className="object-cover object-[center_15%]"
               sizes="(max-width: 1024px) 100vw, 40vw"
-              priority
+              loading="lazy"
             />
           </div>
         </div>
