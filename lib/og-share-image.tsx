@@ -20,8 +20,9 @@ async function brandDataUrls() {
 }
 
 /**
- * Site share card — matches home hero: clear photo + fairway green washes
- * (top scrim + bottom stage), not a muddy full-frame green filter.
+ * Share card bands:
+ * 1) Top — fairway green tent + logo/text
+ * 2) Bottom — photo with green tent over it
  */
 export async function renderOgShareImage() {
   const { photo, logo } = await brandDataUrls()
@@ -34,56 +35,21 @@ export async function renderOgShareImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          position: "relative",
-          overflow: "hidden",
+          flexDirection: "column",
           backgroundColor: "#1c3d32",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={photo}
-          alt=""
-          width={1200}
-          height={630}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center top",
-          }}
-        />
-
-        {/* Soft top scrim (header readability) */}
+        {/* Top band: tent + text */}
         <div
           style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(28,61,50,0.72) 0%, rgba(28,61,50,0.28) 28%, rgba(28,61,50,0) 48%)",
-          }}
-        />
-
-        {/* Bottom stage wash — same idea as home hero from-deep gradient */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(0deg, rgba(28,61,50,0.94) 0%, rgba(28,61,50,0.78) 28%, rgba(28,61,50,0.35) 55%, rgba(28,61,50,0) 72%)",
-          }}
-        />
-
-        <div
-          style={{
-            position: "relative",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "flex-end",
+            justifyContent: "center",
             width: "100%",
-            height: "100%",
-            padding: "52px 56px 48px",
+            height: 300,
+            padding: "40px 56px 28px",
+            background:
+              "linear-gradient(165deg, #1c3d32 0%, #243f36 55%, #2a4a3e 100%)",
             color: "#f4f1e8",
           }}
         >
@@ -92,55 +58,95 @@ export async function renderOgShareImage() {
               display: "flex",
               alignItems: "center",
               gap: 18,
-              marginBottom: 22,
+              marginBottom: 18,
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logo}
               alt=""
-              width={72}
-              height={72}
+              width={64}
+              height={64}
               style={{
-                width: 72,
-                height: 72,
+                width: 64,
+                height: 64,
                 borderRadius: 9999,
                 objectFit: "cover",
                 backgroundColor: "#f4f1e8",
               }}
             />
-            <div style={{ fontSize: 28, fontWeight: 600, opacity: 0.95 }}>
+            <div style={{ fontSize: 26, fontWeight: 600, opacity: 0.95 }}>
               {siteName}
             </div>
           </div>
 
           <div
             style={{
-              fontSize: 58,
+              fontSize: 52,
               fontWeight: 600,
               letterSpacing: "-0.03em",
               lineHeight: 1.08,
-              maxWidth: 920,
+              maxWidth: 980,
             }}
           >
             Joy that still moves mountains
           </div>
           <div
             style={{
-              marginTop: 16,
-              fontSize: 26,
+              marginTop: 14,
+              fontSize: 24,
               opacity: 0.88,
               color: "#d8e0da",
             }}
           >
             Events · community · hope in Maddy’s spirit
           </div>
+        </div>
+
+        {/* Bottom band: photo + tent */}
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            width: "100%",
+            height: 330,
+            overflow: "hidden",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photo}
+            alt=""
+            width={1200}
+            height={330}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center 18%",
+            }}
+          />
+          {/* Green tent over the photo */}
           <div
             style={{
-              marginTop: 28,
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(28,61,50,0.55) 0%, rgba(28,61,50,0.28) 45%, rgba(28,61,50,0.45) 100%)",
+            }}
+          />
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "flex-end",
+              marginTop: "auto",
+              padding: "0 56px 28px",
               fontSize: 20,
-              opacity: 0.5,
-              color: "#c5cfc8",
+              color: "#d8e0da",
+              opacity: 0.75,
             }}
           >
             {host}
