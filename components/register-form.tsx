@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useId, useMemo, useRef, useState } from "react"
 import { formatFee } from "@/lib/events"
 import { normalizeUsPhone } from "@/lib/phone"
-import { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/stripe-checkout"
+import { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/team-addons"
 
 type Props = {
   eventSlug: string

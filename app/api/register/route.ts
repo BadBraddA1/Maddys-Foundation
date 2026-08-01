@@ -8,7 +8,8 @@ import {
 } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { normalizeUsPhone } from "@/lib/phone"
-import { createEventCheckoutSession, teamAddonTotalCents } from "@/lib/stripe-checkout"
+import { createEventCheckoutSession } from "@/lib/stripe-checkout"
+import { teamAddonTotalCents } from "@/lib/team-addons"
 import { stripeConfigured } from "@/lib/stripe"
 
 export const runtime = "nodejs"

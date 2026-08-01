@@ -3,19 +3,9 @@ import { sql } from "@/lib/db"
 import { audit, getEventById } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { getStripe, publicSiteUrl, stripeConfigured } from "@/lib/stripe"
+import { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/team-addons"
 
-/** Mulligans / skins — flat fee per team (cents). */
-export const TEAM_ADDON_CENTS = 2000
-
-export function teamAddonTotalCents(opts: {
-  mulligans?: boolean
-  skins?: boolean
-}): number {
-  let total = 0
-  if (opts.mulligans) total += TEAM_ADDON_CENTS
-  if (opts.skins) total += TEAM_ADDON_CENTS
-  return total
-}
+export { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/team-addons"
 
 export async function createEventCheckoutSession(opts: {
   eventId: number
