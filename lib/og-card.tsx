@@ -17,7 +17,8 @@ const ACCENT_INK = "#3d2e12"
 
 /** Green tent over white + cutout (Satori-safe SVG layer). */
 const TENT_OPACITY = 0.48
-const LOGO_SIZE = 120
+/** ~20% larger than the previous 120px mark */
+const LOGO_SIZE = 144
 
 function greenTentDataUrl() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="${DEEP}" fill-opacity="${TENT_OPACITY}"/></svg>`
@@ -98,7 +99,7 @@ function PhotoGreenTentCard(props: {
           alignItems: "flex-start",
           width: 1200,
           height: 630,
-          padding: "56px 56px 56px 64px",
+          padding: "48px 56px 56px 64px",
           color: ON_DEEP,
         }}
       >
