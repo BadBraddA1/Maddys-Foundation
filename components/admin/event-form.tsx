@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useId, useState } from "react"
-import type { EventRow } from "@/lib/events"
+import type { EventRow } from "@/lib/event-helpers"
 
 type Props = {
   event?: EventRow

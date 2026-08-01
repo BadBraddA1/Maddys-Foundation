@@ -12,7 +12,7 @@ import {
   listPublishedEvents,
 } from "@/lib/events"
 import { siteName } from "@/lib/site-metadata"
-import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold"
+import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold-shared"
 import { dropPendingRegistration } from "@/lib/stripe-checkout"
 
 /** Fresh enough for capacity; registration POST also revalidates. */

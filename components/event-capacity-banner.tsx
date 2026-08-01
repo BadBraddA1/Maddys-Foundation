@@ -2,8 +2,8 @@ import {
   capacityUnitLabel,
   isTeamEvent,
   type EventRow,
-} from "@/lib/events"
-import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold"
+} from "@/lib/event-helpers"
+import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold-shared"
 
 type Props = {
   event: Pick<

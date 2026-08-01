@@ -3,9 +3,9 @@
 import Link from "next/link"
 import { useId, useMemo, useRef, useState } from "react"
 import { CheckoutHoldScreen } from "@/components/checkout-hold-screen"
-import { formatFee } from "@/lib/events"
+import { formatFee } from "@/lib/event-helpers"
 import { normalizeUsPhone } from "@/lib/phone"
-import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold"
+import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold-shared"
 import { TEAM_ADDON_CENTS, registrationTotalCents } from "@/lib/team-addons"
 
 type Props = {

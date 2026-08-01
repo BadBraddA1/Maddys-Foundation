@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import {
   CHECKOUT_HOLD_MINUTES,
   formatHoldCountdown,
-} from "@/lib/registration-hold"
+} from "@/lib/registration-hold-shared"
 
 type Props = {
   checkoutUrl: string

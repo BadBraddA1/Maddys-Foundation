@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { toEventIso } from "@/lib/events"
+import { toEventIso } from "@/lib/event-helpers"
 
 type Parts = { days: number; hours: number; mins: number }
 
