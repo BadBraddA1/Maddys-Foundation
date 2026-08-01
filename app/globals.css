@@ -412,6 +412,7 @@ a {
   }
 }
 
+/* Duration must match SPONSOR_MARQUEE_DURATION_MS (clock-synced delay in sponsor-marquee.tsx). */
 .sponsor-marquee-track {
   animation: sponsor-marquee 40s linear infinite;
 }

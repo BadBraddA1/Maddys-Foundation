@@ -1,4 +1,10 @@
+"use client"
+
+import { useLayoutEffect, useRef } from "react"
 import type { PublicSponsor } from "@/lib/sponsors"
+
+/** Must match `.sponsor-marquee-track` animation duration in globals.css */
+export const SPONSOR_MARQUEE_DURATION_MS = 40_000
 
 type Props = { sponsors: PublicSponsor[] }
 
@@ -41,6 +47,16 @@ function SponsorMark({ sponsor }: { sponsor: PublicSponsor }) {
 
 /** Infinite horizontal sponsor strip for the footer. */
 export function SponsorMarquee({ sponsors }: Props) {
+  const trackRef = useRef<HTMLDivElement>(null)
+
+  // Wall-clock phase so remounts (nav / refresh) land mid-loop, not at 0.
+  useLayoutEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+    const offsetMs = Date.now() % SPONSOR_MARQUEE_DURATION_MS
+    el.style.animationDelay = `-${offsetMs}ms`
+  }, [])
+
   if (sponsors.length === 0) return null
 
   const loop = [...sponsors, ...sponsors]
@@ -53,7 +69,10 @@ export function SponsorMarquee({ sponsors }: Props) {
         </p>
       </div>
       <div className="sponsor-marquee relative mt-3 overflow-hidden pb-5">
-        <div className="sponsor-marquee-track flex w-max items-center">
+        <div
+          ref={trackRef}
+          className="sponsor-marquee-track flex w-max items-center"
+        >
           {loop.map((sponsor, i) => (
             <SponsorMark
               key={`${sponsor.id}-${i}`}
