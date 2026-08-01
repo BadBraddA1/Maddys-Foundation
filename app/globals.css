@@ -306,15 +306,6 @@ a {
   }
 }
 
-.site-header-solid .countdown-enter {
-  animation: hdr-countdown-rise 0.6s var(--ease-out-quart) both;
-}
-
-.site-header-solid .countdown-days {
-  font-size: 1.8175rem;
-  color: color-mix(in oklab, var(--accent-ink) 50%, var(--ink));
-}
-
 .countdown-featured .countdown-enter {
   animation: hdr-countdown-rise 0.6s var(--ease-out-quart) both;
 }
@@ -378,7 +369,6 @@ a {
   .hero-enter,
   .nav-panel-enter,
   .success-enter,
-  .site-header-solid .countdown-enter,
   .countdown-featured .countdown-enter,
   .hero-header-chrome--glass .hero-header-overlay,
   .hero-header-sticky .hero-header-sticky-inner {

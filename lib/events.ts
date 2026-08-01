@@ -59,8 +59,17 @@ export function slugify(input: string): string {
     .slice(0, 80)
 }
 
+/** Normalize Turso `YYYY-MM-DD HH:MM:SS` for reliable Date parsing (incl. Safari). */
+export function toEventIso(startsAt: string): string {
+  const trimmed = startsAt.trim()
+  if (trimmed.includes("T")) {
+    return /Z$|[+-]\d{2}:?\d{2}$/.test(trimmed) ? trimmed : `${trimmed}Z`
+  }
+  return `${trimmed.replace(" ", "T")}Z`
+}
+
 export function formatEventDate(iso: string): string {
-  const d = new Date(iso)
+  const d = new Date(toEventIso(iso))
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleDateString("en-US", {
     weekday: "long",

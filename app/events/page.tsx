@@ -8,6 +8,7 @@ import {
   formatFee,
   isRegistrationAvailable,
   listPublishedEvents,
+  toEventIso,
 } from "@/lib/events"
 
 export const metadata: Metadata = {
@@ -28,10 +29,10 @@ export default async function EventsPage() {
 
   const now = Date.now()
   const upcoming = events.filter(
-    (e) => new Date(e.starts_at).getTime() >= now - 86_400_000,
+    (e) => new Date(toEventIso(e.starts_at)).getTime() >= now - 86_400_000,
   )
   const past = events.filter(
-    (e) => new Date(e.starts_at).getTime() < now - 86_400_000,
+    (e) => new Date(toEventIso(e.starts_at)).getTime() < now - 86_400_000,
   )
 
   return (
@@ -73,13 +74,13 @@ export default async function EventsPage() {
                         </p>
                       ) : null}
                     </div>
-                    <Link
+                      <Link
                       href={
                         open
                           ? `/events/${event.slug}/register`
                           : `/events/${event.slug}`
                       }
-                      className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-deep px-5 text-center text-sm font-medium text-on-deep sm:w-auto"
+                      className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-accent px-5 text-center text-sm font-medium text-accent-ink sm:w-auto"
                     >
                       {open ? "Register" : "Details"}
                     </Link>

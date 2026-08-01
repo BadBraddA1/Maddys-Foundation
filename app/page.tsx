@@ -7,14 +7,10 @@ import {
   formatEventDate,
   getNextUpcomingEvent,
   listPublishedEvents,
+  toEventIso,
 } from "@/lib/events"
 
 export const dynamic = "force-dynamic"
-
-function startsAtIso(startsAt: string): string {
-  if (startsAt.includes("T")) return startsAt
-  return `${startsAt.replace(" ", "T")}Z`
-}
 
 export default async function HomePage() {
   let upcoming: Awaited<ReturnType<typeof listPublishedEvents>> = []
@@ -119,7 +115,7 @@ export default async function HomePage() {
         >
           <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
             <NextEventCountdown
-              targetIso={startsAtIso(next.starts_at)}
+              targetIso={toEventIso(next.starts_at)}
               title={next.title}
               href={`/events/${next.slug}`}
               layout="featured"
