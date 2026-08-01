@@ -5,11 +5,12 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
   formatEventDate,
-  formatFee,
+  formatEventFeeLabel,
   getEventBySlug,
   isRegistrationAvailable,
   listPublishedEvents,
 } from "@/lib/events"
+import { mapsLinks } from "@/lib/maps"
 import { siteName, siteUrl } from "@/lib/site-metadata"
 
 export const revalidate = 60
@@ -56,12 +57,14 @@ export default async function EventDetailPage({ params }: Props) {
   const event = await getEventBySlug(slug).catch(() => null)
   if (!event || !event.is_published) notFound()
 
-  const fee = formatFee(event.fee_cents)
+  const feeLabel = formatEventFeeLabel(event)
   const open = isRegistrationAvailable(event)
+  const maps = event.location ? mapsLinks(event.location) : null
   const spotsLeft =
     event.capacity != null && event.registration_count != null
       ? Math.max(0, event.capacity - event.registration_count)
       : null
+  const teamSize = event.team_size && event.team_size > 1 ? event.team_size : null
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -78,20 +81,60 @@ export default async function EventDetailPage({ params }: Props) {
           {formatEventDate(event.starts_at)}
           {event.ends_at ? ` – ${formatEventDate(event.ends_at)}` : ""}
         </p>
+
         {event.location ? (
-          <p className="mt-2 text-muted">{event.location}</p>
+          <div className="mt-4">
+            <p className="text-muted">{event.location}</p>
+            {maps ? (
+              <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                <a
+                  href={maps.google}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
+                >
+                  Google Maps
+                </a>
+                <a
+                  href={maps.apple}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
+                >
+                  Apple Maps
+                </a>
+              </p>
+            ) : null}
+          </div>
         ) : null}
-        {fee ? (
-          <p className="mt-2 text-sm text-muted">Suggested contribution: {fee}</p>
+
+        {feeLabel ? (
+          <p className="mt-3 text-sm text-muted">
+            {teamSize ? (
+              <>
+                <strong className="text-ink">{feeLabel}</strong>
+                {" · "}
+                {teamSize}-person team · payment required to complete registration
+              </>
+            ) : (
+              <>Contribution: {feeLabel}</>
+            )}
+          </p>
         ) : null}
         {spotsLeft != null ? (
           <p className="mt-2 text-sm text-muted">
-            {spotsLeft === 0 ? "Event is full" : `${spotsLeft} spots left`}
+            {spotsLeft === 0
+              ? teamSize
+                ? "No team spots left"
+                : "Event is full"
+              : teamSize
+                ? `${spotsLeft} team spot${spotsLeft === 1 ? "" : "s"} left`
+                : `${spotsLeft} spots left`}
           </p>
         ) : null}
 
         {event.description ? (
-          <div className="mt-10 whitespace-pre-wrap text-lg leading-relaxed text-muted">
+          <div className="prose-measure mt-10 whitespace-pre-wrap text-lg leading-relaxed text-muted">
             {event.description}
           </div>
         ) : event.summary ? (
@@ -104,7 +147,7 @@ export default async function EventDetailPage({ params }: Props) {
               href={`/events/${event.slug}/register`}
               className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink sm:w-auto"
             >
-              Register for this event
+              {teamSize ? "Register your team" : "Register for this event"}
             </Link>
           ) : (
             <p className="text-sm font-medium text-muted">

@@ -21,6 +21,7 @@ type Body = {
   close_at?: string | null
   fee_cents?: number
   paypal_link?: string | null
+  team_size?: number | null
 }
 
 export async function GET() {
@@ -72,8 +73,8 @@ export async function POST(req: Request) {
       `INSERT INTO events (
         slug, title, summary, description, location,
         starts_at, ends_at, capacity, is_published, registration_open,
-        open_at, close_at, fee_cents, paypal_link, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        open_at, close_at, fee_cents, paypal_link, team_size, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
         slug,
         title,
@@ -89,6 +90,7 @@ export async function POST(req: Request) {
         body.close_at || null,
         body.fee_cents ?? 0,
         body.paypal_link || null,
+        body.team_size ?? null,
       ],
     )
 

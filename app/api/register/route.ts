@@ -16,12 +16,15 @@ type Body = {
   phone?: string
   guests?: number
   notes?: string
+  teamName?: string
+  teammates?: string[]
 }
 
 const NAME_MAX = 120
 const PHONE_MAX = 40
 const NOTES_MAX = 2000
 const EMAIL_MAX = 254
+const TEAM_NAME_MAX = 80
 
 export async function POST(req: Request) {
   let body: Body
@@ -35,8 +38,13 @@ export async function POST(req: Request) {
   const name = body.name?.trim().slice(0, NAME_MAX) ?? ""
   const email = body.email?.trim().toLowerCase().slice(0, EMAIL_MAX) ?? ""
   const phone = (body.phone?.trim() || "").slice(0, PHONE_MAX)
-  const notes = (body.notes?.trim() || "").slice(0, NOTES_MAX)
-  const guests = Math.min(20, Math.max(1, Math.floor(Number(body.guests) || 1)))
+  const teamName = (body.teamName?.trim() || "").slice(0, TEAM_NAME_MAX)
+  const extraNotes = (body.notes?.trim() || "").slice(0, NOTES_MAX)
+  const teammates = Array.isArray(body.teammates)
+    ? body.teammates
+        .map((t) => String(t).trim().slice(0, NAME_MAX))
+        .filter(Boolean)
+    : []
 
   if (!slug || !name || !email) {
     return NextResponse.json(
@@ -75,7 +83,39 @@ export async function POST(req: Request) {
     )
   }
 
-  // Re-check capacity at write time to reduce race overfills (capacity = registration slots)
+  const teamSize =
+    event.team_size && event.team_size > 1 ? event.team_size : null
+  const requirePayment = event.fee_cents > 0
+
+  let guests = Math.min(20, Math.max(1, Math.floor(Number(body.guests) || 1)))
+  let notes = extraNotes
+
+  if (teamSize) {
+    if (teammates.length !== teamSize - 1) {
+      return NextResponse.json(
+        { error: `Enter all ${teamSize} players on the team.` },
+        { status: 400 },
+      )
+    }
+    if (teammates.some((t) => t.length < 2)) {
+      return NextResponse.json(
+        { error: "Each teammate needs a full name." },
+        { status: 400 },
+      )
+    }
+    guests = teamSize
+    const roster = [
+      `Captain: ${name}`,
+      ...teammates.map((t, i) => `Player ${i + 2}: ${t}`),
+    ]
+    const teamLine = teamName ? `Team: ${teamName}` : null
+    notes = [teamLine, roster.join("\n"), extraNotes || null]
+      .filter(Boolean)
+      .join("\n\n")
+      .slice(0, NOTES_MAX)
+  }
+
+  // Capacity = confirmed (paid) slots only so unpaid drafts don't block the field.
   if (event.capacity != null) {
     try {
       const countRows = await sql`
@@ -98,6 +138,9 @@ export async function POST(req: Request) {
     }
   }
 
+  const status = requirePayment ? "pending" : "confirmed"
+  const paid = requirePayment ? 0 : 1
+
   try {
     await sql`
       INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid)
@@ -108,8 +151,8 @@ export async function POST(req: Request) {
         ${phone},
         ${guests},
         ${notes},
-        'confirmed',
-        ${event.fee_cents > 0 ? 0 : 1}
+        ${status},
+        ${paid}
       )
     `
   } catch (err) {
@@ -124,10 +167,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not save registration." }, { status: 500 })
   }
 
-  await audit("public", "register", "event", String(event.id), email).catch(
+  await audit("public", "register", "event", String(event.id), `${email}:${status}`).catch(
     () => undefined,
   )
 
   revalidatePublicEvents(slug)
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, status })
 }

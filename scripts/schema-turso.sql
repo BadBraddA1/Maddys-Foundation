@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS events (
   close_at TEXT,
   fee_cents INTEGER NOT NULL DEFAULT 0,
   paypal_link TEXT,
+  team_size INTEGER,
   cover_image_url TEXT,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)

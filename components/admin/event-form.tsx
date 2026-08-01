@@ -38,6 +38,9 @@ export function EventForm({ event }: Props) {
   const [feeDollars, setFeeDollars] = useState(
     event?.fee_cents ? String(event.fee_cents / 100) : "",
   )
+  const [teamSize, setTeamSize] = useState(
+    event?.team_size != null ? String(event.team_size) : "",
+  )
   const [paypalLink, setPaypalLink] = useState(event?.paypal_link ?? "")
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -50,6 +53,7 @@ export function EventForm({ event }: Props) {
     const fee_cents = feeDollars
       ? Math.round(parseFloat(feeDollars) * 100)
       : 0
+    const team_size = teamSize ? Number(teamSize) : null
 
     const payload = {
       title,
@@ -66,6 +70,10 @@ export function EventForm({ event }: Props) {
       close_at: closeAt ? new Date(closeAt).toISOString() : null,
       fee_cents: Number.isFinite(fee_cents) ? fee_cents : 0,
       paypal_link: paypalLink || null,
+      team_size:
+        team_size != null && Number.isFinite(team_size) && team_size > 1
+          ? team_size
+          : null,
     }
 
     try {
@@ -236,7 +244,26 @@ export function EventForm({ event }: Props) {
             aria-describedby={`${formId}-fee-hint`}
           />
           <p id={`${formId}-fee-hint`} className="mt-1.5 text-sm text-muted">
-            Use 0 or blank for free events.
+            Use 0 or blank for free events. With a fee, registration stays pending until paid.
+          </p>
+        </div>
+        <div>
+          <label htmlFor={`${formId}-team`} className="block text-sm font-medium text-ink">
+            Team size
+          </label>
+          <input
+            id={`${formId}-team`}
+            name="team_size"
+            type="number"
+            min={2}
+            max={20}
+            className={field}
+            value={teamSize}
+            onChange={(e) => setTeamSize(e.target.value)}
+            aria-describedby={`${formId}-team-hint`}
+          />
+          <p id={`${formId}-team-hint`} className="mt-1.5 text-sm text-muted">
+            e.g. 4 for a scramble. Blank = individual registration.
           </p>
         </div>
       </div>
@@ -255,7 +282,7 @@ export function EventForm({ event }: Props) {
           aria-describedby={`${formId}-paypal-hint`}
         />
         <p id={`${formId}-paypal-hint`} className="mt-1.5 text-sm text-muted">
-          Optional. Shown after someone registers when a fee is set.
+          Optional. Shown as the pay step when a fee is set (e.g. PayPal.me/you/500).
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

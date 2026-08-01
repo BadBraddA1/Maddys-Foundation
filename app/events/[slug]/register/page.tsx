@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
   formatEventDate,
-  formatFee,
+  formatEventFeeLabel,
   getEventBySlug,
   isRegistrationAvailable,
   listPublishedEvents,
@@ -43,7 +43,9 @@ export default async function RegisterPage({ params }: Props) {
   if (!event || !event.is_published) notFound()
 
   const open = isRegistrationAvailable(event)
-  const fee = formatFee(event.fee_cents)
+  const fee = formatEventFeeLabel(event)
+  const teamSize = event.team_size && event.team_size > 1 ? event.team_size : null
+  const requirePayment = event.fee_cents > 0
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -55,7 +57,9 @@ export default async function RegisterPage({ params }: Props) {
         >
           <span className="truncate">← {event.title}</span>
         </Link>
-        <h1 className="mt-6 font-display">Register</h1>
+        <h1 className="mt-6 font-display">
+          {teamSize ? "Register your team" : "Register"}
+        </h1>
         <p className="mt-2 text-muted">{formatEventDate(event.starts_at)}</p>
 
         {!open ? (
@@ -69,6 +73,8 @@ export default async function RegisterPage({ params }: Props) {
               eventTitle={event.title}
               feeLabel={fee}
               paypalLink={event.paypal_link}
+              teamSize={teamSize}
+              requirePayment={requirePayment}
             />
           </div>
         )}

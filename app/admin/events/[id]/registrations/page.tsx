@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
+import { ConfirmRegistrationButton } from "@/components/admin/confirm-registration-button"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import { getEventById, listRegistrations } from "@/lib/events"
 
@@ -63,13 +64,26 @@ export default async function RegistrationsPage({ params }: Props) {
                     <dd className="font-medium tabular-nums text-ink">{row.guests}</dd>
                   </div>
                   <div>
+                    <dt className="text-muted">Status</dt>
+                    <dd className="font-medium text-ink capitalize">{row.status}</dd>
+                  </div>
+                  <div>
                     <dt className="text-muted">Paid</dt>
                     <dd className="font-medium text-ink">{row.paid ? "Yes" : "No"}</dd>
                   </div>
                 </dl>
                 {row.notes ? (
-                  <p className="mt-3 text-sm text-muted text-pretty">{row.notes}</p>
+                  <p className="mt-3 whitespace-pre-wrap text-sm text-muted text-pretty">
+                    {row.notes}
+                  </p>
                 ) : null}
+                <div className="mt-3">
+                  <ConfirmRegistrationButton
+                    eventId={event.id}
+                    registrationId={row.id}
+                    alreadyConfirmed={row.status === "confirmed" && row.paid === 1}
+                  />
+                </div>
               </li>
             ))}
           </ul>
@@ -82,8 +96,10 @@ export default async function RegistrationsPage({ params }: Props) {
                   <th className="py-2 pr-4 font-medium">Email</th>
                   <th className="py-2 pr-4 font-medium">Phone</th>
                   <th className="py-2 pr-4 font-medium">Guests</th>
+                  <th className="py-2 pr-4 font-medium">Status</th>
                   <th className="py-2 pr-4 font-medium">Paid</th>
-                  <th className="py-2 font-medium">Notes</th>
+                  <th className="py-2 pr-4 font-medium">Notes</th>
+                  <th className="py-2 font-medium"> </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -93,8 +109,20 @@ export default async function RegistrationsPage({ params }: Props) {
                     <td className="py-3 pr-4">{row.email}</td>
                     <td className="py-3 pr-4">{row.phone || "—"}</td>
                     <td className="py-3 pr-4">{row.guests}</td>
+                    <td className="py-3 pr-4 capitalize">{row.status}</td>
                     <td className="py-3 pr-4">{row.paid ? "Yes" : "No"}</td>
-                    <td className="max-w-xs truncate py-3">{row.notes || "—"}</td>
+                    <td className="max-w-xs whitespace-pre-wrap py-3 pr-4 text-sm">
+                      {row.notes || "—"}
+                    </td>
+                    <td className="py-3">
+                      <ConfirmRegistrationButton
+                        eventId={event.id}
+                        registrationId={row.id}
+                        alreadyConfirmed={
+                          row.status === "confirmed" && row.paid === 1
+                        }
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

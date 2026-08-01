@@ -5,9 +5,9 @@ Public foundation site + custom event registration for **maddysfoundation.org** 
 ## What this is
 
 - Marketing site (home, Maddy’s story, donate, privacy)
-- Published events list + detail pages
-- Public RSVP registration (adults, no parent accounts)
-- Staff admin (`/admin`) to create/edit events and view rosters
+- Published events list + detail pages (Google / Apple Maps links from location)
+- Public registration — individual RSVP or team events (e.g. 4-person scramble); paid events stay **pending** until staff marks paid
+- Staff admin (`/admin`) to create/edit events, view rosters, and confirm payment
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.
 
@@ -109,6 +109,7 @@ When the domain is purchased:
 - Interior header (`SiteHeaderSolid`): brand + nav only (no countdown widget crowding the bar)
 - Event dates format in `America/Chicago`
 - Her Story: Maddy’s bio (Herculaneum High, sports, sister Lydia) + day-on-the-green invite; purpose = scholarships (Herculaneum & DeSoto)
+- Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 

@@ -21,6 +21,7 @@ type Body = {
   close_at?: string | null
   fee_cents?: number
   paypal_link?: string | null
+  team_size?: number | null
 }
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -62,7 +63,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
         slug = ?, title = ?, summary = ?, description = ?, location = ?,
         starts_at = ?, ends_at = ?, capacity = ?, is_published = ?,
         registration_open = ?, open_at = ?, close_at = ?, fee_cents = ?,
-        paypal_link = ?, updated_at = CURRENT_TIMESTAMP
+        paypal_link = ?, team_size = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
       [
         slug,
@@ -89,6 +90,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
         body.paypal_link !== undefined
           ? body.paypal_link
           : existing.paypal_link,
+        body.team_size !== undefined ? body.team_size : existing.team_size,
         id,
       ],
     )

@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
   formatEventDate,
-  formatFee,
+  formatEventFeeLabel,
   isRegistrationAvailable,
   listPublishedEvents,
   toEventIso,
@@ -51,7 +51,7 @@ export default async function EventsPage() {
         ) : (
           <ul className="mt-12 divide-y divide-line border-t border-line">
             {upcoming.map((event) => {
-              const fee = formatFee(event.fee_cents)
+              const fee = formatEventFeeLabel(event)
               const open = isRegistrationAvailable(event)
               return (
                 <li key={event.id} className="py-8">

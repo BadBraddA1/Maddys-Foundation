@@ -13,6 +13,8 @@ Primary job: make it easy to gather people around Madalyn’s light — events f
 
 Mission focus: scholarships for one graduating senior from Herculaneum and DeSoto High Schools, plus other Board-approved community service.
 
+Flagship gathering: Oak Valley Golf Scramble (4-person teams, $500/team, payment required to complete registration).
+
 ## Brand personality
 
 Warm · hopeful · steadfast
