@@ -328,13 +328,12 @@ a {
   animation: hdr-countdown-rise 0.45s var(--ease-out-quart) both;
 }
 
-/* Home hero header — one fixed bar; scrim over photo, solid after scroll */
+/* Home hero header — one fixed bar; soft crossfade into solid green */
 .hero-header-bar .hero-header-bar-inner {
-  transform: translateY(-0.35rem);
+  transform: translateY(-0.2rem);
   transition:
-    transform 0.5s var(--ease-out-quart),
-    background-color 0.35s var(--ease-out-quart),
-    border-color 0.35s var(--ease-out-quart);
+    transform 0.45s var(--ease-out-quart),
+    border-color 0.5s var(--ease-out-quart);
 }
 
 .hero-header-bar[data-ready="true"] .hero-header-bar-inner {
