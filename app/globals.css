@@ -315,6 +315,46 @@ a {
   color: color-mix(in oklab, var(--accent-ink) 50%, var(--ink));
 }
 
+/* Home hero header — glass clip-reveal (baked: motion 0.6, glass 0.72) */
+.hero-header-chrome--glass .hero-header-overlay {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.69s var(--ease-out-quart), opacity 0.35s var(--ease-out-quart);
+}
+
+.hero-header-chrome--glass[data-ready="true"] .hero-header-overlay {
+  clip-path: inset(0 0 0 0);
+}
+
+.hero-header-chrome--glass[data-past="true"] .hero-header-overlay {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero-header-chrome--glass .hero-header-sticky {
+  pointer-events: none;
+}
+
+.hero-header-chrome--glass[data-past="true"] .hero-header-sticky {
+  pointer-events: auto;
+}
+
+.hero-header-chrome--glass .hero-header-sticky-inner {
+  background: color-mix(in oklab, var(--surface) 72%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: scaleY(0.92);
+  transform-origin: top;
+  opacity: 0.001;
+  transition:
+    opacity 0.35s var(--ease-out-quart),
+    transform 0.58s var(--ease-out-quart);
+}
+
+.hero-header-chrome--glass[data-past="true"] .hero-header-sticky-inner {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
 /* Press feedback — fine pointer only so touch doesn’t feel sticky */
 @media (hover: hover) and (pointer: fine) {
   .motion-press:hover {
@@ -336,10 +376,22 @@ a {
   .hero-enter,
   .nav-panel-enter,
   .success-enter,
-  .site-header-solid .countdown-enter {
+  .site-header-solid .countdown-enter,
+  .hero-header-chrome--glass .hero-header-overlay,
+  .hero-header-chrome--glass .hero-header-sticky-inner {
     animation: none !important;
     filter: none !important;
     transform: none !important;
+    clip-path: none !important;
+    transition: none !important;
+  }
+
+  .hero-header-chrome--glass .hero-header-sticky-inner {
+    opacity: 0.001;
+  }
+
+  .hero-header-chrome--glass[data-past="true"] .hero-header-sticky-inner {
+    opacity: 1;
   }
 
   .motion-press:hover,

@@ -17,7 +17,10 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <section className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep [contain:layout_paint]">
+      <section
+        data-home-hero
+        className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep [contain:layout_paint]"
+      >
         <HeroPhoto />
         {/* Bottom wash only — keep face (upper third) clear of the fog veil */}
         <div
