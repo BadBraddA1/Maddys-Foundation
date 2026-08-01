@@ -37,9 +37,18 @@ export function NextEventCountdown({
     if (Number.isNaN(target)) return
     const tick = () => setParts(split(target - Date.now()))
     tick()
-    const id = window.setInterval(tick, 1000)
-    return () => window.clearInterval(id)
-  }, [target])
+    // Featured home clock doesn’t need second-precision; quieter updates.
+    const ms = layout === "featured" ? 30_000 : 1000
+    const id = window.setInterval(tick, ms)
+    const onVis = () => {
+      if (!document.hidden) tick()
+    }
+    document.addEventListener("visibilitychange", onVis)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener("visibilitychange", onVis)
+    }
+  }, [target, layout])
 
   const ended = Number.isNaN(target) || (!!parts && target <= Date.now())
   const ready = parts !== null
@@ -60,38 +69,35 @@ export function NextEventCountdown({
     const units = [
       { label: "Days", value: display.days },
       { label: "Hours", value: display.hours },
-      { label: "Min", value: display.mins },
-      { label: "Sec", value: display.secs },
+      { label: "Minutes", value: display.mins },
     ]
     return (
       <div
         className={`countdown-featured text-center ${ready ? "is-ready" : ""}`}
       >
-        <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted">
-          Next gathering
-        </p>
-        <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">
+        <p className="text-sm text-muted">Next gathering</p>
+        <h2 className="mt-2 font-display text-2xl text-ink sm:text-3xl">
           <Link href={href} className="transition hover:text-accent-ink">
             {title}
           </Link>
         </h2>
         <Link
           href={href}
-          className="countdown-enter mt-8 inline-flex flex-wrap items-end justify-center gap-4 sm:gap-6"
+          className="countdown-enter mt-8 inline-flex flex-wrap items-end justify-center gap-5 sm:gap-8"
           aria-label={`Countdown to ${title}`}
         >
           {units.map((u) => (
             <span
               key={u.label}
-              className="flex min-w-[3.5rem] flex-col items-center sm:min-w-[4.25rem]"
+              className="flex min-w-[3rem] flex-col items-center sm:min-w-[3.75rem]"
             >
               <span
-                className="font-display text-4xl leading-none text-accent-ink tabular-nums sm:text-5xl"
+                className="font-display text-3xl leading-none text-ink tabular-nums sm:text-4xl"
                 suppressHydrationWarning
               >
                 {ready ? String(u.value).padStart(2, "0") : "––"}
               </span>
-              <span className="mt-2 text-xs font-medium uppercase tracking-wide text-muted">
+              <span className="mt-2 text-xs font-medium text-muted">
                 {u.label}
               </span>
             </span>
@@ -100,7 +106,7 @@ export function NextEventCountdown({
         <p className="mt-8">
           <Link
             href={href}
-            className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
+            className="inline-flex min-h-11 items-center text-sm font-medium text-muted underline decoration-line underline-offset-4 hover:text-accent-ink"
           >
             Event details & RSVP →
           </Link>

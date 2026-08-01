@@ -217,101 +217,94 @@ a {
 
 @keyframes hero-drift {
   from {
-    transform: scale(1.04);
+    transform: scale(1.02);
   }
   to {
     transform: scale(1);
   }
 }
 
-/* Readable throughout — transform + soft blur only */
+/* Readable throughout — transform only, no blur */
 @keyframes hero-rise {
   from {
-    transform: translateY(0.5rem);
-    filter: blur(2px);
+    transform: translateY(0.3rem);
   }
   to {
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
 @keyframes menu-in {
   from {
-    transform: translateY(-0.35rem);
-    filter: blur(3px);
+    transform: translateY(-0.2rem);
   }
   to {
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
 @keyframes success-settle {
   from {
-    transform: translateY(0.4rem) scale(0.985);
+    transform: translateY(0.25rem);
   }
   to {
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
 .animate-hero-drift {
-  animation: hero-drift 1.5s var(--ease-out-quart) forwards;
+  animation: hero-drift 1.8s var(--ease-out-quart) forwards;
 }
 
 .hero-enter {
   transform: translateY(0);
-  filter: blur(0);
-  animation: hero-rise 0.55s var(--ease-out-quart) both;
+  animation: hero-rise 0.45s var(--ease-out-quart) both;
 }
 
 .hero-enter[data-enter="1"] {
-  animation-delay: 60ms;
+  animation-delay: 50ms;
 }
 
 .hero-enter[data-enter="2"] {
-  animation-delay: 120ms;
+  animation-delay: 100ms;
 }
 
 .hero-enter[data-enter="3"] {
-  animation-delay: 180ms;
+  animation-delay: 150ms;
 }
 
 .nav-panel-enter {
-  animation: menu-in 0.22s var(--ease-out-quart) both;
+  animation: menu-in 0.2s var(--ease-out-quart) both;
 }
 
 .success-enter {
-  transform: translateY(0) scale(1);
-  animation: success-settle 0.45s var(--ease-out-quart) both;
+  transform: translateY(0);
+  animation: success-settle 0.35s var(--ease-out-quart) both;
 }
 
-/* Solid header — next-event countdown (baked live knobs: type-scale 0.55, accent 0.5) */
 @keyframes hdr-countdown-rise {
   from {
-    transform: translateY(0.35rem);
-    filter: blur(2px);
+    transform: translateY(0.2rem);
   }
   to {
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
 .countdown-featured .countdown-enter {
-  animation: hdr-countdown-rise 0.6s var(--ease-out-quart) both;
+  animation: hdr-countdown-rise 0.45s var(--ease-out-quart) both;
 }
 
-/* Home hero header — glass clip-reveal (baked: motion 0.6, glass 0.72)
-   Sticky bar is portaled to body; show/hide via [data-past] on itself. */
+/* Home hero header — soft scrim entrance; sticky portals to body */
 .hero-header-chrome--glass .hero-header-overlay {
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path 0.69s var(--ease-out-quart), opacity 0.35s var(--ease-out-quart);
+  transform: translateY(-0.35rem);
+  transition:
+    transform 0.5s var(--ease-out-quart),
+    opacity 0.35s var(--ease-out-quart);
 }
 
 .hero-header-chrome--glass[data-ready="true"] .hero-header-overlay {
-  clip-path: inset(0 0 0 0);
+  transform: translateY(0);
 }
 
 .hero-header-chrome--glass[data-past="true"] .hero-header-overlay {

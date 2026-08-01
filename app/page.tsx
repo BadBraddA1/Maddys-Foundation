@@ -97,8 +97,8 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-        <div className="mt-12 -mx-5 bg-accent-soft/40 px-5 py-10 sm:-mx-6 sm:px-6 md:mx-0 md:px-8">
-          <blockquote className="prose-measure mx-auto max-w-3xl text-center font-display text-2xl leading-snug text-ink">
+        <div className="mt-12 -mx-5 border-y border-line px-5 py-10 sm:-mx-6 sm:px-6 md:mx-0 md:border md:px-8">
+          <blockquote className="prose-measure mx-auto max-w-3xl text-center font-display text-xl leading-snug text-ink sm:text-2xl">
             And we know that in all things God works for the good of those who
             love Him…
             <cite className="mt-4 block font-sans text-sm font-medium not-italic text-muted">
@@ -110,10 +110,10 @@ export default async function HomePage() {
 
       {next ? (
         <section
-          className="border-b border-line bg-surface"
+          className="border-b border-line"
           aria-label="Countdown to the next event"
         >
-          <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
+          <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 md:px-8 md:py-16">
             <NextEventCountdown
               targetIso={toEventIso(next.starts_at)}
               title={next.title}
@@ -124,8 +124,8 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <section className="border-y border-line bg-accent-soft/40">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
+      <section className="border-b border-line">
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 md:px-8 md:py-16">
           <div className="flex items-end justify-between gap-4">
             <h2 className="font-display">Events</h2>
             <Link

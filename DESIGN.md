@@ -60,9 +60,10 @@ CTAs & fields: squared (`.field-control`); no pills.
 
 ## Motion
 
-- Signature: soft photo settle + short rise (≤0.55s, light blur) — never opacity-0 gated
-- Stagger capped (~120ms); feedback via `.motion-press` on primary actions
+- Signature: soft photo settle + short rise (≤0.45s) — transform only, no blur flourishes
+- Stagger capped (~100ms); feedback via `.motion-press` on primary actions
 - No decorative glass, shadows, or scroll-section fades; past-hero sticky is solid `--surface`
 - Ease-out-quart; `prefers-reduced-motion` disables named motion classes (not a blanket `*` kill of all transitions)
 - Mobile nav disclosure closes on route change / link click
 - Primary CTA text (`--accent-ink` on `--accent`) meets WCAG AA ≥4.5:1
+- Home countdown: days/hours/minutes only (no ticking seconds); quieter type scale in ink
