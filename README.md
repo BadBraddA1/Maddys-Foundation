@@ -134,9 +134,10 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 1. Staff sign in at `/admin` (password or Clerk).
 2. Open **Check-in desk** (or Roster → Day-of check-in).
 3. First time / after imports: on the event roster, **Sync players from roster notes**.
-4. Search team → Load → check players in as they arrive; **Save add-ons** separately (Skins / Golf Cannon / Golf Pro per player).
-5. Print/copy the team QR (`/admin/check-in?team={registrationId}`) — phone must already be staff-logged-in.
+4. **Scan QR** on iPhone (Safari, staff already logged in) or type the team **check-in code** (`OV-……`), or search by team name → Load → check players in; **Save add-ons** separately (Skins / Golf Cannon / Golf Pro per player).
+5. Each registration gets a unique `check_in_code` in the DB at register time (for a later confirmation email). QR links use `/admin/check-in?code=…`.
 6. Dashboard for live totals and CSV export.
+7. Local test data: `pnpm db:seed-checkin` seeds 5 paid Oak Valley teams (`*@checkin-seed.test`) with codes + players.
 
 Paid registration Mulligans/Skins stay on the registration notes; desk add-ons are separate day-of sales.
 

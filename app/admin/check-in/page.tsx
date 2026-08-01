@@ -6,7 +6,7 @@ import { listAllEvents } from "@/lib/events"
 export const dynamic = "force-dynamic"
 
 type Props = {
-  searchParams: Promise<{ team?: string; eventId?: string }>
+  searchParams: Promise<{ team?: string; eventId?: string; code?: string }>
 }
 
 export default async function CheckInPage({ searchParams }: Props) {
@@ -38,6 +38,7 @@ export default async function CheckInPage({ searchParams }: Props) {
   }
 
   const initialTeamId = query.team ? Number(query.team) : null
+  const initialCode = query.code?.trim() || null
 
   return (
     <CheckInDesk
@@ -46,6 +47,7 @@ export default async function CheckInPage({ searchParams }: Props) {
       initialTeamId={
         initialTeamId && Number.isFinite(initialTeamId) ? initialTeamId : null
       }
+      initialCode={initialCode}
     />
   )
 }

@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS registrations (
   /** Unix seconds — unpaid draft holds capacity until this time (10 min). */
   hold_expires_at INTEGER,
   team_name TEXT NOT NULL DEFAULT '',
+  /** Short code for day-of QR / email (e.g. OV-A3K9Q2). Allocated on register. */
+  check_in_code TEXT,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   UNIQUE (event_id, email)
 );
@@ -50,6 +52,9 @@ CREATE INDEX IF NOT EXISTS idx_registrations_stripe_session
 
 CREATE INDEX IF NOT EXISTS idx_registrations_hold_expires
   ON registrations (status, hold_expires_at);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_registrations_check_in_code
+  ON registrations (check_in_code);
 
 -- Soft capacity holds while the register form timer is running (before submit).
 CREATE TABLE IF NOT EXISTS capacity_holds (

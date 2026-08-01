@@ -2,6 +2,10 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import {
+  CheckInQrScanner,
+  parseScannedCheckInPayload,
+} from "@/components/admin/check-in-qr-scanner"
 import { computeAddonTotalCents, formatAddonMoney, type AddonPrice, type EventPlayer } from "@/lib/check-in-shared"
 
 type TeamSummary = {
@@ -20,6 +24,7 @@ type CheckInTeam = {
   email: string
   phone: string
   notes: string
+  checkInCode: string
   players: EventPlayer[]
   prices: AddonPrice[]
   teamAddonTotalCents: number
@@ -40,10 +45,17 @@ type Props = {
   eventId: number
   eventTitle: string
   initialTeamId?: number | null
+  initialCode?: string | null
 }
 
-export function CheckInDesk({ eventId, eventTitle, initialTeamId }: Props) {
+export function CheckInDesk({
+  eventId,
+  eventTitle,
+  initialTeamId,
+  initialCode,
+}: Props) {
   const [query, setQuery] = useState("")
+  const [codeInput, setCodeInput] = useState(initialCode ?? "")
   const [suggestions, setSuggestions] = useState<TeamSummary[]>([])
   const [searching, setSearching] = useState(false)
   const [loadingTeam, setLoadingTeam] = useState(false)
@@ -54,6 +66,7 @@ export function CheckInDesk({ eventId, eventTitle, initialTeamId }: Props) {
   const [busyPlayerId, setBusyPlayerId] = useState<number | null>(null)
   const [savingAddons, setSavingAddons] = useState(false)
   const [qr, setQr] = useState<{ url: string; dataUrl: string } | null>(null)
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   const loadSuggestions = useCallback(
     async (q: string) => {
@@ -130,11 +143,56 @@ export function CheckInDesk({ eventId, eventTitle, initialTeamId }: Props) {
     [applyTeam],
   )
 
+  const loadByCode = useCallback(
+    async (raw: string) => {
+      const parsed = parseScannedCheckInPayload(raw) || raw.trim().toUpperCase()
+      if (!parsed) {
+        setError("Enter or scan a check-in code.")
+        return
+      }
+      if (parsed.startsWith("TEAM:")) {
+        const id = Number(parsed.slice(5))
+        if (Number.isFinite(id) && id > 0) {
+          await loadTeam(id)
+          return
+        }
+      }
+      setLoadingTeam(true)
+      setError(null)
+      setMessage(null)
+      try {
+        const res = await fetch(
+          `/api/admin/check-in/teams?eventId=${eventId}&code=${encodeURIComponent(parsed)}`,
+        )
+        const data = (await res.json()) as {
+          registrationId?: number
+          error?: string
+        }
+        if (!res.ok || !data.registrationId) {
+          setError(data.error || "Code not found.")
+          return
+        }
+        setCodeInput(parsed)
+        await loadTeam(data.registrationId)
+        setMessage(`Loaded team for code ${parsed}.`)
+      } catch {
+        setError("Could not look up code.")
+      } finally {
+        setLoadingTeam(false)
+      }
+    },
+    [eventId, loadTeam],
+  )
+
   useEffect(() => {
+    if (initialCode?.trim()) {
+      void loadByCode(initialCode)
+      return
+    }
     if (initialTeamId && initialTeamId > 0) {
       void loadTeam(initialTeamId)
     }
-  }, [initialTeamId, loadTeam])
+  }, [initialTeamId, initialCode, loadTeam, loadByCode])
 
   const liveTeamTotal = useMemo(() => {
     if (!team) return 0
@@ -283,60 +341,114 @@ export function CheckInDesk({ eventId, eventTitle, initialTeamId }: Props) {
         </div>
       </div>
 
-      <div className="border border-line bg-surface p-4">
-        <label className="block text-sm font-medium text-ink" htmlFor="team-search">
-          Search team
-        </label>
-        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-          <input
-            id="team-search"
-            className="field-control min-h-12 flex-1 text-base"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Team name"
-            autoComplete="off"
-            list="team-suggestions"
-          />
-          <datalist id="team-suggestions">
-            {suggestions.map((t) => (
-              <option key={t.registrationId} value={t.teamName} />
-            ))}
-          </datalist>
-          <button
-            type="button"
-            className="btn-deep inline-flex min-h-12 items-center justify-center px-6 text-sm font-medium disabled:opacity-60"
-            disabled={loadingTeam || searching}
-            onClick={() => {
-              const match =
-                suggestions.find(
-                  (t) => t.teamName.toLowerCase() === query.trim().toLowerCase(),
-                ) || suggestions[0]
-              if (match) void loadTeam(match.registrationId)
-              else setError("Team not found.")
-            }}
-          >
-            {loadingTeam ? "Loading…" : "Load team"}
-          </button>
+      <div className="border border-line bg-surface p-4 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-ink" htmlFor="check-in-code">
+            Check-in code / Scan QR
+          </label>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+            <input
+              id="check-in-code"
+              className="field-control min-h-12 flex-1 font-mono text-base uppercase tracking-wide"
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+              placeholder="OV-A3K9Q2"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  void loadByCode(codeInput)
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="btn-deep inline-flex min-h-12 items-center justify-center px-5 text-sm font-medium disabled:opacity-60"
+              disabled={loadingTeam}
+              onClick={() => void loadByCode(codeInput)}
+            >
+              Load code
+            </button>
+            <button
+              type="button"
+              className="inline-flex min-h-12 items-center justify-center border border-line bg-bg px-5 text-sm font-medium text-ink"
+              onClick={() => setScannerOpen(true)}
+            >
+              Scan QR
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            On iPhone: open this page in Safari while staff-logged-in, tap Scan QR,
+            allow camera.
+          </p>
         </div>
-        {suggestions.length > 0 ? (
-          <ul className="mt-3 divide-y divide-line border border-line">
-            {suggestions.slice(0, 8).map((t) => (
-              <li key={t.registrationId}>
-                <button
-                  type="button"
-                  className="flex min-h-12 w-full items-center justify-between gap-3 px-3 text-left text-sm hover:bg-bg"
-                  onClick={() => void loadTeam(t.registrationId)}
-                >
-                  <span className="font-medium text-ink">{t.teamName}</span>
-                  <span className="text-muted tabular-nums">
-                    {t.checkedInCount}/{t.playerCount}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+
+        <div>
+          <label className="block text-sm font-medium text-ink" htmlFor="team-search">
+            Or search team name
+          </label>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+            <input
+              id="team-search"
+              className="field-control min-h-12 flex-1 text-base"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Team name"
+              autoComplete="off"
+              list="team-suggestions"
+            />
+            <datalist id="team-suggestions">
+              {suggestions.map((t) => (
+                <option key={t.registrationId} value={t.teamName} />
+              ))}
+            </datalist>
+            <button
+              type="button"
+              className="inline-flex min-h-12 items-center justify-center border border-line px-6 text-sm font-medium disabled:opacity-60"
+              disabled={loadingTeam || searching}
+              onClick={() => {
+                const match =
+                  suggestions.find(
+                    (t) =>
+                      t.teamName.toLowerCase() === query.trim().toLowerCase(),
+                  ) || suggestions[0]
+                if (match) void loadTeam(match.registrationId)
+                else setError("Team not found.")
+              }}
+            >
+              {loadingTeam ? "Loading…" : "Load team"}
+            </button>
+          </div>
+          {suggestions.length > 0 ? (
+            <ul className="mt-3 divide-y divide-line border border-line">
+              {suggestions.slice(0, 8).map((t) => (
+                <li key={t.registrationId}>
+                  <button
+                    type="button"
+                    className="flex min-h-12 w-full items-center justify-between gap-3 px-3 text-left text-sm hover:bg-bg"
+                    onClick={() => void loadTeam(t.registrationId)}
+                  >
+                    <span className="font-medium text-ink">{t.teamName}</span>
+                    <span className="text-muted tabular-nums">
+                      {t.checkedInCount}/{t.playerCount}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       </div>
+
+      <CheckInQrScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onCode={(code) => {
+          void loadByCode(code)
+        }}
+      />
 
       {error ? (
         <p className="border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
@@ -360,6 +472,9 @@ export function CheckInDesk({ eventId, eventTitle, initialTeamId }: Props) {
               <p className="mt-1 text-sm text-muted">
                 {team.checkedInCount}/{team.players.length} checked in · Captain{" "}
                 {team.captainName}
+              </p>
+              <p className="mt-1 font-mono text-sm tracking-wide text-ink">
+                Code {team.checkInCode}
               </p>
               <Link
                 href={`/admin/check-in/team/${team.registrationId}`}

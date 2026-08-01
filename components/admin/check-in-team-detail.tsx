@@ -13,6 +13,7 @@ type Team = {
   email: string
   phone: string
   notes: string
+  checkInCode: string
   players: EventPlayer[]
   prices: AddonPrice[]
   teamAddonTotalCents: number
@@ -156,6 +157,9 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
           <p className="mt-1 text-sm text-muted">
             {team.checkedInCount}/{team.players.length} checked in ·{" "}
             {formatAddonMoney(team.teamAddonTotalCents)} add-ons
+          </p>
+          <p className="mt-1 font-mono text-sm tracking-wide">
+            Code {team.checkInCode}
           </p>
         </div>
         <button

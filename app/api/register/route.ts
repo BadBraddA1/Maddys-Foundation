@@ -290,24 +290,51 @@ export async function POST(req: Request) {
   }
 
   let registrationId = 0
+  const { checkInPrefixFromSlug, generateCheckInCode } = await import(
+    "@/lib/check-in-code"
+  )
+  const codePrefix = checkInPrefixFromSlug(event.slug)
+  let checkInCode = generateCheckInCode(codePrefix)
   try {
-    const result = await sql.execute(
-      `INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid, hold_expires_at, team_name)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        event.id,
-        name,
-        email,
-        phone,
-        guests,
-        notes,
-        status,
-        paid,
-        holdUntil,
-        teamName || "",
-      ],
-    )
-    registrationId = Number(result.lastInsertRowid ?? 0)
+    for (let attempt = 0; attempt < 8; attempt++) {
+      try {
+        const result = await sql.execute(
+          `INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid, hold_expires_at, team_name, check_in_code)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            event.id,
+            name,
+            email,
+            phone,
+            guests,
+            notes,
+            status,
+            paid,
+            holdUntil,
+            teamName || "",
+            checkInCode,
+          ],
+        )
+        registrationId = Number(result.lastInsertRowid ?? 0)
+        break
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (
+          (message.includes("UNIQUE") || message.includes("unique")) &&
+          message.toLowerCase().includes("check_in")
+        ) {
+          checkInCode = generateCheckInCode(codePrefix)
+          continue
+        }
+        throw err
+      }
+    }
+    if (!registrationId) {
+      return NextResponse.json(
+        { error: "Could not save registration." },
+        { status: 500 },
+      )
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     if (message.includes("UNIQUE") || message.includes("unique")) {

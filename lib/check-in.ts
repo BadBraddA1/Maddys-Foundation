@@ -1,6 +1,10 @@
 import { sql } from "@/lib/db"
 import { audit } from "@/lib/audit"
 import {
+  checkInPrefixFromSlug,
+  ensureRegistrationCheckInCode,
+} from "@/lib/check-in-code"
+import {
   computeAddonTotalCents,
   type AddonKey,
   type AddonPrice,
@@ -22,6 +26,8 @@ export type CheckInTeam = {
   email: string
   phone: string
   notes: string
+  /** Day-of QR / email code (e.g. OV-A3K9Q2). */
+  checkInCode: string
   players: EventPlayer[]
   prices: AddonPrice[]
   teamAddonTotalCents: number
@@ -218,7 +224,7 @@ export async function syncPlayersForEvent(
   return { registrations: regs.length, playersCreated }
 }
 
-/** After payment confirmed — set team_name and ensure player rows. */
+/** After payment confirmed — set team_name, check_in_code, and ensure player rows. */
 export async function ensureCheckInRosterForRegistration(
   registrationId: number,
   opts?: { teamName?: string; playerNames?: string[] },
@@ -231,6 +237,12 @@ export async function ensureCheckInRosterForRegistration(
   if (!reg) return
 
   const eventId = Number(reg.event_id)
+  const eventRows = await sql`
+    SELECT slug FROM events WHERE id = ${eventId} LIMIT 1
+  `
+  const prefix = checkInPrefixFromSlug(String(eventRows[0]?.slug ?? "MF"))
+  await ensureRegistrationCheckInCode(registrationId, prefix)
+
   const parsed = parseRegistrationRoster(
     String(reg.notes ?? ""),
     String(reg.name ?? ""),
@@ -288,7 +300,7 @@ export async function searchTeams(opts: {
 
   const rows = q
     ? await sql`
-        SELECT r.id, r.team_name, r.name, r.notes,
+        SELECT r.id, r.team_name, r.name, r.notes, r.check_in_code,
           (SELECT COUNT(*) FROM event_players p WHERE p.registration_id = r.id) AS player_count,
           (SELECT COUNT(*) FROM event_players p
             WHERE p.registration_id = r.id AND p.checked_in = 1) AS checked_in_count
@@ -299,6 +311,7 @@ export async function searchTeams(opts: {
             lower(r.team_name) LIKE ${`%${q}%`}
             OR lower(r.name) LIKE ${`%${q}%`}
             OR lower(r.notes) LIKE ${`%${q}%`}
+            OR upper(COALESCE(r.check_in_code, '')) LIKE ${`%${q.toUpperCase()}%`}
           )
         ORDER BY r.team_name ASC, r.name ASC
         LIMIT ${limit}
@@ -338,6 +351,12 @@ export async function getCheckInTeam(
   const reg = regs[0]
   if (!reg) return null
 
+  const eventRows = await sql`
+    SELECT slug FROM events WHERE id = ${Number(reg.event_id)} LIMIT 1
+  `
+  const prefix = checkInPrefixFromSlug(String(eventRows[0]?.slug ?? "MF"))
+  const checkInCode = await ensureRegistrationCheckInCode(registrationId, prefix)
+
   await syncPlayersForRegistration(registrationId)
   const players = await listPlayersForRegistration(registrationId)
   const prices = await ensureAddonPrices(Number(reg.event_id))
@@ -358,6 +377,7 @@ export async function getCheckInTeam(
     email: String(reg.email),
     phone: String(reg.phone ?? ""),
     notes: String(reg.notes ?? ""),
+    checkInCode,
     players,
     prices,
     teamAddonTotalCents,

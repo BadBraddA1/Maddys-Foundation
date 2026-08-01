@@ -26,12 +26,17 @@ export async function GET(_req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Team not found." }, { status: 404 })
   }
 
-  const url = `${publicSiteUrl()}/admin/check-in?team=${registrationId}`
+  const url = `${publicSiteUrl()}/admin/check-in?code=${encodeURIComponent(team.checkInCode)}`
   const dataUrl = await QRCode.toDataURL(url, {
     margin: 1,
     width: 280,
     errorCorrectionLevel: "M",
   })
 
-  return NextResponse.json({ url, dataUrl, teamName: team.teamName })
+  return NextResponse.json({
+    url,
+    dataUrl,
+    teamName: team.teamName,
+    checkInCode: team.checkInCode,
+  })
 }
