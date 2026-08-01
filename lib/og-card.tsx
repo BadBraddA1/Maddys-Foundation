@@ -55,7 +55,8 @@ function PhotoGreenTentCard(props: {
         backgroundColor: "#ffffff",
       }}
     >
-      {/* Subject — cutout sits on the right; full-bleed cover uses right-biased crop */}
+      {/* Subject — cutout asset is already composed 1200×630 (use fill, don’t re-crop).
+          Full-bleed covers still bias right so faces stay clear of left type. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={props.photoSrc}
@@ -68,7 +69,7 @@ function PhotoGreenTentCard(props: {
           left: 0,
           width: 1200,
           height: 630,
-          objectFit: "cover",
+          objectFit: props.cutoutOnWhite ? "fill" : "cover",
           objectPosition: props.cutoutOnWhite ? "center center" : "70% 20%",
         }}
       />
