@@ -4,18 +4,12 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { BrandMark, PrimaryNav } from "@/components/site-nav"
 
-export type HeroHeaderMotion = "rise" | "morph" | "glass"
-
-type Props = {
-  motion: HeroHeaderMotion
-}
-
 /**
  * Home hero chrome: overlay scrolls away with the photo; after the hero
- * leaves the viewport a glass sticky bar portals to the document (so
+ * leaves the viewport a solid sticky bar portals to the document (so
  * `contain` on the hero can’t trap `position: fixed` over the image).
  */
-export function HeroHeaderChrome({ motion }: Props) {
+export function HeroHeaderChrome() {
   const [ready, setReady] = useState(false)
   const [pastHero, setPastHero] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -28,7 +22,6 @@ export function HeroHeaderChrome({ motion }: Props) {
       return () => window.cancelAnimationFrame(enter)
     }
 
-    // Fire once the hero’s bottom edge has cleared the top of the viewport.
     const io = new IntersectionObserver(
       ([entry]) => {
         setPastHero(entry.boundingClientRect.bottom <= 0)
@@ -48,7 +41,6 @@ export function HeroHeaderChrome({ motion }: Props) {
       className="hero-header-sticky fixed inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]"
       data-past={pastHero ? "true" : "false"}
       aria-hidden={!pastHero}
-      // Keep it out of the tree for hit-testing while over the photo
       inert={!pastHero ? true : undefined}
     >
       <div className="hero-header-sticky-inner border-b border-line bg-surface">
@@ -62,7 +54,7 @@ export function HeroHeaderChrome({ motion }: Props) {
 
   return (
     <div
-      className={`hero-header-chrome hero-header-chrome--${motion}`}
+      className="hero-header-chrome"
       data-ready={ready ? "true" : "false"}
       data-past={pastHero ? "true" : "false"}
     >

@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 
 export const metadata: Metadata = {
-  title: "Maddy's Story",
+  title: "Her Story",
   description:
     "Madalyn Robinson was an incredible light — her story continues through this foundation.",
 }
@@ -51,7 +51,7 @@ export default function StoryPage() {
                 href="/donate"
                 className="motion-press inline-flex min-h-11 items-center justify-center border border-line px-6 text-sm font-medium text-ink hover:bg-surface"
               >
-                Give
+                Donate
               </Link>
             </div>
           </div>

@@ -45,7 +45,7 @@ export default async function HomePage() {
         <SiteHeader />
         <div className="hero-stage relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
           <h1
-            className="hero-enter max-w-3xl font-display text-on-deep"
+            className="hero-enter on-dark max-w-3xl font-display text-on-deep"
             data-enter="0"
           >
             Joy that still moves mountains
@@ -78,14 +78,14 @@ export default async function HomePage() {
       </section>
 
       <main id="main">
-      <section className="mx-auto w-full max-w-6xl px-5 py-[3.7rem] sm:px-6 md:px-8">
+      <section className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-6 md:px-8 md:py-16">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-display">Our purpose</h2>
           <p className="mx-auto mt-4 max-w-[40rem] text-lg text-muted text-pretty">
             Continue to spread joy and light to others in their darkest moments —
             the same heart Maddy showed while fighting her own battles.
           </p>
-          <div className="mt-[1.65rem] flex flex-wrap justify-center gap-x-6 gap-y-1">
+          <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-1">
             <Link
               href="/donate"
               className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
@@ -96,7 +96,7 @@ export default async function HomePage() {
               href="/story"
               className="inline-flex min-h-11 items-center text-sm font-medium text-muted underline decoration-line underline-offset-4 hover:text-ink"
             >
-              Read Maddy&apos;s story →
+              Her Story →
             </Link>
           </div>
         </div>
@@ -121,7 +121,6 @@ export default async function HomePage() {
               targetIso={toEventIso(next.starts_at)}
               title={next.title}
               href={`/events/${next.slug}`}
-              layout="featured"
             />
           </div>
         </section>

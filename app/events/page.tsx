@@ -80,7 +80,11 @@ export default async function EventsPage() {
                           ? `/events/${event.slug}/register`
                           : `/events/${event.slug}`
                       }
-                      className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-accent px-5 text-center text-sm font-medium text-accent-ink sm:w-auto"
+                      className={
+                        open
+                          ? "motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-accent px-5 text-center text-sm font-medium text-accent-ink sm:w-auto"
+                          : "motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center border border-line bg-surface px-5 text-center text-sm font-medium text-ink hover:bg-bg sm:w-auto"
+                      }
                     >
                       {open ? "Register" : "Details"}
                     </Link>

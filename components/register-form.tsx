@@ -257,7 +257,9 @@ export function RegisterForm({
       {feeLabel ? (
         <p className="text-sm text-muted">
           Suggested contribution: <strong className="text-ink">{feeLabel}</strong>
-          {paypalLink ? " — you’ll get a PayPal link after registering." : null}
+          {paypalLink
+            ? " — you\u2019ll get a PayPal link after registering."
+            : null}
         </p>
       ) : null}
       {error ? (

@@ -211,6 +211,14 @@ a {
   color: var(--accent-ink);
 }
 
+/* Selection on fog/deep planes — soft wash washes out; use accent */
+.bg-deep ::selection,
+.text-on-deep::selection,
+.text-on-deep-muted::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
 /*
   Motion system — brand register
   Signature: hero photo settles + copy rises (always readable; never opacity-0 gated).
@@ -298,18 +306,18 @@ a {
 }
 
 /* Home hero header — soft scrim entrance; sticky portals to body */
-.hero-header-chrome--glass .hero-header-overlay {
+.hero-header-chrome .hero-header-overlay {
   transform: translateY(-0.35rem);
   transition:
     transform 0.5s var(--ease-out-quart),
     opacity 0.35s var(--ease-out-quart);
 }
 
-.hero-header-chrome--glass[data-ready="true"] .hero-header-overlay {
+.hero-header-chrome[data-ready="true"] .hero-header-overlay {
   transform: translateY(0);
 }
 
-.hero-header-chrome--glass[data-past="true"] .hero-header-overlay {
+.hero-header-chrome[data-past="true"] .hero-header-overlay {
   opacity: 0;
   pointer-events: none;
 }
@@ -373,7 +381,7 @@ a {
   .nav-panel-enter,
   .success-enter,
   .countdown-featured .countdown-enter,
-  .hero-header-chrome--glass .hero-header-overlay,
+  .hero-header-chrome .hero-header-overlay,
   .hero-header-sticky .hero-header-sticky-inner {
     animation: none !important;
     filter: none !important;

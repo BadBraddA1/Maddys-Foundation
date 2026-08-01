@@ -2,13 +2,13 @@ import { BrandMark, PrimaryNav } from "@/components/site-nav"
 import { SkipLink } from "@/components/skip-link"
 import { HeroHeaderChrome } from "@/components/hero-header-chrome"
 
-/** Overlay header for the photo hero — animates in, then sticky glass after scroll. */
+/** Overlay header for the photo hero — settles in, then solid sticky after scroll. */
 export function SiteHeader() {
   return (
     <>
       <SkipLink />
       <header className="absolute inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]">
-        <HeroHeaderChrome motion="glass" />
+        <HeroHeaderChrome />
       </header>
     </>
   )

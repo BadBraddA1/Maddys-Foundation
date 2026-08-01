@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             Questions about your data? Contact the foundation through the channels
             listed on upcoming event pages, or ask a staff member at an event.
           </p>
-          <p className="text-sm">Last updated: July 31, 2026</p>
+          <p className="text-sm">Last updated: August 1, 2026</p>
         </div>
       </main>
       <SiteFooter />

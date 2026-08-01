@@ -99,11 +99,11 @@ When the domain is purchased:
 - Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
 - A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
-- Home hero header: clip-path animates in over the photo; after scrolling past `[data-home-hero]`, a solid sticky bar portals to `document.body` (so hero `contain` can’t trap `fixed` over the image) and slides down
+- Home hero header: soft scrim entrance over the photo; after scrolling past `[data-home-hero]`, a solid sticky bar portals to `document.body` and slides down
 - A11y harden: darker `--accent-ink` on CTAs (≥4.5:1), mobile menu closes on navigate, register Dismiss is ≥44px tall
 - Adapt: story photo first on phones; admin roster cards on small screens; 16px form fields; past-event links ≥44px; landscape hero breathing room
-- Home page: quieter centered countdown (days/hours/minutes, no second tick; ink numerals) between purpose and events — not in site header chrome
-- Home sections: verse and events sit on page bg with hairline borders (no accent-soft bands)
+- Home page: quieter centered countdown (days/hours/minutes only) between purpose and events
+- Polish: nav noun “Her Story” everywhere; Register vs Details CTA hierarchy; dead countdown layouts removed; spacing on purpose scale; selection on deep uses accent
 - Interior header (`SiteHeaderSolid`): brand + nav only (no countdown widget crowding the bar)
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))

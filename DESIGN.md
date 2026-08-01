@@ -71,4 +71,6 @@ CTAs & fields: squared (`.field-control`); no pills.
 - Ease-out-quart; `prefers-reduced-motion` disables named motion classes (not a blanket `*` kill of all transitions)
 - Mobile nav disclosure closes on route change / link click
 - Primary CTA text (`--accent-ink` on `--accent`) meets WCAG AA ≥4.5:1
-- Home countdown: days/hours/minutes only (no ticking seconds); quieter type scale in ink
+- Home countdown: featured days/hours/minutes only (no ticking seconds); quieter type scale in ink
+- Polish: “Her Story” naming aligned; closed-registration events use outline Details CTA (accent reserved for Register); deep-plane text selection uses accent
+- Events list / story / donate empty paths share the same secondary-link cadence

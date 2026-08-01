@@ -35,7 +35,7 @@ export function EmptyEvents() {
         href="/story"
         className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline underline-offset-4"
       >
-        Read Maddy&apos;s story
+        Read Her Story
       </Link>
     </div>
   )

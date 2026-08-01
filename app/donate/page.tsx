@@ -39,14 +39,22 @@ export default function DonatePage() {
             <p className="font-medium text-ink">Donation link coming soon</p>
             <p className="mt-2 text-sm text-muted">
               We&apos;re connecting the foundation&apos;s giving account. In the
-              meantime, join an event or share Maddy&apos;s story.
+              meantime, join an event or read Her Story.
             </p>
-            <Link
-              href="/events"
-              className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent underline-offset-4"
-            >
-              See upcoming events →
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1">
+              <Link
+                href="/events"
+                className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent underline-offset-4"
+              >
+                See upcoming events →
+              </Link>
+              <Link
+                href="/story"
+                className="inline-flex min-h-11 items-center text-sm font-medium text-muted underline decoration-line underline-offset-4 hover:text-ink"
+              >
+                Her Story →
+              </Link>
+            </div>
           </div>
         )}
       </main>
