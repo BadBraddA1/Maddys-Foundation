@@ -9,6 +9,11 @@ import {
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { normalizeUsPhone } from "@/lib/phone"
 import { createEventCheckoutSession } from "@/lib/stripe-checkout"
+import {
+  CHECKOUT_HOLD_MINUTES,
+  holdExpiresAtUnix,
+  releaseExpiredHolds,
+} from "@/lib/registration-hold"
 import { registrationTotalCents } from "@/lib/team-addons"
 import { stripeConfigured } from "@/lib/stripe"
 
@@ -212,7 +217,9 @@ export async function POST(req: Request) {
   }
 
   // Capacity = one slot per registration row (a team when team_size > 1).
-  // In-checkout drafts hold a slot; cancel/expire deletes them and frees it.
+  // Expired unpaid holds are released first so slots return to the pool.
+  await releaseExpiredHolds(event.id).catch(() => undefined)
+
   if (event.capacity != null) {
     try {
       const countRows = await sql`
@@ -241,6 +248,7 @@ export async function POST(req: Request) {
 
   const status = requirePayment ? "pending" : "confirmed"
   const paid = requirePayment ? 0 : 1
+  const holdUntil = requirePayment ? holdExpiresAtUnix() : null
 
   // Replace any abandoned unpaid draft for this email so they can start over.
   if (requirePayment) {
@@ -254,9 +262,9 @@ export async function POST(req: Request) {
   let registrationId = 0
   try {
     const result = await sql.execute(
-      `INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [event.id, name, email, phone, guests, notes, status, paid],
+      `INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid, hold_expires_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [event.id, name, email, phone, guests, notes, status, paid, holdUntil],
     )
     registrationId = Number(result.lastInsertRowid ?? 0)
   } catch (err) {
@@ -276,6 +284,7 @@ export async function POST(req: Request) {
   )
 
   let checkoutUrl: string | null = null
+  let holdExpiresAt: number | null = holdUntil
   if (requirePayment && stripeConfigured() && registrationId > 0) {
     try {
       const session = await createEventCheckoutSession({
@@ -291,6 +300,7 @@ export async function POST(req: Request) {
         coverCardFees: Boolean(body.coverCardFees),
       })
       checkoutUrl = session?.url ?? null
+      if (session?.holdExpiresAt) holdExpiresAt = session.holdExpiresAt
       if (!checkoutUrl) {
         const { dropPendingRegistration } = await import("@/lib/stripe-checkout")
         await dropPendingRegistration({ registrationId })
@@ -316,6 +326,8 @@ export async function POST(req: Request) {
     status,
     registrationId,
     checkoutUrl,
+    holdExpiresAt,
+    holdMinutes: CHECKOUT_HOLD_MINUTES,
     stripe: stripeConfigured(),
   })
 }

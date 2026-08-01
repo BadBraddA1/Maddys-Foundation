@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS registrations (
   status TEXT NOT NULL DEFAULT 'confirmed',
   paid INTEGER NOT NULL DEFAULT 0,
   stripe_checkout_session_id TEXT,
+  /** Unix seconds — unpaid draft holds capacity until this time (10 min). */
+  hold_expires_at INTEGER,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   UNIQUE (event_id, email)
 );
@@ -44,6 +46,9 @@ CREATE INDEX IF NOT EXISTS idx_registrations_event
 
 CREATE INDEX IF NOT EXISTS idx_registrations_stripe_session
   ON registrations (stripe_checkout_session_id);
+
+CREATE INDEX IF NOT EXISTS idx_registrations_hold_expires
+  ON registrations (status, hold_expires_at);
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

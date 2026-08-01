@@ -1,21 +1,20 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { EventCapacityBanner } from "@/components/event-capacity-banner"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
-  capacityUnitLabel,
   formatEventDate,
   formatEventFeeLabel,
   getEventBySlug,
   isRegistrationAvailable,
-  isTeamEvent,
   listPublishedEvents,
 } from "@/lib/events"
 import { mapsLinks } from "@/lib/maps"
 import { siteName, siteUrl } from "@/lib/site-metadata"
 
-export const revalidate = 60
+export const revalidate = 30
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -62,12 +61,7 @@ export default async function EventDetailPage({ params }: Props) {
   const feeLabel = formatEventFeeLabel(event)
   const open = isRegistrationAvailable(event)
   const maps = event.location ? mapsLinks(event.location) : null
-  const spotsLeft =
-    event.capacity != null && event.registration_count != null
-      ? Math.max(0, event.capacity - event.registration_count)
-      : null
   const teamSize = event.team_size && event.team_size > 1 ? event.team_size : null
-  const unit = capacityUnitLabel(event, spotsLeft === 1 ? 1 : 2)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -124,15 +118,8 @@ export default async function EventDetailPage({ params }: Props) {
             )}
           </p>
         ) : null}
-        {spotsLeft != null ? (
-          <p className="mt-2 text-sm text-muted">
-            {spotsLeft === 0
-              ? isTeamEvent(event)
-                ? "No team spots left"
-                : "Event is full"
-              : `${spotsLeft} ${unit} left`}
-          </p>
-        ) : null}
+
+        <EventCapacityBanner event={event} />
 
         {event.description ? (
           <div className="prose-measure mt-10 whitespace-pre-wrap text-lg leading-relaxed text-muted">

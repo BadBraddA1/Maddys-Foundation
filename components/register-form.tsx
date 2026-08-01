@@ -2,8 +2,10 @@
 
 import Link from "next/link"
 import { useId, useMemo, useRef, useState } from "react"
+import { CheckoutHoldScreen } from "@/components/checkout-hold-screen"
 import { formatFee } from "@/lib/events"
 import { normalizeUsPhone } from "@/lib/phone"
+import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold"
 import { TEAM_ADDON_CENTS, registrationTotalCents } from "@/lib/team-addons"
 
 type Props = {
@@ -57,6 +59,10 @@ export function RegisterForm({
   const [done, setDone] = useState(false)
   const [pending, setPending] = useState(false)
   const [awaitingPayment, setAwaitingPayment] = useState(false)
+  const [holdCheckout, setHoldCheckout] = useState<{
+    url: string
+    holdExpiresAt: number
+  } | null>(null)
 
   const totals = useMemo(
     () =>
@@ -175,6 +181,8 @@ export function RegisterForm({
         error?: string
         status?: string
         checkoutUrl?: string | null
+        holdExpiresAt?: number | null
+        holdMinutes?: number
         stripe?: boolean
       } = {}
       try {
@@ -197,6 +205,14 @@ export function RegisterForm({
         return
       }
 
+      if (data.checkoutUrl && data.holdExpiresAt) {
+        setHoldCheckout({
+          url: data.checkoutUrl,
+          holdExpiresAt: data.holdExpiresAt,
+        })
+        return
+      }
+
       if (data.checkoutUrl) {
         window.location.assign(data.checkoutUrl)
         return
@@ -214,6 +230,17 @@ export function RegisterForm({
       window.clearTimeout(timeout)
       setPending(false)
     }
+  }
+
+  if (holdCheckout) {
+    return (
+      <CheckoutHoldScreen
+        checkoutUrl={holdCheckout.url}
+        holdExpiresAt={holdCheckout.holdExpiresAt}
+        eventTitle={eventTitle}
+        isTeam={isTeam}
+      />
+    )
   }
 
   if (done) {
@@ -602,6 +629,13 @@ export function RegisterForm({
       {feeLabel && !isTeam ? (
         <p className="text-sm text-muted">
           Suggested contribution: <strong className="text-ink">{feeLabel}</strong>
+        </p>
+      ) : null}
+      {requirePayment ? (
+        <p className="text-sm text-muted">
+          Submitting holds your {isTeam ? "team spot" : "spot"} for{" "}
+          <strong className="text-ink">{CHECKOUT_HOLD_MINUTES} minutes</strong>{" "}
+          while you pay. If the timer runs out, the spot goes back in the pool.
         </p>
       ) : null}
       {error ? (

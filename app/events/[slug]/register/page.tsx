@@ -12,6 +12,7 @@ import {
   listPublishedEvents,
 } from "@/lib/events"
 import { siteName } from "@/lib/site-metadata"
+import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold"
 import { dropPendingRegistration } from "@/lib/stripe-checkout"
 
 /** Fresh enough for capacity; registration POST also revalidates. */
@@ -106,8 +107,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             role="status"
           >
             <p className="text-ink">
-              Checkout was canceled and your draft was cleared. Fill out the form
-              again when you&apos;re ready to pay and complete registration.
+              Checkout was canceled and your hold was released — that spot is
+              back in the pool. Fill out the form again when you&apos;re ready
+              to pay within the {CHECKOUT_HOLD_MINUTES}-minute window.
             </p>
           </div>
         ) : null}

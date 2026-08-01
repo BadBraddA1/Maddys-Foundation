@@ -4,6 +4,11 @@ import { audit, getEventById } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { getStripe, publicSiteUrl, stripeConfigured } from "@/lib/stripe"
 import {
+  CHECKOUT_HOLD_MINUTES,
+  STRIPE_SESSION_EXPIRE_SECONDS,
+  holdExpiresAtUnix,
+} from "@/lib/registration-hold"
+import {
   TEAM_ADDON_CENTS,
   registrationTotalCents,
 } from "@/lib/team-addons"
@@ -26,7 +31,13 @@ export async function createEventCheckoutSession(opts: {
   mulligans?: boolean
   skins?: boolean
   coverCardFees?: boolean
-}): Promise<{ url: string; sessionId: string; totalCents: number } | null> {
+}): Promise<{
+  url: string
+  sessionId: string
+  totalCents: number
+  holdExpiresAt: number
+  holdMinutes: number
+} | null> {
   const totals = registrationTotalCents(opts)
   if (!stripeConfigured() || totals.totalCents <= 0) return null
 
@@ -113,22 +124,26 @@ export async function createEventCheckoutSession(opts: {
     },
     success_url: `${base}/events/${opts.eventSlug}/register?paid=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${base}/events/${opts.eventSlug}/register?canceled=1&session_id={CHECKOUT_SESSION_ID}`,
-    expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes
+    // Stripe minimum is 30m; we expire the session ourselves at CHECKOUT_HOLD_MINUTES.
+    expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_EXPIRE_SECONDS,
   })
 
   if (!session.url) return null
 
+  const holdUntil = holdExpiresAtUnix()
   await sql.execute(
     `UPDATE registrations
-     SET stripe_checkout_session_id = ?
+     SET stripe_checkout_session_id = ?, hold_expires_at = ?
      WHERE id = ?`,
-    [session.id, opts.registrationId],
+    [session.id, holdUntil, opts.registrationId],
   )
 
   return {
     url: session.url,
     sessionId: session.id,
     totalCents: totals.totalCents,
+    holdExpiresAt: holdUntil,
+    holdMinutes: CHECKOUT_HOLD_MINUTES,
   }
 }
 
@@ -203,16 +218,31 @@ export async function confirmRegistrationFromCheckout(
 
   await sql.execute(
     `UPDATE registrations
-     SET paid = 1, status = 'confirmed', stripe_checkout_session_id = ?
-     WHERE id = ? AND (status = 'pending' OR paid = 0)`,
-    [session.id, registrationId],
+     SET paid = 1, status = 'confirmed', stripe_checkout_session_id = ?, hold_expires_at = NULL
+     WHERE (id = ? OR stripe_checkout_session_id = ?)
+       AND (status = 'pending' OR paid = 0)`,
+    [session.id, registrationId, session.id],
   )
+
+  const still = await sql`
+    SELECT id FROM registrations
+    WHERE id = ${registrationId} OR stripe_checkout_session_id = ${session.id}
+    LIMIT 1
+  `
+  if (!still[0]) {
+    console.error(
+      "[stripe] payment received but registration hold was already released",
+      session.id,
+      registrationId,
+    )
+    return
+  }
 
   await audit(
     "stripe",
     "confirm_registration",
     "registration",
-    String(registrationId),
+    String(still[0].id ?? registrationId),
     session.id,
   )
 

@@ -1,4 +1,5 @@
 import { sql, type SqlRow } from "@/lib/db"
+import { releaseExpiredHolds } from "@/lib/registration-hold"
 
 export type EventRow = {
   id: number
@@ -137,6 +138,7 @@ export function isRegistrationAvailable(event: EventRow): boolean {
 }
 
 export async function listPublishedEvents(): Promise<EventRow[]> {
+  await releaseExpiredHolds().catch(() => undefined)
   const rows = await sql`
     SELECT e.*,
       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
@@ -151,6 +153,7 @@ export async function listPublishedEvents(): Promise<EventRow[]> {
 
 /** Soonest published event that hasn’t started yet (header countdown). */
 export async function getNextUpcomingEvent(): Promise<EventRow | null> {
+  await releaseExpiredHolds().catch(() => undefined)
   const rows = await sql`
     SELECT e.*,
       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
@@ -165,6 +168,7 @@ export async function getNextUpcomingEvent(): Promise<EventRow | null> {
 }
 
 export async function listAllEvents(): Promise<EventRow[]> {
+  await releaseExpiredHolds().catch(() => undefined)
   const rows = await sql`
     SELECT e.*,
       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
@@ -177,6 +181,7 @@ export async function listAllEvents(): Promise<EventRow[]> {
 }
 
 export async function getEventBySlug(slug: string): Promise<EventRow | null> {
+  await releaseExpiredHolds().catch(() => undefined)
   const rows = await sql`
     SELECT e.*,
       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
@@ -190,6 +195,7 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 }
 
 export async function getEventById(id: number): Promise<EventRow | null> {
+  await releaseExpiredHolds(id).catch(() => undefined)
   const rows = await sql`
     SELECT e.*,
       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
