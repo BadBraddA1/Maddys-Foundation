@@ -19,7 +19,10 @@ export default async function EditEventPage({ params }: Props) {
 
   return (
     <div>
-      <Link href="/admin" className="text-sm text-muted hover:text-ink">
+      <Link
+        href="/admin"
+        className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+      >
         ← Events
       </Link>
       <h1 className="mt-4 font-display text-3xl">Edit event</h1>

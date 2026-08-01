@@ -171,7 +171,7 @@ a {
   font-weight: 500;
 }
 
-/* Squared field control — matches CTA geometry */
+/* Squared field control — matches CTA geometry; 16px text avoids iOS focus zoom */
 .field-control {
   margin-top: 0.375rem;
   width: 100%;
@@ -180,6 +180,8 @@ a {
   background: var(--surface);
   color: var(--ink);
   padding: 0.625rem 0.75rem;
+  font-size: 1rem;
+  line-height: var(--leading-body);
   outline: none;
 }
 
@@ -346,6 +348,23 @@ a {
 
 .motion-press {
   transition: transform 0.2s var(--ease-out-quart), background-color 0.2s, filter 0.2s;
+}
+
+/* Coarse pointers (phones/tablets): a bit more padding without changing layout */
+@media (pointer: coarse) {
+  .motion-press {
+    padding-inline: 1.35rem;
+    padding-block: 0.75rem;
+  }
+}
+
+/* Short landscape phones: don’t trap copy under a full-svh hero shell */
+@media (max-height: 40rem) and (orientation: landscape) {
+  .hero-stage {
+    min-height: auto;
+    padding-top: 5.5rem;
+    padding-bottom: 2rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

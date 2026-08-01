@@ -40,7 +40,7 @@ export default async function HomePage() {
           aria-hidden="true"
         />
         <SiteHeader />
-        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
+        <div className="hero-stage relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
           <h1
             className="hero-enter max-w-3xl font-display text-on-deep"
             data-enter="0"

@@ -74,7 +74,7 @@ export default async function EventsPage() {
                         </p>
                       ) : null}
                     </div>
-                      <Link
+                    <Link
                       href={
                         open
                           ? `/events/${event.slug}/register`
@@ -99,7 +99,7 @@ export default async function EventsPage() {
                 <li key={event.id} className="min-w-0">
                   <Link
                     href={`/events/${event.slug}`}
-                    className="break-words hover:text-ink"
+                    className="inline-flex min-h-11 max-w-full items-center break-words py-1 hover:text-ink"
                   >
                     {event.title} — {formatEventDate(event.starts_at)}
                   </Link>

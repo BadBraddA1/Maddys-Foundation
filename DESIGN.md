@@ -44,6 +44,11 @@ CTAs & fields: squared (`.field-control`); no pills.
 - Full-bleed hero with Maddy photo as the dominant plane
 - Phone-first chrome: short wordmark + disclosure nav under `md`; ≥44px targets; safe-area insets
 - Hero header sits on a deep top scrim so nav contrast does not depend on the photo
+- Short landscape: `.hero-stage` drops full-svh so copy isn’t trapped
+- Story: photo leads on small screens (`order-first`), copy first from `lg`
+- Admin rosters: card list under `md`, table from `md` up
+- Form fields: `1rem` text to avoid iOS input zoom
+- Coarse pointers: slightly roomier `.motion-press` padding
 - Skip link → `#main` on every shell (`SkipLink` in headers)
 - Content width ~68ch for story prose
 - Events as quiet list rows, not card grids; primary CTAs full-width on small screens

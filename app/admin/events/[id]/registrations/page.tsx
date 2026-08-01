@@ -20,10 +20,13 @@ export default async function RegistrationsPage({ params }: Props) {
 
   return (
     <div>
-      <Link href="/admin" className="text-sm text-muted hover:text-ink">
+      <Link
+        href="/admin"
+        className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+      >
         ← Events
       </Link>
-      <h1 className="mt-4 font-display text-3xl">{event.title}</h1>
+      <h1 className="mt-4 break-words font-display text-3xl">{event.title}</h1>
       <p className="mt-1 text-sm text-muted">
         {rows.length} registration{rows.length === 1 ? "" : "s"}
       </p>
@@ -31,32 +34,73 @@ export default async function RegistrationsPage({ params }: Props) {
       {rows.length === 0 ? (
         <p className="mt-10 text-muted">No registrations yet.</p>
       ) : (
-        <div className="mt-8 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm tabular-nums">
-            <thead className="border-b border-line text-muted">
-              <tr>
-                <th className="py-2 pr-4 font-medium">Name</th>
-                <th className="py-2 pr-4 font-medium">Email</th>
-                <th className="py-2 pr-4 font-medium">Phone</th>
-                <th className="py-2 pr-4 font-medium">Guests</th>
-                <th className="py-2 pr-4 font-medium">Paid</th>
-                <th className="py-2 font-medium">Notes</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="py-3 pr-4 font-medium text-ink">{row.name}</td>
-                  <td className="py-3 pr-4">{row.email}</td>
-                  <td className="py-3 pr-4">{row.phone || "—"}</td>
-                  <td className="py-3 pr-4">{row.guests}</td>
-                  <td className="py-3 pr-4">{row.paid ? "Yes" : "No"}</td>
-                  <td className="py-3 max-w-xs truncate">{row.notes || "—"}</td>
+        <>
+          {/* Phone: stacked records — table is awkward under ~640px */}
+          <ul className="mt-8 space-y-4 md:hidden">
+            {rows.map((row) => (
+              <li
+                key={row.id}
+                className="border border-line bg-surface px-4 py-4"
+              >
+                <p className="break-words font-medium text-ink">{row.name}</p>
+                <a
+                  href={`mailto:${row.email}`}
+                  className="mt-1 inline-flex min-h-11 max-w-full items-center break-all text-sm text-accent-ink underline underline-offset-4"
+                >
+                  {row.email}
+                </a>
+                {row.phone ? (
+                  <a
+                    href={`tel:${row.phone}`}
+                    className="mt-1 flex min-h-11 items-center text-sm text-muted underline underline-offset-4"
+                  >
+                    {row.phone}
+                  </a>
+                ) : null}
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-muted">Guests</dt>
+                    <dd className="font-medium tabular-nums text-ink">{row.guests}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted">Paid</dt>
+                    <dd className="font-medium text-ink">{row.paid ? "Yes" : "No"}</dd>
+                  </div>
+                </dl>
+                {row.notes ? (
+                  <p className="mt-3 text-sm text-muted text-pretty">{row.notes}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-8 hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[640px] text-left text-sm tabular-nums">
+              <thead className="border-b border-line text-muted">
+                <tr>
+                  <th className="py-2 pr-4 font-medium">Name</th>
+                  <th className="py-2 pr-4 font-medium">Email</th>
+                  <th className="py-2 pr-4 font-medium">Phone</th>
+                  <th className="py-2 pr-4 font-medium">Guests</th>
+                  <th className="py-2 pr-4 font-medium">Paid</th>
+                  <th className="py-2 font-medium">Notes</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <td className="py-3 pr-4 font-medium text-ink">{row.name}</td>
+                    <td className="py-3 pr-4">{row.email}</td>
+                    <td className="py-3 pr-4">{row.phone || "—"}</td>
+                    <td className="py-3 pr-4">{row.guests}</td>
+                    <td className="py-3 pr-4">{row.paid ? "Yes" : "No"}</td>
+                    <td className="max-w-xs truncate py-3">{row.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )

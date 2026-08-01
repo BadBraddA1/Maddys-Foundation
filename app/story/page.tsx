@@ -16,7 +16,7 @@ export default function StoryPage() {
       <SiteHeaderSolid />
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
+          <div className="min-w-0">
             <h1 className="font-display">
               Maddy&apos;s light
             </h1>
@@ -55,7 +55,7 @@ export default function StoryPage() {
               </Link>
             </div>
           </div>
-          <div className="relative aspect-[4/5] overflow-hidden bg-deep">
+          <div className="relative order-first aspect-[4/5] overflow-hidden bg-deep lg:order-none">
             <Image
               src="/brand/maddy-960.webp"
               alt="Madalyn Robinson smiling outdoors"
