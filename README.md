@@ -47,7 +47,7 @@ turso db shell maddys-foundation < scripts/schema-turso.sql
 3. In Clerk Dashboard → Users → your user → Metadata → Public: `{ "role": "admin" }`.
 4. Sign in at `/sign-in`, then open `/admin`.
 
-Without Clerk keys the public site still runs; `/admin` shows setup instructions.
+Without Clerk keys the public site still runs; use the staff password on `/admin`.
 
 ### Staff password (temporary)
 
