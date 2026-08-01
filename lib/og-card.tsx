@@ -18,8 +18,14 @@ const ACCENT_INK = "#3d2e12"
 /**
  * Strength of the green tent — matched to the old cool-gray fog on the
  * screenshot OG (even wash over the whole photo, text sits on top).
+ * Satori often ignores div opacity, so the tent is an SVG <img> layer.
  */
-const TENT_OPACITY = 0.5
+const TENT_OPACITY = 0.55
+
+function greenTentDataUrl() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="${DEEP}" fill-opacity="${TENT_OPACITY}"/></svg>`
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`
+}
 
 async function localBrand(file: "maddy.jpg" | "logo.jpg") {
   const buf = await readFile(join(process.cwd(), "public/brand", file))
@@ -60,21 +66,40 @@ function PhotoGreenTentCard(props: {
         height={630}
         style={{
           position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
+          top: 0,
+          left: 0,
+          width: 1200,
+          height: 630,
           objectFit: "cover",
           objectPosition: "center top",
         }}
       />
 
-      {/* 2) Even green tent — above photo, below text (like the old gray fog) */}
+      {/* 2) Even green tent — above photo, below text.
+          Satori often drops `opacity` on divs; use rgba + display:flex AND an SVG img. */}
       <div
         style={{
           position: "absolute",
-          inset: 0,
-          backgroundColor: DEEP,
-          opacity: TENT_OPACITY,
+          top: 0,
+          left: 0,
+          width: 1200,
+          height: 630,
+          display: "flex",
+          backgroundColor: `rgba(28, 61, 50, ${TENT_OPACITY})`,
+        }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={greenTentDataUrl()}
+        alt=""
+        width={1200}
+        height={630}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: 1200,
+          height: 630,
         }}
       />
 
@@ -85,8 +110,8 @@ function PhotoGreenTentCard(props: {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          width: "100%",
-          height: "100%",
+          width: 1200,
+          height: 630,
           padding: "64px 72px",
           color: ON_DEEP,
         }}
