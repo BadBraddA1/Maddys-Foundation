@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { BrandMark, PrimaryNav } from "@/components/site-nav"
 
 export type HeroHeaderMotion = "rise" | "morph" | "glass"
@@ -10,25 +11,29 @@ type Props = {
 }
 
 /**
- * Home hero chrome: overlay animates in over the photo; after the hero
- * leaves the viewport a solid sticky bar appears.
+ * Home hero chrome: overlay scrolls away with the photo; after the hero
+ * leaves the viewport a glass sticky bar portals to the document (so
+ * `contain` on the hero can’t trap `position: fixed` over the image).
  */
 export function HeroHeaderChrome({ motion }: Props) {
   const [ready, setReady] = useState(false)
   const [pastHero, setPastHero] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const enter = window.requestAnimationFrame(() => setReady(true))
     const hero = document.querySelector("[data-home-hero]")
     if (!hero) {
       return () => window.cancelAnimationFrame(enter)
     }
 
+    // Fire once the hero’s bottom edge has cleared the top of the viewport.
     const io = new IntersectionObserver(
       ([entry]) => {
-        setPastHero(!entry.isIntersecting)
+        setPastHero(entry.boundingClientRect.bottom <= 0)
       },
-      { threshold: 0, rootMargin: "0px" },
+      { threshold: [0, 1] },
     )
     io.observe(hero)
 
@@ -37,6 +42,23 @@ export function HeroHeaderChrome({ motion }: Props) {
       io.disconnect()
     }
   }, [])
+
+  const sticky = (
+    <div
+      className="hero-header-sticky fixed inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]"
+      data-past={pastHero ? "true" : "false"}
+      aria-hidden={!pastHero}
+      // Keep it out of the tree for hit-testing while over the photo
+      inert={!pastHero ? true : undefined}
+    >
+      <div className="hero-header-sticky-inner border-b border-line bg-surface">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8">
+          <BrandMark tone="dark" />
+          <PrimaryNav tone="dark" />
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div
@@ -54,17 +76,7 @@ export function HeroHeaderChrome({ motion }: Props) {
         </div>
       </div>
 
-      <div
-        className="hero-header-sticky fixed inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]"
-        aria-hidden={!pastHero}
-      >
-        <div className="hero-header-sticky-inner border-b border-line bg-surface">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8">
-            <BrandMark tone="dark" />
-            <PrimaryNav tone="dark" />
-          </div>
-        </div>
-      </div>
+      {mounted ? createPortal(sticky, document.body) : null}
     </div>
   )
 }

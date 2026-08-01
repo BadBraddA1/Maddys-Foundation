@@ -315,7 +315,8 @@ a {
   color: color-mix(in oklab, var(--accent-ink) 50%, var(--ink));
 }
 
-/* Home hero header — glass clip-reveal (baked: motion 0.6, glass 0.72) */
+/* Home hero header — glass clip-reveal (baked: motion 0.6, glass 0.72)
+   Sticky bar is portaled to body; show/hide via [data-past] on itself. */
 .hero-header-chrome--glass .hero-header-overlay {
   clip-path: inset(0 0 100% 0);
   transition: clip-path 0.69s var(--ease-out-quart), opacity 0.35s var(--ease-out-quart);
@@ -330,29 +331,26 @@ a {
   pointer-events: none;
 }
 
-.hero-header-chrome--glass .hero-header-sticky {
+.hero-header-sticky {
   pointer-events: none;
+  visibility: hidden;
 }
 
-.hero-header-chrome--glass[data-past="true"] .hero-header-sticky {
+.hero-header-sticky[data-past="true"] {
   pointer-events: auto;
+  visibility: visible;
 }
 
-.hero-header-chrome--glass .hero-header-sticky-inner {
+.hero-header-sticky .hero-header-sticky-inner {
   background: color-mix(in oklab, var(--surface) 72%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  transform: scaleY(0.92);
-  transform-origin: top;
-  opacity: 0.001;
-  transition:
-    opacity 0.35s var(--ease-out-quart),
-    transform 0.58s var(--ease-out-quart);
+  transform: translateY(-110%);
+  transition: transform 0.45s var(--ease-out-quart);
 }
 
-.hero-header-chrome--glass[data-past="true"] .hero-header-sticky-inner {
-  opacity: 1;
-  transform: scaleY(1);
+.hero-header-sticky[data-past="true"] .hero-header-sticky-inner {
+  transform: translateY(0);
 }
 
 /* Press feedback — fine pointer only so touch doesn’t feel sticky */
@@ -378,7 +376,7 @@ a {
   .success-enter,
   .site-header-solid .countdown-enter,
   .hero-header-chrome--glass .hero-header-overlay,
-  .hero-header-chrome--glass .hero-header-sticky-inner {
+  .hero-header-sticky .hero-header-sticky-inner {
     animation: none !important;
     filter: none !important;
     transform: none !important;
@@ -386,12 +384,12 @@ a {
     transition: none !important;
   }
 
-  .hero-header-chrome--glass .hero-header-sticky-inner {
-    opacity: 0.001;
+  .hero-header-sticky:not([data-past="true"]) .hero-header-sticky-inner {
+    transform: translateY(-110%);
   }
 
-  .hero-header-chrome--glass[data-past="true"] .hero-header-sticky-inner {
-    opacity: 1;
+  .hero-header-sticky[data-past="true"] .hero-header-sticky-inner {
+    transform: translateY(0);
   }
 
   .motion-press:hover,
