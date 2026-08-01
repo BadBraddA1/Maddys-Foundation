@@ -7,7 +7,7 @@ export const siteTitle =
 export const siteDescription =
   "Spreading joy and light in honor of Madalyn Robinson — events, community, and hope."
 export const ogImageAlt =
-  "Madalyn Robinson Foundation — joy that still moves mountains"
+  "Madalyn Robinson Foundation — events, scholarships, and hope"
 
 function resolveSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "").trim()
@@ -26,9 +26,9 @@ function resolveSiteUrl(): string {
 
 export const siteUrl = resolveSiteUrl()
 
-/** Absolute OG / Twitter image paths (file lives at app/opengraph-image.jpg). */
-export const ogImagePath = "/opengraph-image.jpg"
-export const twitterImagePath = "/twitter-image.jpg"
+/** Absolute OG / Twitter image paths (app/opengraph-image.tsx). */
+export const ogImagePath = "/opengraph-image"
+export const twitterImagePath = "/twitter-image"
 
 /** Venmo profile — override with NEXT_PUBLIC_DONATE_URL if needed. */
 export const donateUrl =
