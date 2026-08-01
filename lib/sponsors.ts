@@ -8,6 +8,11 @@ export type Sponsor = {
   logo_url: string
   logo_key: string
   website_url: string
+  /** Staff-only — not shown on the public site. */
+  contact_name: string
+  contact_email: string
+  contact_phone: string
+  contact_notes: string
   sort_order: number
   is_published: number
   created_at: string
@@ -21,6 +26,10 @@ function mapSponsor(row: Record<string, unknown>): Sponsor {
     logo_url: String(row.logo_url ?? ""),
     logo_key: String(row.logo_key ?? ""),
     website_url: String(row.website_url ?? ""),
+    contact_name: String(row.contact_name ?? ""),
+    contact_email: String(row.contact_email ?? ""),
+    contact_phone: String(row.contact_phone ?? ""),
+    contact_notes: String(row.contact_notes ?? ""),
     sort_order: Number(row.sort_order ?? 0),
     is_published: Number(row.is_published ?? 0),
     created_at: String(row.created_at ?? ""),
@@ -28,9 +37,35 @@ function mapSponsor(row: Record<string, unknown>): Sponsor {
   }
 }
 
+/** Public footer payload — never includes contact fields. */
+export type PublicSponsor = Pick<
+  Sponsor,
+  "id" | "name" | "logo_url" | "website_url" | "sort_order"
+>
+
+function mapPublicSponsor(row: Record<string, unknown>): PublicSponsor {
+  return {
+    id: Number(row.id),
+    name: String(row.name ?? ""),
+    logo_url: String(row.logo_url ?? ""),
+    website_url: String(row.website_url ?? ""),
+    sort_order: Number(row.sort_order ?? 0),
+  }
+}
+
 export function revalidateSponsors() {
   revalidatePath("/", "layout")
   revalidatePath("/admin/sponsors")
+}
+
+export async function listPublishedSponsorsPublic(): Promise<PublicSponsor[]> {
+  const rows = await sql`
+    SELECT id, name, logo_url, website_url, sort_order
+    FROM sponsors
+    WHERE is_published = 1
+    ORDER BY sort_order ASC, id ASC
+  `
+  return rows.map(mapPublicSponsor)
 }
 
 export async function listSponsors(opts?: {
@@ -54,9 +89,17 @@ export async function getSponsor(id: number): Promise<Sponsor | null> {
   return rows[0] ? mapSponsor(rows[0]) : null
 }
 
+function normalizeEmail(raw: string): string {
+  return raw.trim().toLowerCase().slice(0, 200)
+}
+
 export async function createSponsor(opts: {
   name: string
   websiteUrl?: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
+  contactNotes?: string
   file: File
 }): Promise<Sponsor> {
   const name = opts.name.trim().slice(0, 120)
@@ -72,13 +115,20 @@ export async function createSponsor(opts: {
   const sortOrder = Number(maxRows[0]?.m ?? 0) + 1
 
   const result = await sql.execute(
-    `INSERT INTO sponsors (name, logo_url, logo_key, website_url, sort_order, is_published)
-     VALUES (?, ?, ?, ?, ?, 1)`,
+    `INSERT INTO sponsors
+      (name, logo_url, logo_key, website_url,
+       contact_name, contact_email, contact_phone, contact_notes,
+       sort_order, is_published)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
     [
       name,
       uploaded.url,
       uploaded.key,
       (opts.websiteUrl ?? "").trim().slice(0, 500),
+      (opts.contactName ?? "").trim().slice(0, 120),
+      normalizeEmail(opts.contactEmail ?? ""),
+      (opts.contactPhone ?? "").trim().slice(0, 40),
+      (opts.contactNotes ?? "").trim().slice(0, 1000),
       sortOrder,
     ],
   )
@@ -94,6 +144,10 @@ export async function updateSponsor(
   opts: {
     name?: string
     websiteUrl?: string
+    contactName?: string
+    contactEmail?: string
+    contactPhone?: string
+    contactNotes?: string
     isPublished?: boolean
     sortOrder?: number
     file?: File | null
@@ -119,7 +173,9 @@ export async function updateSponsor(
 
   await sql.execute(
     `UPDATE sponsors
-     SET name = ?, website_url = ?, is_published = ?, sort_order = ?,
+     SET name = ?, website_url = ?,
+         contact_name = ?, contact_email = ?, contact_phone = ?, contact_notes = ?,
+         is_published = ?, sort_order = ?,
          logo_url = ?, logo_key = ?, updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
     [
@@ -127,6 +183,18 @@ export async function updateSponsor(
       opts.websiteUrl !== undefined
         ? opts.websiteUrl.trim().slice(0, 500)
         : current.website_url,
+      opts.contactName !== undefined
+        ? opts.contactName.trim().slice(0, 120)
+        : current.contact_name,
+      opts.contactEmail !== undefined
+        ? normalizeEmail(opts.contactEmail)
+        : current.contact_email,
+      opts.contactPhone !== undefined
+        ? opts.contactPhone.trim().slice(0, 40)
+        : current.contact_phone,
+      opts.contactNotes !== undefined
+        ? opts.contactNotes.trim().slice(0, 1000)
+        : current.contact_notes,
       opts.isPublished !== undefined
         ? opts.isPublished
           ? 1

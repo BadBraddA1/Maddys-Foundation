@@ -25,8 +25,8 @@ export default async function AdminSponsorsPage() {
         </Link>
         <h1 className="mt-4 font-display text-3xl">Sponsors</h1>
         <p className="mt-1 text-sm text-muted">
-          Logos scroll above the site footer. Upload a logo and name for each
-          sponsor.
+          Logos scroll above the site footer. Collect a point of contact and
+          email for later outreach — contacts stay staff-only.
         </p>
       </div>
       <SponsorsAdmin initialSponsors={sponsors} r2Ready={r2Configured()} />

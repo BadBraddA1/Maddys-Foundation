@@ -1,8 +1,8 @@
-import type { Sponsor } from "@/lib/sponsors"
+import type { PublicSponsor } from "@/lib/sponsors"
 
-type Props = { sponsors: Sponsor[] }
+type Props = { sponsors: PublicSponsor[] }
 
-function SponsorMark({ sponsor }: { sponsor: Sponsor }) {
+function SponsorMark({ sponsor }: { sponsor: PublicSponsor }) {
   const inner = (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}

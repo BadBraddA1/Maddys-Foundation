@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { SponsorMarquee } from "@/components/sponsor-marquee"
 import { contactEmail, siteName, siteUrl } from "@/lib/site-metadata"
-import { listSponsors } from "@/lib/sponsors"
+import { listPublishedSponsorsPublic } from "@/lib/sponsors"
 
 const exploreLinks = [
   { href: "/story", label: "Her Story" },
@@ -15,7 +15,7 @@ const utilityLinks = [{ href: "/privacy", label: "Privacy" }]
 /** Site footer — playbook 05 / LECYC-style columns + BraddCorp credit. */
 export async function SiteFooter() {
   const host = new URL(siteUrl).host
-  const sponsors = await listSponsors({ publishedOnly: true }).catch(() => [])
+  const sponsors = await listPublishedSponsorsPublic().catch(() => [])
 
   return (
     <footer className="mt-auto border-t border-line bg-deep text-on-deep pb-[env(safe-area-inset-bottom)]">

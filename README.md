@@ -141,7 +141,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, **31 team capacity**, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 - Stripe: Checkout on paid registration + webhook confirms roster; **10-minute hold** then unpaid drafts are released (Stripe session expired + row deleted) and never shown in admin
 - Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
-- Sponsors: `/admin/sponsors` uploads logos to R2; published logos scroll in the footer
+- Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
 - Gallery: `/admin/gallery` uploads photos to R2 (optional **event tag**); public `/gallery` filters by event (`?event=slug`)
 - Site palette: fairway green hero/footer + soft gold accent (warm off-white page)
 

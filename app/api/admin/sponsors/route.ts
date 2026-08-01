@@ -36,6 +36,10 @@ export async function POST(req: Request) {
   const form = await req.formData()
   const name = String(form.get("name") ?? "")
   const websiteUrl = String(form.get("websiteUrl") ?? "")
+  const contactName = String(form.get("contactName") ?? "")
+  const contactEmail = String(form.get("contactEmail") ?? "")
+  const contactPhone = String(form.get("contactPhone") ?? "")
+  const contactNotes = String(form.get("contactNotes") ?? "")
   const file = form.get("logo")
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Logo file is required." }, { status: 400 })
@@ -51,7 +55,15 @@ export async function POST(req: Request) {
   }
 
   try {
-    const sponsor = await createSponsor({ name, websiteUrl, file })
+    const sponsor = await createSponsor({
+      name,
+      websiteUrl,
+      contactName,
+      contactEmail,
+      contactPhone,
+      contactNotes,
+      file,
+    })
     return NextResponse.json({ sponsor }, { status: 201 })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not save sponsor."
@@ -95,12 +107,22 @@ export async function PATCH(req: Request) {
       websiteUrl: form.has("websiteUrl")
         ? String(form.get("websiteUrl"))
         : undefined,
+      contactName: form.has("contactName")
+        ? String(form.get("contactName"))
+        : undefined,
+      contactEmail: form.has("contactEmail")
+        ? String(form.get("contactEmail"))
+        : undefined,
+      contactPhone: form.has("contactPhone")
+        ? String(form.get("contactPhone"))
+        : undefined,
+      contactNotes: form.has("contactNotes")
+        ? String(form.get("contactNotes"))
+        : undefined,
       isPublished:
         publishedRaw == null ? undefined : String(publishedRaw) === "1",
       sortOrder:
-        sortRaw == null || sortRaw === ""
-          ? undefined
-          : Number(sortRaw),
+        sortRaw == null || sortRaw === "" ? undefined : Number(sortRaw),
       file: logo,
     })
     return NextResponse.json({ sponsor })
