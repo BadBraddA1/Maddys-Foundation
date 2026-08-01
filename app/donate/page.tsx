@@ -15,13 +15,13 @@ export default function DonatePage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8 md:py-24">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+        <p className="label-caps text-muted">
           Give
         </p>
-        <h1 className="mt-3 font-display text-4xl md:text-5xl">
+        <h1 className="mt-3 font-display">
           Every gift matters
         </h1>
-        <p className="mt-6 text-lg leading-relaxed text-muted">
+        <p className="prose-measure mt-6 text-lg leading-relaxed text-muted">
           We are so grateful for generous hearts. Your support helps us host
           gatherings, walk with families, and keep Maddy&apos;s joy moving in the
           world. Tax-deductible details will be listed here once the foundation

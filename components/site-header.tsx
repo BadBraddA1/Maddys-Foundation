@@ -34,7 +34,7 @@ function BrandMark({
         <span className="sm:hidden">Maddy&apos;s</span>
         <span className="hidden sm:inline">Madalyn Robinson</span>
         <span
-          className={`mt-0.5 block font-sans text-[0.65rem] font-medium uppercase tracking-[0.16em] sm:text-xs ${sub}`}
+          className={`mt-0.5 block label-caps ${sub}`}
         >
           Foundation
         </span>

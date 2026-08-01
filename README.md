@@ -75,6 +75,7 @@ When the domain is purchased:
 - Logo: `public/brand/logo.jpg` (also favicon / apple-touch)
 - Maddy photo: `public/brand/maddy.jpg` (hero + story)
 - Design notes: `DESIGN.md` · product brief: `PRODUCT.md`
+- Type: Literata (display) + Source Sans 3 (body) — major-third scale
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
 
 ## Useful paths

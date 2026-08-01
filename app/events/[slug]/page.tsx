@@ -53,7 +53,7 @@ export default async function EventDetailPage({ params }: Props) {
         >
           ← All events
         </Link>
-        <h1 className="mt-6 font-display text-4xl md:text-5xl">{event.title}</h1>
+        <h1 className="mt-6 font-display">{event.title}</h1>
         <p className="mt-4 text-lg font-medium text-muted">
           {formatEventDate(event.starts_at)}
           {event.ends_at ? ` – ${formatEventDate(event.ends_at)}` : ""}

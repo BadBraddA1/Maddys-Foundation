@@ -36,19 +36,19 @@ export default async function HomePage() {
         <SiteHeader />
         <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
           <p
-            className="hero-enter text-xs font-medium uppercase tracking-[0.22em] text-accent"
+            className="hero-enter label-caps text-accent"
             data-enter="0"
           >
             Madalyn Robinson Foundation
           </p>
           <h1
-            className="hero-enter mt-4 max-w-3xl font-display text-[clamp(2.1rem,8vw,4.5rem)] leading-[1.08] text-white"
+            className="hero-enter mt-4 max-w-3xl font-display text-white"
             data-enter="1"
           >
             Joy that still moves mountains
           </h1>
           <p
-            className="hero-enter mt-5 max-w-xl text-base text-white sm:text-lg"
+            className="hero-enter on-dark mt-5 max-w-xl text-base text-white sm:text-lg"
             data-enter="2"
           >
             We gather people, host events, and keep spreading the light Maddy
@@ -76,9 +76,9 @@ export default async function HomePage() {
 
       <main id="main">
       <section className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
-        <div className="max-w-2xl">
-          <h2 className="font-display text-3xl md:text-4xl">Our purpose</h2>
-          <p className="mt-4 text-base text-muted sm:text-lg">
+        <div className="prose-measure max-w-2xl">
+          <h2 className="font-display">Our purpose</h2>
+          <p className="mt-4 text-muted text-lg">
             Continue to spread joy and light to others in their darkest moments —
             the same heart Maddy showed while fighting her own battles.
           </p>
@@ -87,7 +87,7 @@ export default async function HomePage() {
           <blockquote className="border-t border-line pt-6 font-display text-2xl leading-snug text-ink md:text-3xl">
             And we know that in all things God works for the good of those who
             love Him…
-            <cite className="mt-4 block font-sans text-sm font-medium not-italic tracking-wide text-muted">
+            <cite className="mt-4 block font-sans text-sm font-medium not-italic text-muted">
               Romans 8:28
             </cite>
           </blockquote>
@@ -111,7 +111,7 @@ export default async function HomePage() {
       <section className="border-y border-line bg-surface">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
           <div className="flex items-end justify-between gap-4">
-            <h2 className="font-display text-3xl md:text-4xl">Events</h2>
+            <h2 className="font-display">Events</h2>
             <Link
               href="/events"
               className="inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-muted hover:text-ink"

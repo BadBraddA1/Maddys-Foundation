@@ -44,7 +44,7 @@ export default async function RegisterPage({ params }: Props) {
         >
           ← {event.title}
         </Link>
-        <h1 className="mt-6 font-display text-4xl">Register</h1>
+        <h1 className="mt-6 font-display">Register</h1>
         <p className="mt-2 text-muted">{formatEventDate(event.starts_at)}</p>
 
         {!open ? (

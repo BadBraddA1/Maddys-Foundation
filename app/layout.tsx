@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Analytics } from "@vercel/analytics/next"
-import { DM_Sans, Fraunces } from "next/font/google"
+import { Literata, Source_Sans_3 } from "next/font/google"
 import { clerkConfigured } from "@/lib/auth"
 import {
   siteDescription,
@@ -18,14 +18,18 @@ export const viewport: Viewport = {
   themeColor: "#1c2a3c",
 }
 
-const dmSans = DM_Sans({
+/* Display: Literata — literary warmth for memorial voice; not Fraunces soft-AI default.
+   Body: Source Sans 3 — humanist clarity for forms/nav; steadfast, not geometric DM Sans. */
+const literata = Literata({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-literata",
+  display: "swap",
 })
 
-const fraunces = Fraunces({
+const sourceSans = Source_Sans_3({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-source-sans",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -63,10 +67,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${dmSans.variable} ${fraunces.variable} min-h-screen bg-bg font-sans text-ink antialiased`}
-      >
+    <html lang="en" className={`${literata.variable} ${sourceSans.variable}`}>
+      <body className="min-h-screen bg-bg font-sans text-ink antialiased">
         <Providers>
           {children}
           <Analytics />

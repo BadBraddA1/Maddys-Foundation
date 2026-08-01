@@ -32,7 +32,7 @@ export default async function RegistrationsPage({ params }: Props) {
         <p className="mt-10 text-muted">No registrations yet.</p>
       ) : (
         <div className="mt-8 overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[640px] text-left text-sm tabular-nums">
             <thead className="border-b border-line text-muted">
               <tr>
                 <th className="py-2 pr-4 font-medium">Name</th>

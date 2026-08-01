@@ -17,13 +17,13 @@ export default function StoryPage() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+            <p className="label-caps text-muted">
               Her story
             </p>
-            <h1 className="mt-3 font-display text-4xl md:text-5xl">
+            <h1 className="mt-3 font-display">
               Maddy&apos;s light
             </h1>
-            <div className="mt-8 space-y-5 text-lg leading-relaxed text-muted">
+            <div className="prose-measure mt-8 space-y-5 text-lg leading-relaxed text-muted">
               <p>
                 Maddy was the most incredible light to this world and everyone
                 she met. While the circumstances of her life were incredibly
@@ -71,8 +71,8 @@ export default function StoryPage() {
         </div>
 
         <section className="mt-24 max-w-3xl border-t border-line pt-12">
-          <h2 className="font-display text-3xl">Our vision</h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted">
+          <h2 className="font-display">Our vision</h2>
+          <p className="prose-measure mt-4 text-lg leading-relaxed text-muted">
             Our single purpose is to continue spreading joy and light to others
             in their darkest moments. Maddy&apos;s heart was to help — and our
             mission is to keep carrying that help here on Earth: through events

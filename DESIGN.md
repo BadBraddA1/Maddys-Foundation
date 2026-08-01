@@ -19,10 +19,19 @@ Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink 
 
 ## Typography
 
-- **Display:** Fraunces (soft serif) — headlines, brand moments
-- **Body:** DM Sans — UI, forms, nav
-- Display clamp max ≤ 4.5rem; letter-spacing ≥ -0.03em
-- `text-wrap: balance` on headings
+Voice words: warm · hopeful · steadfast. Physical object: a lakeside memorial program — literary, clear, not magazine-editorial.
+
+| Role | Family | Notes |
+| --- | --- | --- |
+| Display | **Literata** | Headlines, brand moments — literary warmth; not Fraunces |
+| Body / UI | **Source Sans 3** | Nav, forms, prose — humanist clarity; not DM Sans |
+
+Scale: major third (1.25) via `--text-xs` … `--text-display`.  
+Display: `clamp` max ≤ 4.25rem; letter-spacing ≥ -0.025em on H1.  
+Body measure: `--measure` 65ch (`.prose-measure`).  
+On-dark: `.on-dark` bumps leading + tracking.  
+Labels: `.label-caps` at 0.08em tracking (not 0.2em+ shout).  
+`text-wrap: balance` on headings; `pretty` on paragraphs; `font-optical-sizing: auto`.
 
 ## Layout
 

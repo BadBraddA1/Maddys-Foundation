@@ -13,8 +13,8 @@ export default function PrivacyPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8">
-        <h1 className="font-display text-4xl">Privacy</h1>
-        <div className="mt-8 space-y-5 text-muted leading-relaxed">
+        <h1 className="font-display">Privacy</h1>
+        <div className="prose-measure mt-8 space-y-5 text-muted leading-relaxed">
           <p>
             When you register for an event on {siteUrl.replace(/^https?:\/\//, "")},
             we collect the information you submit (such as name, email, phone,
