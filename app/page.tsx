@@ -86,9 +86,9 @@ export default async function HomePage() {
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-display">Our purpose</h2>
             <p className="mx-auto mt-4 max-w-[40rem] text-pretty text-lg text-muted">
-              Continue to spread joy and light to others in their darkest
-              moments — the same heart Maddy showed while fighting her own
-              battles.
+              Scholarships for one graduating senior from Herculaneum and
+              DeSoto High Schools — and other community service the Board deems
+              appropriate.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-1">
               <Link

@@ -108,6 +108,7 @@ When the domain is purchased:
 - Distill: purpose keeps Give only; dropped duplicate hero preload tags; logo via CSS (no LCP competition)
 - Interior header (`SiteHeaderSolid`): brand + nav only (no countdown widget crowding the bar)
 - Event dates format in `America/Chicago`
+- Her Story: Maddy’s bio (Herculaneum High, sports, sister Lydia) + day-on-the-green invite; purpose = scholarships (Herculaneum & DeSoto)
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 

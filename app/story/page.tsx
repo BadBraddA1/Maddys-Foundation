@@ -7,7 +7,7 @@ import { SiteHeaderSolid } from "@/components/site-header"
 export const metadata: Metadata = {
   title: "Her Story",
   description:
-    "Madalyn Robinson was an incredible light — her story continues through this foundation.",
+    "Maddy was a spirited junior at Herculaneum High — her competitive spirit, love of sports, and creativity still gather people in her name.",
 }
 
 export default function StoryPage() {
@@ -22,22 +22,17 @@ export default function StoryPage() {
             </h1>
             <div className="prose-measure mt-8 space-y-5 text-lg leading-relaxed text-muted">
               <p>
-                Maddy was the most incredible light to this world and everyone
-                she met. While the circumstances of her life were incredibly
-                unfair, she moved mountains with her love, grace, and a spirit
-                so bright and fierce that nothing felt impossible.
+                Maddy was a spirited junior at Herculaneum High, known for her
+                competitive nature, love of sports, and vibrant creativity.
+                Whether running track, playing basketball, or dancing with her
+                sister Lydia, she brought joy and energy to everything she did.
+                Her fun-loving personality and zest for life left a lasting
+                impression on everyone who knew her.
               </p>
               <p>
-                Her purpose reached farther than we will ever fully know. She is
-                still touching and changing lives every day — through laughter
-                remembered, courage shared, and the people who gather in her
-                name.
-              </p>
-              <p>
-                This foundation exists to keep spreading that joy: to walk with
-                families in hard seasons, to host moments of community, and to
-                honor a heart that helped others even while she was fighting her
-                own battles.
+                Join us for a fun day on the green to support a meaningful
+                cause! All proceeds go to support the Madalyn Robinson
+                Foundation.
               </p>
             </div>
             <div className="mt-10 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
@@ -69,13 +64,11 @@ export default function StoryPage() {
         </div>
 
         <section className="mt-24 max-w-3xl border-t border-line pt-12">
-          <h2 className="font-display">Our vision</h2>
+          <h2 className="font-display">Our purpose</h2>
           <p className="prose-measure mt-4 text-lg leading-relaxed text-muted">
-            Our single purpose is to continue spreading joy and light to others
-            in their darkest moments. Maddy&apos;s heart was to help — and our
-            mission is to keep carrying that help here on Earth: through events
-            you can join, stories you can share, and generosity that reaches the
-            next family who needs it.
+            Dedicated to presenting scholarships to one (1) graduating senior
+            from Herculaneum and DeSoto High Schools, as well as other community
+            service opportunities the Board of Directors deem appropriate.
           </p>
         </section>
       </main>
