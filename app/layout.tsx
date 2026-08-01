@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Analytics } from "@vercel/analytics/next"
 import { DM_Sans, Fraunces } from "next/font/google"
@@ -10,6 +10,13 @@ import {
   siteUrl,
 } from "@/lib/site-metadata"
 import "./globals.css"
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1c2a3c",
+}
 
 const dmSans = DM_Sans({
   subsets: ["latin"],

@@ -166,7 +166,7 @@ export function RegisterForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-accent px-8 py-3 text-sm font-semibold text-accent-ink transition hover:brightness-105 disabled:opacity-60"
+        className="inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-semibold text-accent-ink transition hover:brightness-105 disabled:opacity-60 sm:w-auto"
       >
         {pending ? "Submitting…" : "Register"}
       </button>

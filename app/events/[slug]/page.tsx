@@ -82,7 +82,7 @@ export default async function EventDetailPage({ params }: Props) {
           {open ? (
             <Link
               href={`/events/${event.slug}/register`}
-              className="inline-flex rounded-full bg-accent px-8 py-3.5 text-sm font-semibold text-accent-ink"
+              className="inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-semibold text-accent-ink sm:w-auto"
             >
               Register for this event
             </Link>

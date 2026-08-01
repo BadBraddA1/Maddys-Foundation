@@ -7,69 +7,134 @@ const links = [
   { href: "/donate", label: "Donate" },
 ]
 
-export function SiteHeader() {
+function BrandMark({
+  tone,
+}: {
+  tone: "light" | "dark"
+}) {
+  const text = tone === "light" ? "text-white" : "text-ink"
+  const sub = tone === "light" ? "text-white" : "text-muted"
+  const ring =
+    tone === "light" ? "ring-white/90" : "ring-line"
+
   return (
-    <header className="absolute inset-x-0 top-0 z-40">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-5 py-5 md:px-8">
-        <Link href="/" className="flex items-center gap-3 text-white">
-          <Image
-            src="/brand/logo.jpg"
-            alt="Madalyn Robinson Foundation"
-            width={48}
-            height={48}
-            className="h-12 w-12 rounded-full bg-white object-cover ring-2 ring-white/80"
-            priority
-          />
-          <span className="font-display text-lg tracking-tight md:text-xl">
-            Madalyn Robinson
-            <span className="block text-xs font-sans font-medium uppercase tracking-[0.18em] text-white/80">
-              Foundation
-            </span>
-          </span>
-        </Link>
-        <nav className="flex items-center gap-1 text-sm font-medium text-white/90 md:gap-2">
-          {links.map((link) => (
+    <Link
+      href="/"
+      className={`flex min-h-11 items-center gap-2.5 sm:gap-3 ${text}`}
+    >
+      <Image
+        src="/brand/logo.jpg"
+        alt="Madalyn Robinson Foundation"
+        width={44}
+        height={44}
+        className={`h-11 w-11 shrink-0 rounded-full bg-white object-cover ring-2 ${ring}`}
+        priority
+      />
+      <span className="min-w-0 font-display text-base leading-tight tracking-tight sm:text-lg md:text-xl">
+        <span className="sm:hidden">Maddy&apos;s</span>
+        <span className="hidden sm:inline">Madalyn Robinson</span>
+        <span
+          className={`mt-0.5 block font-sans text-[0.65rem] font-medium uppercase tracking-[0.16em] sm:text-xs ${sub}`}
+        >
+          Foundation
+        </span>
+      </span>
+    </Link>
+  )
+}
+
+function PrimaryNav({
+  tone,
+}: {
+  tone: "light" | "dark"
+}) {
+  const desktopLink =
+    tone === "light"
+      ? "text-white hover:bg-white/15"
+      : "text-ink hover:bg-bg"
+
+  const panel =
+    tone === "light"
+      ? "border-white/20 bg-deep text-white shadow-lg"
+      : "border-line bg-surface text-ink shadow-lg"
+
+  const mobileLink =
+    tone === "light"
+      ? "text-white hover:bg-white/10"
+      : "text-ink hover:bg-bg"
+
+  return (
+    <nav aria-label="Primary">
+      {/* Desktop / tablet horizontal */}
+      <ul className="hidden items-center gap-1 md:flex">
+        {links.map((link) => (
+          <li key={link.href}>
             <Link
-              key={link.href}
               href={link.href}
-              className="rounded-full px-3 py-2 transition hover:bg-white/15 hover:text-white"
+              className={`inline-flex min-h-11 items-center px-4 text-sm font-medium transition ${desktopLink}`}
             >
               {link.label}
             </Link>
+          </li>
+        ))}
+      </ul>
+
+      {/* Phone: disclosure menu — no hover dependency */}
+      <details className="relative md:hidden">
+        <summary
+          className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center border text-sm font-semibold transition [&::-webkit-details-marker]:hidden ${
+            tone === "light"
+              ? "border-white/40 bg-deep/80 text-white"
+              : "border-line bg-surface text-ink"
+          }`}
+        >
+          <span className="sr-only">Open menu</span>
+          <span aria-hidden="true" className="flex flex-col gap-1.5">
+            <span className="block h-0.5 w-4 bg-current" />
+            <span className="block h-0.5 w-4 bg-current" />
+            <span className="block h-0.5 w-4 bg-current" />
+          </span>
+        </summary>
+        <ul
+          className={`absolute right-0 z-50 mt-2 min-w-[12.5rem] border py-1 ${panel}`}
+        >
+          {links.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className={`flex min-h-11 items-center px-4 text-base font-medium ${mobileLink}`}
+              >
+                {link.label}
+              </Link>
+            </li>
           ))}
-        </nav>
+        </ul>
+      </details>
+    </nav>
+  )
+}
+
+/** Overlay header for the photo hero — sits on a deep scrim so contrast holds. */
+export function SiteHeader() {
+  return (
+    <header className="absolute inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]">
+      <div className="bg-gradient-to-b from-deep from-40% via-deep/85 to-transparent pb-10">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
+          <BrandMark tone="light" />
+          <PrimaryNav tone="light" />
+        </div>
       </div>
     </header>
   )
 }
 
+/** Solid header for interior pages. */
 export function SiteHeaderSolid() {
   return (
-    <header className="border-b border-line bg-surface/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-5 py-4 md:px-8">
-        <Link href="/" className="flex items-center gap-3 text-ink">
-          <Image
-            src="/brand/logo.jpg"
-            alt="Madalyn Robinson Foundation"
-            width={44}
-            height={44}
-            className="h-11 w-11 rounded-full object-cover"
-          />
-          <span className="font-display text-lg tracking-tight">
-            Madalyn Robinson Foundation
-          </span>
-        </Link>
-        <nav className="flex items-center gap-1 text-sm font-medium text-muted md:gap-2">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-full px-3 py-2 transition hover:bg-bg hover:text-ink"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+    <header className="sticky top-0 z-40 border-b border-line bg-surface pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8">
+        <BrandMark tone="dark" />
+        <PrimaryNav tone="dark" />
       </div>
     </header>
   )

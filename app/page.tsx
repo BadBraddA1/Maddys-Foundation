@@ -16,38 +16,45 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       <section className="relative min-h-[100svh] overflow-hidden bg-deep text-white">
         <Image
           src="/brand/maddy.jpg"
           alt="Madalyn Robinson"
           fill
           priority
-          className="animate-hero-drift object-cover object-[center_20%]"
+          className="animate-hero-drift object-cover object-[center_12%] sm:object-[center_18%] md:object-[center_20%]"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-deep via-deep/55 to-deep/25" />
+        {/* Bottom wash for copy + top is handled by header scrim */}
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-deep from-15% via-deep/70 via-45% to-deep/30"
+          aria-hidden="true"
+        />
         <SiteHeader />
-        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-16 pt-32 md:px-8 md:pb-24">
+        <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
           <p className="animate-fade-up text-xs font-medium uppercase tracking-[0.22em] text-accent">
             Madalyn Robinson Foundation
           </p>
-          <h1 className="animate-fade-up mt-4 max-w-3xl font-display text-[clamp(2.4rem,6vw,4.5rem)] leading-[1.05] text-white [animation-delay:80ms]">
+          <h1 className="animate-fade-up mt-4 max-w-3xl font-display text-[clamp(2.1rem,8vw,4.5rem)] leading-[1.08] text-white [animation-delay:80ms]">
             Joy that still moves mountains
           </h1>
-          <p className="animate-fade-up mt-5 max-w-xl text-lg text-white/85 [animation-delay:140ms]">
+          <p className="animate-fade-up mt-5 max-w-xl text-base text-white sm:text-lg [animation-delay:140ms]">
             We gather people, host events, and keep spreading the light Maddy
             carried so fiercely.
           </p>
-          <div className="animate-fade-up mt-8 flex flex-wrap gap-3 [animation-delay:200ms]">
+          <div className="animate-fade-up mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap [animation-delay:200ms]">
             <Link
               href="/events"
-              className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-ink transition hover:brightness-105"
+              className="inline-flex min-h-11 items-center justify-center bg-accent px-6 py-3 text-center text-sm font-semibold text-accent-ink transition hover:brightness-105"
             >
               Upcoming events
             </Link>
             <Link
               href="/story"
-              className="rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+              className="inline-flex min-h-11 items-center justify-center border border-white/50 bg-deep/50 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-deep/70"
             >
               Her story
             </Link>
@@ -55,10 +62,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-20 md:px-8">
+      <main id="main">
+      <section className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
         <div className="max-w-2xl">
           <h2 className="font-display text-3xl md:text-4xl">Our purpose</h2>
-          <p className="mt-4 text-lg text-muted">
+          <p className="mt-4 text-base text-muted sm:text-lg">
             Continue to spread joy and light to others in their darkest moments —
             the same heart Maddy showed while fighting her own battles.
           </p>
@@ -71,16 +79,16 @@ export default async function HomePage() {
               Romans 8:28
             </cite>
           </blockquote>
-          <div className="flex flex-col justify-end gap-4">
+          <div className="flex flex-col justify-end gap-1">
             <Link
               href="/donate"
-              className="text-sm font-semibold text-accent-ink underline decoration-accent underline-offset-4"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink underline decoration-accent underline-offset-4"
             >
               Give in her honor →
             </Link>
             <Link
               href="/story"
-              className="text-sm font-semibold text-muted underline decoration-line underline-offset-4 hover:text-ink"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-muted underline decoration-line underline-offset-4 hover:text-ink"
             >
               Read Maddy&apos;s story →
             </Link>
@@ -89,12 +97,12 @@ export default async function HomePage() {
       </section>
 
       <section className="border-y border-line bg-surface">
-        <div className="mx-auto max-w-6xl px-5 py-20 md:px-8">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
           <div className="flex items-end justify-between gap-4">
             <h2 className="font-display text-3xl md:text-4xl">Events</h2>
             <Link
               href="/events"
-              className="text-sm font-semibold text-muted hover:text-ink"
+              className="inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-muted hover:text-ink"
             >
               View all
             </Link>
@@ -130,6 +138,7 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+      </main>
 
       <SiteFooter />
     </div>

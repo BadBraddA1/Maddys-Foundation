@@ -43,16 +43,16 @@ export default function StoryPage() {
                 own battles.
               </p>
             </div>
-            <div className="mt-10 flex flex-wrap gap-3">
+            <div className="mt-10 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
               <Link
                 href="/events"
-                className="rounded-full bg-deep px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                className="inline-flex min-h-11 items-center justify-center bg-deep px-6 text-sm font-semibold text-white transition hover:opacity-90"
               >
                 Join an event
               </Link>
               <Link
                 href="/donate"
-                className="rounded-full border border-line px-6 py-3 text-sm font-semibold text-ink transition hover:bg-surface"
+                className="inline-flex min-h-11 items-center justify-center border border-line px-6 text-sm font-semibold text-ink transition hover:bg-surface"
               >
                 Give
               </Link>

@@ -27,8 +27,10 @@ Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink 
 ## Layout
 
 - Full-bleed hero with Maddy photo as the dominant plane
+- Phone-first chrome: short wordmark + disclosure nav under `md`; ≥44px targets; safe-area insets
+- Hero header sits on a deep top scrim so nav contrast does not depend on the photo
 - Content width ~68ch for story prose
-- Events as quiet list rows, not card grids
+- Events as quiet list rows, not card grids; primary CTAs full-width on small screens
 - Admin: utilitarian tables, same tokens, denser spacing
 
 ## Motion

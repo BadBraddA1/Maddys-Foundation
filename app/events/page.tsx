@@ -74,7 +74,7 @@ export default async function EventsPage() {
                           ? `/events/${event.slug}/register`
                           : `/events/${event.slug}`
                       }
-                      className="shrink-0 rounded-full bg-deep px-5 py-2.5 text-center text-sm font-semibold text-white"
+                      className="inline-flex min-h-11 w-full items-center justify-center bg-deep px-5 text-center text-sm font-semibold text-white sm:w-auto"
                     >
                       {open ? "Register" : "Details"}
                     </Link>
