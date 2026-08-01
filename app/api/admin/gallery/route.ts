@@ -10,6 +10,18 @@ import { ALLOWED_MEDIA_TYPES, MAX_MEDIA_BYTES, r2Configured } from "@/lib/r2"
 
 export const runtime = "nodejs"
 
+function parseOptionalEventId(raw: FormDataEntryValue | null): {
+  eventId?: number | null
+  clearEvent?: boolean
+} {
+  if (raw == null) return {}
+  const s = String(raw).trim()
+  if (s === "" || s === "none") return { eventId: null, clearEvent: true }
+  const n = Number(s)
+  if (!Number.isFinite(n) || n <= 0) return { eventId: null, clearEvent: true }
+  return { eventId: n }
+}
+
 export async function GET() {
   try {
     await requireAdmin()
@@ -36,6 +48,7 @@ export async function POST(req: Request) {
   const form = await req.formData()
   const title = String(form.get("title") ?? "")
   const caption = String(form.get("caption") ?? "")
+  const { eventId } = parseOptionalEventId(form.get("eventId"))
   const file = form.get("image")
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Image file is required." }, { status: 400 })
@@ -51,7 +64,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const image = await createGalleryImage({ title, caption, file })
+    const image = await createGalleryImage({
+      title,
+      caption,
+      eventId: eventId ?? null,
+      file,
+    })
     return NextResponse.json({ image }, { status: 201 })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not save image."
@@ -88,6 +106,9 @@ export async function PATCH(req: Request) {
 
   const publishedRaw = form.get("isPublished")
   const sortRaw = form.get("sortOrder")
+  const eventPatch = form.has("eventId")
+    ? parseOptionalEventId(form.get("eventId"))
+    : {}
 
   try {
     const updated = await updateGalleryImage(id, {
@@ -98,6 +119,7 @@ export async function PATCH(req: Request) {
       sortOrder:
         sortRaw == null || sortRaw === "" ? undefined : Number(sortRaw),
       file: image,
+      ...eventPatch,
     })
     return NextResponse.json({ image: updated })
   } catch (err) {

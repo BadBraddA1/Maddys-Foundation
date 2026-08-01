@@ -4,16 +4,20 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import type { GalleryImage } from "@/lib/gallery"
 
+type EventOption = { id: number; title: string; slug: string }
+
 type Props = {
   initialImages: GalleryImage[]
+  events: EventOption[]
   r2Ready: boolean
 }
 
-export function GalleryAdmin({ initialImages, r2Ready }: Props) {
+export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
   const router = useRouter()
   const [images, setImages] = useState(initialImages)
   const [title, setTitle] = useState("")
   const [caption, setCaption] = useState("")
+  const [eventId, setEventId] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,6 +40,7 @@ export function GalleryAdmin({ initialImages, r2Ready }: Props) {
       const form = new FormData()
       form.set("title", title)
       form.set("caption", caption)
+      form.set("eventId", eventId || "none")
       form.set("image", file)
       const res = await fetch("/api/admin/gallery", { method: "POST", body: form })
       const data = (await res.json()) as { error?: string }
@@ -45,6 +50,7 @@ export function GalleryAdmin({ initialImages, r2Ready }: Props) {
       }
       setTitle("")
       setCaption("")
+      setEventId("")
       setFile(null)
       setMessage("Image added.")
       await refresh()
@@ -71,6 +77,28 @@ export function GalleryAdmin({ initialImages, r2Ready }: Props) {
       await refresh()
     } catch {
       setError("Could not update.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function setImageEvent(image: GalleryImage, next: string) {
+    setBusy(true)
+    setError(null)
+    try {
+      const form = new FormData()
+      form.set("id", String(image.id))
+      form.set("eventId", next || "none")
+      const res = await fetch("/api/admin/gallery", { method: "PATCH", body: form })
+      const data = (await res.json()) as { error?: string }
+      if (!res.ok) {
+        setError(data.error || "Could not update event tag.")
+        return
+      }
+      setMessage("Event tag saved.")
+      await refresh()
+    } catch {
+      setError("Could not update event tag.")
     } finally {
       setBusy(false)
     }
@@ -168,6 +196,27 @@ export function GalleryAdmin({ initialImages, r2Ready }: Props) {
           />
         </div>
         <div>
+          <label htmlFor="gallery-event" className="block text-sm font-medium">
+            Event tag (optional)
+          </label>
+          <select
+            id="gallery-event"
+            className="field-control mt-1.5 min-h-11 w-full"
+            value={eventId}
+            onChange={(e) => setEventId(e.target.value)}
+          >
+            <option value="">No event</option>
+            {events.map((ev) => (
+              <option key={ev.id} value={String(ev.id)}>
+                {ev.title}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1.5 text-xs text-muted">
+            Tagging links the photo to an event on the public gallery filters.
+          </p>
+        </div>
+        <div>
           <label htmlFor="gallery-image" className="block text-sm font-medium">
             Photo
           </label>
@@ -210,6 +259,22 @@ export function GalleryAdmin({ initialImages, r2Ready }: Props) {
                   {img.is_published ? "Published" : "Hidden"}
                   {img.caption ? ` · ${img.caption}` : ""}
                 </p>
+                <label className="mt-3 block text-sm">
+                  <span className="font-medium text-ink">Event tag</span>
+                  <select
+                    className="field-control mt-1.5 min-h-11 w-full"
+                    value={img.event_id != null ? String(img.event_id) : ""}
+                    disabled={busy}
+                    onChange={(e) => void setImageEvent(img, e.target.value)}
+                  >
+                    <option value="">No event</option>
+                    {events.map((ev) => (
+                      <option key={ev.id} value={String(ev.id)}>
+                        {ev.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <div className="mt-3 flex flex-wrap gap-2 text-sm">
                   <button
                     type="button"

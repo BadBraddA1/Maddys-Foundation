@@ -3,7 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
-import { listGalleryImages } from "@/lib/gallery"
+import { listGalleryEventTags, listGalleryImages } from "@/lib/gallery"
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -13,8 +13,25 @@ export const metadata: Metadata = {
 
 export const revalidate = 60
 
-export default async function GalleryPage() {
-  const images = await listGalleryImages({ publishedOnly: true }).catch(() => [])
+type Props = {
+  searchParams: Promise<{ event?: string }>
+}
+
+export default async function GalleryPage({ searchParams }: Props) {
+  const query = await searchParams
+  const eventSlug = query.event?.trim() || undefined
+
+  const [images, eventTags] = await Promise.all([
+    listGalleryImages({
+      publishedOnly: true,
+      eventSlug,
+    }).catch(() => []),
+    listGalleryEventTags().catch(() => []),
+  ])
+
+  const activeTag = eventSlug
+    ? eventTags.find((t) => t.slug === eventSlug) ?? null
+    : null
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -25,9 +42,61 @@ export default async function GalleryPage() {
           Moments from our events and community — joy in Maddy&apos;s spirit.
         </p>
 
+        {eventTags.length > 0 ? (
+          <nav
+            className="mt-8 flex flex-wrap gap-2"
+            aria-label="Filter gallery by event"
+          >
+            <Link
+              href="/gallery"
+              className={`inline-flex min-h-11 items-center border px-4 text-sm font-medium ${
+                !eventSlug
+                  ? "border-deep bg-deep text-on-deep"
+                  : "border-line bg-surface text-ink hover:bg-bg"
+              }`}
+            >
+              All
+            </Link>
+            {eventTags.map((tag) => {
+              const active = eventSlug === tag.slug
+              return (
+                <Link
+                  key={tag.id}
+                  href={`/gallery?event=${encodeURIComponent(tag.slug)}`}
+                  className={`inline-flex min-h-11 items-center border px-4 text-sm font-medium ${
+                    active
+                      ? "border-deep bg-deep text-on-deep"
+                      : "border-line bg-surface text-ink hover:bg-bg"
+                  }`}
+                >
+                  {tag.title}
+                  <span className="ml-2 tabular-nums text-xs opacity-70">
+                    {tag.photoCount}
+                  </span>
+                </Link>
+              )
+            })}
+          </nav>
+        ) : null}
+
+        {activeTag ? (
+          <p className="mt-6 text-sm text-muted">
+            Showing photos tagged to{" "}
+            <Link
+              href={`/events/${activeTag.slug}`}
+              className="font-medium text-accent-ink underline underline-offset-4"
+            >
+              {activeTag.title}
+            </Link>
+            .
+          </p>
+        ) : null}
+
         {images.length === 0 ? (
           <p className="mt-12 text-muted">
-            Photos coming soon.{" "}
+            {eventSlug
+              ? "No published photos for that event yet."
+              : "Photos coming soon."}{" "}
             <Link href="/events" className="underline underline-offset-4">
               See upcoming events
             </Link>
@@ -47,16 +116,24 @@ export default async function GalleryPage() {
                       className="object-cover transition duration-500 group-hover:scale-[1.02]"
                     />
                   </div>
-                  {img.title || img.caption ? (
-                    <figcaption className="mt-3">
-                      {img.title ? (
-                        <p className="font-medium text-ink">{img.title}</p>
-                      ) : null}
-                      {img.caption ? (
-                        <p className="mt-1 text-sm text-muted">{img.caption}</p>
-                      ) : null}
-                    </figcaption>
-                  ) : null}
+                  <figcaption className="mt-3">
+                    {img.event_title && img.event_slug ? (
+                      <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
+                        <Link
+                          href={`/gallery?event=${encodeURIComponent(img.event_slug)}`}
+                          className="hover:text-ink"
+                        >
+                          {img.event_title}
+                        </Link>
+                      </p>
+                    ) : null}
+                    {img.title ? (
+                      <p className="mt-1 font-medium text-ink">{img.title}</p>
+                    ) : null}
+                    {img.caption ? (
+                      <p className="mt-1 text-sm text-muted">{img.caption}</p>
+                    ) : null}
+                  </figcaption>
                 </figure>
               </li>
             ))}

@@ -145,6 +145,8 @@ CREATE TABLE IF NOT EXISTS gallery_images (
   caption TEXT NOT NULL DEFAULT '',
   image_url TEXT NOT NULL,
   image_key TEXT NOT NULL,
+  /** Optional tag linking the photo to an event. */
+  event_id INTEGER REFERENCES events(id) ON DELETE SET NULL,
   sort_order INTEGER NOT NULL DEFAULT 0,
   is_published INTEGER NOT NULL DEFAULT 1,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
@@ -153,6 +155,9 @@ CREATE TABLE IF NOT EXISTS gallery_images (
 
 CREATE INDEX IF NOT EXISTS idx_gallery_published_sort
   ON gallery_images (is_published, sort_order, id);
+
+CREATE INDEX IF NOT EXISTS idx_gallery_event
+  ON gallery_images (event_id);
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

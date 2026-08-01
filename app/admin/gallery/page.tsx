@@ -2,6 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { GalleryAdmin } from "@/components/admin/gallery-admin"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
+import { listAllEvents } from "@/lib/events"
 import { listGalleryImages } from "@/lib/gallery"
 import { r2Configured } from "@/lib/r2"
 
@@ -12,7 +13,10 @@ export default async function AdminGalleryPage() {
   const admin = await getAdminOrNull()
   if (!admin) redirect("/admin")
 
-  const images = await listGalleryImages().catch(() => [])
+  const [images, events] = await Promise.all([
+    listGalleryImages().catch(() => []),
+    listAllEvents().catch(() => []),
+  ])
 
   return (
     <div className="space-y-6">
@@ -29,10 +33,18 @@ export default async function AdminGalleryPage() {
           <Link href="/gallery" className="underline underline-offset-4">
             /gallery
           </Link>{" "}
-          page.
+          page. Tag a photo to an event to filter it there.
         </p>
       </div>
-      <GalleryAdmin initialImages={images} r2Ready={r2Configured()} />
+      <GalleryAdmin
+        initialImages={images}
+        events={events.map((e) => ({
+          id: e.id,
+          title: e.title,
+          slug: e.slug,
+        }))}
+        r2Ready={r2Configured()}
+      />
     </div>
   )
 }
