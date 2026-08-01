@@ -31,8 +31,9 @@ export default async function Image({
           flexDirection: "column",
           justifyContent: "space-between",
           padding: 56,
-          background: "linear-gradient(165deg, #1f2d3f 0%, #2a3a4d 55%, #6b7a48 140%)",
-          color: "#f7f4ec",
+          background:
+            "linear-gradient(165deg, #1c3d32 0%, #243f36 52%, #2f5346 100%)",
+          color: "#f4f1e8",
         }}
       >
         <div style={{ fontSize: 26, fontWeight: 600, opacity: 0.85 }}>{siteName}</div>
@@ -48,7 +49,7 @@ export default async function Image({
             {title}
           </div>
           {meta ? (
-            <div style={{ fontSize: 26, opacity: 0.88, color: "#e8e2d4" }}>{meta}</div>
+            <div style={{ fontSize: 26, opacity: 0.88, color: "#e5e0d2" }}>{meta}</div>
           ) : null}
         </div>
         <div
@@ -69,7 +70,7 @@ export default async function Image({
           >
             View event →
           </div>
-          <div style={{ fontSize: 20, opacity: 0.55, color: "#c8c0ae" }}>{host}</div>
+          <div style={{ fontSize: 20, opacity: 0.55, color: "#c5cfc8" }}>{host}</div>
         </div>
       </div>
     ),
