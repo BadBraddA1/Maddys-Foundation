@@ -58,10 +58,15 @@ Without Clerk keys the public site still runs; `/admin` shows setup instructions
 | `NEXT_PUBLIC_SITE_URL` | yes (prod) | Canonical URL / metadata |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | admin | Clerk |
 | `CLERK_SECRET_KEY` | admin | Clerk |
-| `NEXT_PUBLIC_DONATE_URL` | no | External donate link |
+| `NEXT_PUBLIC_DONATE_URL` | no | External donate link (until Stripe Checkout ships) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | no | Shown in footer when set |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Publishable key (`pk_test_` / `pk_live_`) |
+| `STRIPE_SECRET_KEY` | Stripe | Secret key — server only |
+| `STRIPE_WEBHOOK_SECRET` | Stripe | Webhook signing secret (`whsec_`) |
 
 Never commit `.env.local` or tokens.
+
+**Stripe plan (keys + how to get them):** [`docs/STRIPE.md`](docs/STRIPE.md)
 
 ## Domain cutover (`maddysfoundation.org`)
 
