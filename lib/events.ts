@@ -109,6 +109,20 @@ export async function listPublishedEvents(): Promise<EventRow[]> {
   return rows.map(mapEvent)
 }
 
+/** Soonest published event that hasn’t started yet (header countdown). */
+export async function getNextUpcomingEvent(): Promise<EventRow | null> {
+  const rows = await sql`
+    SELECT e.*,
+      (SELECT COUNT(*) FROM registrations r
+        WHERE r.event_id = e.id AND r.status = 'confirmed') AS registration_count
+    FROM events e
+    WHERE e.is_published = 1 AND e.starts_at > datetime('now')
+    ORDER BY e.starts_at ASC
+    LIMIT 1
+  `
+  return rows[0] ? mapEvent(rows[0]) : null
+}
+
 export async function listAllEvents(): Promise<EventRow[]> {
   const rows = await sql`
     SELECT e.*,

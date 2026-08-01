@@ -294,6 +294,27 @@ a {
   animation: success-settle 0.45s var(--ease-out-quart) both;
 }
 
+/* Solid header — next-event countdown (baked live knobs: type-scale 0.55, accent 0.5) */
+@keyframes hdr-countdown-rise {
+  from {
+    transform: translateY(0.35rem);
+    filter: blur(2px);
+  }
+  to {
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.site-header-solid .countdown-enter {
+  animation: hdr-countdown-rise 0.6s var(--ease-out-quart) both;
+}
+
+.site-header-solid .countdown-days {
+  font-size: 1.8175rem;
+  color: color-mix(in oklab, var(--accent-ink) 50%, var(--ink));
+}
+
 /* Press feedback — fine pointer only so touch doesn’t feel sticky */
 @media (hover: hover) and (pointer: fine) {
   .motion-press:hover {
@@ -314,7 +335,8 @@ a {
   .animate-hero-drift,
   .hero-enter,
   .nav-panel-enter,
-  .success-enter {
+  .success-enter,
+  .site-header-solid .countdown-enter {
     animation: none !important;
     filter: none !important;
     transform: none !important;
