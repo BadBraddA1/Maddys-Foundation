@@ -9,19 +9,29 @@ export const ogContentType = "image/png"
 export const siteOgAlt =
   "Madalyn Robinson Foundation — events, scholarships, and hope"
 
+/** Home fairway green (`--deep` / themeColor) — richer than a thin sage wash. */
 const DEEP = "#1c3d32"
+/** Slightly brighter fairway mid for chroma so the tent doesn’t read grey-mud. */
+const DEEP_GOLF = "#1f4f3a"
 const ON_DEEP = "#f4f1e8"
-const ON_DEEP_MUTED = "#e2e8e4"
+const ON_DEEP_MUTED = "#d8e4dc"
 const ACCENT = "#c9a84a"
 const ACCENT_INK = "#3d2e12"
 
-/** Green tent over white + cutout (Satori-safe SVG layer). */
-const TENT_OPACITY = 0.48
+/**
+ * Tent strength over white + cutout. Low opacity over white looked “throw-up”
+ * sage; denser golf green matches the home hero/footer chrome.
+ */
+const TENT_OPACITY = 0.72
 /** ~20% larger than the previous 120px mark */
 const LOGO_SIZE = 144
 
 function greenTentDataUrl() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="${DEEP}" fill-opacity="${TENT_OPACITY}"/></svg>`
+  // Two stops: deep fairway base + a touch more chroma (still home-adjacent).
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
+  <rect width="1200" height="630" fill="${DEEP}" fill-opacity="${TENT_OPACITY}"/>
+  <rect width="1200" height="630" fill="${DEEP_GOLF}" fill-opacity="0.22"/>
+</svg>`
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`
 }
 
