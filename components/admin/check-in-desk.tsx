@@ -6,7 +6,7 @@ import {
   CheckInQrScanner,
   parseScannedCheckInPayload,
 } from "@/components/admin/check-in-qr-scanner"
-import { computeAddonTotalCents, formatAddonMoney, type AddonPrice, type EventPlayer } from "@/lib/check-in-shared"
+import { computeAddonTotalCents, formatAddonMoney, isPlayerCheckedIn, type AddonPrice, type EventPlayer } from "@/lib/check-in-shared"
 
 type TeamSummary = {
   registrationId: number
@@ -206,6 +206,7 @@ export function CheckInDesk({
     if (busyPlayerId) return
     setBusyPlayerId(player.id)
     setError(null)
+    setMessage(null)
     try {
       const res = await fetch(
         `/api/admin/check-in/players/${player.id}/check-in`,
@@ -215,29 +216,27 @@ export function CheckInDesk({
         error?: string
         player?: EventPlayer
       }
+      const nextPlayer = data.player
+      if (nextPlayer) {
+        setTeam((prev) => {
+          if (!prev) return prev
+          const players = prev.players.map((p) =>
+            p.id === nextPlayer.id ? nextPlayer : p,
+          )
+          return {
+            ...prev,
+            players,
+            checkedInCount: players.filter((p) => isPlayerCheckedIn(p)).length,
+          }
+        })
+      }
       if (!res.ok) {
         setError(data.error || "Unable to save check-in.")
-        if (data.player && team) {
-          applyTeam({
-            ...team,
-            players: team.players.map((p) =>
-              p.id === data.player!.id ? data.player! : p,
-            ),
-          })
-        }
         return
       }
-      if (data.player && team) {
-        const players = team.players.map((p) =>
-          p.id === data.player!.id ? data.player! : p,
-        )
-        applyTeam({
-          ...team,
-          players,
-          checkedInCount: players.filter((p) => p.checked_in === 1).length,
-        })
-        setMessage(`${data.player.display_name} has been checked in.`)
-      }
+      setMessage(
+        `${nextPlayer?.display_name ?? player.display_name} has been checked in.`,
+      )
     } catch {
       setError("Unable to save check-in.")
     } finally {
@@ -247,10 +246,9 @@ export function CheckInDesk({
 
   async function onUndo(player: EventPlayer) {
     if (busyPlayerId) return
-    const ok = window.confirm(`Undo the check-in for ${player.display_name}?`)
-    if (!ok) return
     setBusyPlayerId(player.id)
     setError(null)
+    setMessage(null)
     try {
       const res = await fetch(
         `/api/admin/check-in/players/${player.id}/undo`,
@@ -260,21 +258,27 @@ export function CheckInDesk({
         error?: string
         player?: EventPlayer
       }
+      const nextPlayer = data.player
+      if (nextPlayer) {
+        setTeam((prev) => {
+          if (!prev) return prev
+          const players = prev.players.map((p) =>
+            p.id === nextPlayer.id ? nextPlayer : p,
+          )
+          return {
+            ...prev,
+            players,
+            checkedInCount: players.filter((p) => isPlayerCheckedIn(p)).length,
+          }
+        })
+      }
       if (!res.ok) {
         setError(data.error || "Unable to undo check-in.")
         return
       }
-      if (data.player && team) {
-        const players = team.players.map((p) =>
-          p.id === data.player!.id ? data.player! : p,
-        )
-        applyTeam({
-          ...team,
-          players,
-          checkedInCount: players.filter((p) => p.checked_in === 1).length,
-        })
-        setMessage(`Check-in undone for ${data.player.display_name}.`)
-      }
+      setMessage(
+        `Check-in undone for ${nextPlayer?.display_name ?? player.display_name}.`,
+      )
     } catch {
       setError("Unable to undo check-in.")
     } finally {
@@ -526,6 +530,7 @@ export function CheckInDesk({
                     golf_pro: false,
                   }
                   const total = computeAddonTotalCents(draft, team.prices)
+                  const inAlready = isPlayerCheckedIn(player)
                   return (
                     <li
                       key={player.id}
@@ -533,30 +538,34 @@ export function CheckInDesk({
                     >
                       <p className="font-medium text-ink">{player.display_name}</p>
                       <p className="mt-1 text-sm text-muted">
-                        {player.checked_in
+                        {inAlready
                           ? `Checked in${player.checked_in_at ? ` · ${new Date(player.checked_in_at).toLocaleString()}` : ""}`
                           : "Not checked in"}
                       </p>
-                      <button
-                        type="button"
-                        disabled={busyPlayerId === player.id}
-                        className={`mt-4 inline-flex min-h-14 w-full items-center justify-center px-4 text-base font-semibold disabled:opacity-60 ${
-                          player.checked_in
-                            ? "bg-accent text-accent-ink"
-                            : "bg-success text-white"
-                        }`}
-                        onClick={() =>
-                          player.checked_in
-                            ? void onUndo(player)
-                            : void onCheckIn(player)
-                        }
-                      >
-                        {busyPlayerId === player.id
-                          ? "Saving…"
-                          : player.checked_in
-                            ? "Checked In — Undo"
-                            : "Check In"}
-                      </button>
+                      {inAlready ? (
+                        <div className="mt-4 flex flex-col gap-2">
+                          <p className="inline-flex min-h-12 w-full items-center justify-center bg-accent px-4 text-base font-semibold text-accent-ink">
+                            Checked in
+                          </p>
+                          <button
+                            type="button"
+                            disabled={busyPlayerId === player.id}
+                            className="inline-flex min-h-12 w-full items-center justify-center border border-line px-4 text-sm font-medium disabled:opacity-60"
+                            onClick={() => void onUndo(player)}
+                          >
+                            {busyPlayerId === player.id ? "Undoing…" : "Undo check-in"}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={busyPlayerId === player.id}
+                          className="mt-4 inline-flex min-h-14 w-full items-center justify-center bg-success px-4 text-base font-semibold text-white disabled:opacity-60"
+                          onClick={() => void onCheckIn(player)}
+                        >
+                          {busyPlayerId === player.id ? "Saving…" : "Check In"}
+                        </button>
+                      )}
                       <div className="mt-4 space-y-2 text-sm">
                         {team.prices.map((price) => (
                           <label
@@ -616,35 +625,40 @@ export function CheckInDesk({
                         golf_pro: false,
                       }
                       const total = computeAddonTotalCents(draft, team.prices)
+                      const inAlready = isPlayerCheckedIn(player)
                       return (
                         <tr key={player.id}>
                           <td className="py-3 pr-3 font-medium text-ink">
                             {player.display_name}
                           </td>
                           <td className="py-3 pr-3 text-muted">
-                            {player.checked_in ? "In" : "—"}
+                            {inAlready ? "In" : "—"}
                           </td>
                           <td className="py-3 pr-3">
-                            <button
-                              type="button"
-                              disabled={busyPlayerId === player.id}
-                              className={`inline-flex min-h-12 min-w-[10rem] items-center justify-center px-4 text-sm font-semibold disabled:opacity-60 ${
-                                player.checked_in
-                                  ? "bg-accent text-accent-ink"
-                                  : "bg-success text-white"
-                              }`}
-                              onClick={() =>
-                                player.checked_in
-                                  ? void onUndo(player)
-                                  : void onCheckIn(player)
-                              }
-                            >
-                              {busyPlayerId === player.id
-                                ? "…"
-                                : player.checked_in
-                                  ? "Checked In — Undo"
-                                  : "Check In"}
-                            </button>
+                            {inAlready ? (
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="inline-flex min-h-12 items-center bg-accent px-3 text-sm font-semibold text-accent-ink">
+                                  Checked in
+                                </span>
+                                <button
+                                  type="button"
+                                  disabled={busyPlayerId === player.id}
+                                  className="inline-flex min-h-12 items-center justify-center border border-line px-4 text-sm font-medium disabled:opacity-60"
+                                  onClick={() => void onUndo(player)}
+                                >
+                                  {busyPlayerId === player.id ? "…" : "Undo"}
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={busyPlayerId === player.id}
+                                className="inline-flex min-h-12 min-w-[10rem] items-center justify-center bg-success px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                onClick={() => void onCheckIn(player)}
+                              >
+                                {busyPlayerId === player.id ? "…" : "Check In"}
+                              </button>
+                            )}
                           </td>
                           {team.prices.map((price) => (
                             <td key={price.addon_key} className="py-3 pr-3">

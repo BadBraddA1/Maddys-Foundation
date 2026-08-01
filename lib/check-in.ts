@@ -16,7 +16,7 @@ import {
 } from "@/lib/roster-parse"
 
 export type { AddonKey, AddonPrice, EventPlayer } from "@/lib/check-in-shared"
-export { computeAddonTotalCents, formatAddonMoney } from "@/lib/check-in-shared"
+export { computeAddonTotalCents, formatAddonMoney, isPlayerCheckedIn } from "@/lib/check-in-shared"
 
 export type CheckInTeam = {
   registrationId: number
@@ -460,13 +460,17 @@ export async function undoCheckInPlayer(
 
   const result = await sql.execute(
     `UPDATE event_players
-     SET checked_in = 0, updated_at = CURRENT_TIMESTAMP
+     SET checked_in = 0, checked_in_at = NULL, updated_at = CURRENT_TIMESTAMP
      WHERE id = ? AND checked_in = 1`,
     [playerId],
   )
   if (!result.rowsAffected) {
     const again = await sql`SELECT * FROM event_players WHERE id = ${playerId} LIMIT 1`
     const p = again[0] ? mapPlayer(again[0]) : current
+    // Already cleared (race / retry) — treat as success so the desk UI can sync.
+    if (p.checked_in !== 1) {
+      return { ok: true, player: p }
+    }
     return {
       ok: false,
       status: 409,
@@ -475,14 +479,18 @@ export async function undoCheckInPlayer(
     }
   }
 
-  await writeCheckInHistory({
-    eventId: current.event_id,
-    registrationId: current.registration_id,
-    playerId,
-    action: "check_in_undone",
-    actor,
-    detail: current.display_name,
-  })
+  try {
+    await writeCheckInHistory({
+      eventId: current.event_id,
+      registrationId: current.registration_id,
+      playerId,
+      action: "check_in_undone",
+      actor,
+      detail: current.display_name,
+    })
+  } catch (err) {
+    console.error("[undoCheckInPlayer] history", err)
+  }
 
   const updated = await sql`SELECT * FROM event_players WHERE id = ${playerId} LIMIT 1`
   return { ok: true, player: mapPlayer(updated[0]!) }

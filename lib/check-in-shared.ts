@@ -41,3 +41,12 @@ export function formatAddonMoney(cents: number) {
     currency: "USD",
   }).format(cents / 100)
 }
+
+/** Robust check — Turso/JSON can yield 1/0, true/false, or "1"/"0". */
+export function isPlayerCheckedIn(
+  player: Pick<EventPlayer, "checked_in"> | null | undefined,
+): boolean {
+  if (!player) return false
+  const v = player.checked_in as unknown
+  return v === 1 || v === true || v === "1"
+}

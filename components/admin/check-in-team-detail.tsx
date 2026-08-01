@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { formatAddonMoney, type AddonPrice, type EventPlayer } from "@/lib/check-in-shared"
+import { formatAddonMoney, isPlayerCheckedIn, type AddonPrice, type EventPlayer } from "@/lib/check-in-shared"
 
 type Team = {
   registrationId: number
@@ -80,19 +80,36 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
   }
 
   async function undo(player: EventPlayer) {
-    if (!window.confirm(`Undo the check-in for ${player.display_name}?`)) return
     setBusyId(player.id)
     setError(null)
+    setMessage(null)
     try {
       const res = await fetch(`/api/admin/check-in/players/${player.id}/undo`, {
         method: "POST",
       })
-      const data = (await res.json()) as { error?: string }
+      const data = (await res.json()) as {
+        error?: string
+        player?: EventPlayer
+      }
+      if (data.player) {
+        setTeam((prev) => {
+          const players = prev.players.map((p) =>
+            p.id === data.player!.id ? data.player! : p,
+          )
+          return {
+            ...prev,
+            players,
+            checkedInCount: players.filter((p) => isPlayerCheckedIn(p)).length,
+          }
+        })
+      }
       if (!res.ok) {
         setError(data.error || "Unable to undo.")
         return
       }
-      setMessage(`Check-in undone for ${player.display_name}.`)
+      setMessage(
+        `Check-in undone for ${data.player?.display_name ?? player.display_name}.`,
+      )
       await refresh()
     } finally {
       setBusyId(null)
@@ -102,17 +119,35 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
   async function checkIn(player: EventPlayer) {
     setBusyId(player.id)
     setError(null)
+    setMessage(null)
     try {
       const res = await fetch(
         `/api/admin/check-in/players/${player.id}/check-in`,
         { method: "POST" },
       )
-      const data = (await res.json()) as { error?: string }
+      const data = (await res.json()) as {
+        error?: string
+        player?: EventPlayer
+      }
+      if (data.player) {
+        setTeam((prev) => {
+          const players = prev.players.map((p) =>
+            p.id === data.player!.id ? data.player! : p,
+          )
+          return {
+            ...prev,
+            players,
+            checkedInCount: players.filter((p) => isPlayerCheckedIn(p)).length,
+          }
+        })
+      }
       if (!res.ok) {
         setError(data.error || "Unable to check in.")
         return
       }
-      setMessage(`${player.display_name} checked in.`)
+      setMessage(
+        `${data.player?.display_name ?? player.display_name} checked in.`,
+      )
       await refresh()
     } finally {
       setBusyId(null)
@@ -189,35 +224,42 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
             golf_cannon: false,
             golf_pro: false,
           }
+          const inAlready = isPlayerCheckedIn(player)
           return (
             <li key={player.id} className="border border-line bg-surface px-4 py-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-medium text-ink">{player.display_name}</p>
                   <p className="mt-1 text-sm text-muted">
-                    {player.checked_in
+                    {inAlready
                       ? `Checked in${player.checked_in_at ? ` · ${new Date(player.checked_in_at).toLocaleString()}` : ""}`
                       : "Not checked in"}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={busyId === player.id}
-                  className={`inline-flex min-h-12 items-center justify-center px-4 text-sm font-semibold disabled:opacity-60 ${
-                    player.checked_in
-                      ? "bg-accent text-accent-ink"
-                      : "bg-success text-white"
-                  }`}
-                  onClick={() =>
-                    player.checked_in ? void undo(player) : void checkIn(player)
-                  }
-                >
-                  {busyId === player.id
-                    ? "…"
-                    : player.checked_in
-                      ? "Checked In — Undo"
-                      : "Check In"}
-                </button>
+                {inAlready ? (
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex min-h-12 items-center bg-accent px-4 text-sm font-semibold text-accent-ink">
+                      Checked in
+                    </span>
+                    <button
+                      type="button"
+                      disabled={busyId === player.id}
+                      className="inline-flex min-h-12 items-center justify-center border border-line px-4 text-sm font-medium disabled:opacity-60"
+                      onClick={() => void undo(player)}
+                    >
+                      {busyId === player.id ? "…" : "Undo"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={busyId === player.id}
+                    className="inline-flex min-h-12 items-center justify-center bg-success px-4 text-sm font-semibold text-white disabled:opacity-60"
+                    onClick={() => void checkIn(player)}
+                  >
+                    {busyId === player.id ? "…" : "Check In"}
+                  </button>
+                )}
               </div>
               <div className="mt-4 flex flex-wrap gap-4 text-sm">
                 {team.prices.map((price) => (
