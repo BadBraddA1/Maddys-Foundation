@@ -83,7 +83,8 @@ When the domain is purchased:
 - A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
 - Home hero header: clip-path animates in over the photo; after scrolling past `[data-home-hero]`, a frosted glass sticky bar portals to `document.body` (so hero `contain` can’t trap `fixed` over the image) and slides down
-- Interior header (`SiteHeaderSolid`): live countdown to the next published upcoming event (days + title, links to the event) between brand and nav; falls back to empty center when none
+- Home page: centered featured countdown to the next upcoming event (between purpose and events) — not in the home header chrome
+- Interior header (`SiteHeaderSolid`): compact day-count countdown between brand and nav; falls back to empty center when none
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 

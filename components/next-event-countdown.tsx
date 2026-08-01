@@ -18,8 +18,8 @@ type Props = {
   targetIso: string
   title: string
   href: string
-  /** compact = inline chip · stacked = unit columns · days = big day count */
-  layout?: "compact" | "stacked" | "days"
+  /** compact = inline chip · stacked = unit columns · days = big day count · featured = home centerpiece */
+  layout?: "compact" | "stacked" | "days" | "featured"
 }
 
 /** Live countdown to the next published event. */
@@ -51,6 +51,56 @@ export function NextEventCountdown({
       >
         See events →
       </Link>
+    )
+  }
+
+  if (layout === "featured") {
+    const units = [
+      { label: "Days", value: parts.days },
+      { label: "Hours", value: parts.hours },
+      { label: "Min", value: parts.mins },
+      { label: "Sec", value: parts.secs },
+    ]
+    return (
+      <div
+        className={`countdown-featured text-center ${ready ? "is-ready" : ""}`}
+      >
+        <p className="text-sm font-medium uppercase tracking-[0.12em] text-muted">
+          Next gathering
+        </p>
+        <h2 className="mt-3 font-display text-3xl text-ink sm:text-4xl">
+          <Link
+            href={href}
+            className="transition hover:text-accent-ink"
+          >
+            {title}
+          </Link>
+        </h2>
+        <Link
+          href={href}
+          className="countdown-enter mt-8 inline-flex flex-wrap items-end justify-center gap-4 sm:gap-6"
+          aria-label={`Countdown to ${title}`}
+        >
+          {units.map((u) => (
+            <span key={u.label} className="flex min-w-[3.5rem] flex-col items-center sm:min-w-[4.25rem]">
+              <span className="font-display text-4xl leading-none text-accent-ink tabular-nums sm:text-5xl">
+                {String(u.value).padStart(2, "0")}
+              </span>
+              <span className="mt-2 text-xs font-medium uppercase tracking-wide text-muted">
+                {u.label}
+              </span>
+            </span>
+          ))}
+        </Link>
+        <p className="mt-8">
+          <Link
+            href={href}
+            className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
+          >
+            Event details & RSVP →
+          </Link>
+        </p>
+      </div>
     )
   }
 

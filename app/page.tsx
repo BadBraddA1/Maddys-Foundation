@@ -1,16 +1,32 @@
 import Link from "next/link"
 import { HeroPhoto } from "@/components/hero-photo"
+import { NextEventCountdown } from "@/components/next-event-countdown"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
-import { formatEventDate, listPublishedEvents } from "@/lib/events"
+import {
+  formatEventDate,
+  getNextUpcomingEvent,
+  listPublishedEvents,
+} from "@/lib/events"
 
 export const dynamic = "force-dynamic"
 
+function startsAtIso(startsAt: string): string {
+  if (startsAt.includes("T")) return startsAt
+  return `${startsAt.replace(" ", "T")}Z`
+}
+
 export default async function HomePage() {
   let upcoming: Awaited<ReturnType<typeof listPublishedEvents>> = []
+  let next: Awaited<ReturnType<typeof getNextUpcomingEvent>> = null
   let loadFailed = false
   try {
-    upcoming = (await listPublishedEvents()).slice(0, 3)
+    const [listed, soonest] = await Promise.all([
+      listPublishedEvents(),
+      getNextUpcomingEvent(),
+    ])
+    upcoming = listed.slice(0, 3)
+    next = soonest
   } catch {
     loadFailed = true
   }
@@ -95,6 +111,22 @@ export default async function HomePage() {
           </blockquote>
         </div>
       </section>
+
+      {next ? (
+        <section
+          className="border-b border-line bg-surface"
+          aria-label="Countdown to the next event"
+        >
+          <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
+            <NextEventCountdown
+              targetIso={startsAtIso(next.starts_at)}
+              title={next.title}
+              href={`/events/${next.slug}`}
+              layout="featured"
+            />
+          </div>
+        </section>
+      ) : null}
 
       <section className="border-y border-line bg-accent-soft/40">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
