@@ -9,6 +9,7 @@
   --accent: oklch(0.68 0.10 85);
   --accent-ink: oklch(0.30 0.05 70);
   --deep: oklch(0.28 0.04 250);
+  --danger: oklch(0.48 0.16 25);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 
   /* Modular scale — major third (1.25) */
@@ -37,6 +38,7 @@
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-deep: var(--deep);
+  --color-danger: var(--danger);
   --font-sans: var(--font-source-sans), "Segoe UI", system-ui, sans-serif;
   --font-display: var(--font-literata), "Iowan Old Style", "Palatino Linotype", Palatino, serif;
 }
@@ -67,6 +69,7 @@ body {
   font-kerning: normal;
   font-optical-sizing: auto;
   line-height: var(--leading-body);
+  overflow-wrap: break-word;
 }
 
 h1,

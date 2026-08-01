@@ -42,6 +42,13 @@ CTAs: squared, `font-medium` (not pill / semibold shout). Accent ≤10% of surfa
 - Events as quiet list rows, not card grids; primary CTAs full-width on small screens
 - Admin: utilitarian tables, same tokens, denser spacing
 
+## Resilience
+
+- Public registration: client + server validation, timeouts, capacity re-check, 409 duplicate email
+- Events list distinguishes empty vs load failure
+- Long titles wrap (`break-words` / `overflow-wrap`); form fields have max lengths
+- Errors use `--danger` token; live regions on success
+
 ## Motion
 
 - Signature: soft photo settle + short rise (≤0.55s, light blur) — never opacity-0 gated

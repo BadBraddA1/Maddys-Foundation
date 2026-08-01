@@ -76,22 +76,25 @@ export function EventForm({ event }: Props) {
           body: JSON.stringify(payload),
         },
       )
-      const data = (await res.json()) as { error?: string; id?: number }
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string
+        id?: number
+      }
       if (!res.ok) {
-        setError(data.error || "Save failed")
+        setError(data.error || "Save failed. Please try again.")
         return
       }
       router.push("/admin")
       router.refresh()
     } catch {
-      setError("Network error")
+      setError("Network error. Check your connection and try again.")
     } finally {
       setPending(false)
     }
   }
 
   const field =
-    "mt-1.5 w-full rounded-sm border border-line bg-surface px-3 py-2 text-ink outline-none focus:ring-2 focus:ring-accent"
+    "mt-1.5 w-full min-w-0 rounded-sm border border-line bg-surface px-3 py-2 text-ink outline-none focus:ring-2 focus:ring-accent"
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -100,6 +103,7 @@ export function EventForm({ event }: Props) {
         <input
           className={field}
           required
+          maxLength={160}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -110,6 +114,7 @@ export function EventForm({ event }: Props) {
         </label>
         <input
           className={field}
+          maxLength={80}
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           placeholder="auto-from-title"
@@ -119,6 +124,7 @@ export function EventForm({ event }: Props) {
         <label className="text-sm font-medium">Summary</label>
         <input
           className={field}
+          maxLength={280}
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
         />
@@ -128,6 +134,7 @@ export function EventForm({ event }: Props) {
         <textarea
           className={field}
           rows={6}
+          maxLength={10000}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
@@ -136,6 +143,7 @@ export function EventForm({ event }: Props) {
         <label className="text-sm font-medium">Location</label>
         <input
           className={field}
+          maxLength={200}
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
@@ -234,14 +242,14 @@ export function EventForm({ event }: Props) {
         </label>
       </div>
       {error ? (
-        <p className="text-sm font-medium text-red-700" role="alert">
+        <p className="text-sm font-medium text-danger" role="alert">
           {error}
         </p>
       ) : null}
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex min-h-11 items-center bg-deep px-6 text-sm font-medium text-white disabled:opacity-60"
+        className="inline-flex min-h-11 items-center bg-deep px-6 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? "Saving…" : event ? "Update event" : "Create event"}
       </button>

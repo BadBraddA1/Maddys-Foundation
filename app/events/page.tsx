@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { EmptyEvents, LoadError } from "@/components/load-state"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
@@ -18,15 +19,20 @@ export const dynamic = "force-dynamic"
 
 export default async function EventsPage() {
   let events: Awaited<ReturnType<typeof listPublishedEvents>> = []
+  let loadFailed = false
   try {
     events = await listPublishedEvents()
   } catch {
-    events = []
+    loadFailed = true
   }
 
   const now = Date.now()
-  const upcoming = events.filter((e) => new Date(e.starts_at).getTime() >= now - 86_400_000)
-  const past = events.filter((e) => new Date(e.starts_at).getTime() < now - 86_400_000)
+  const upcoming = events.filter(
+    (e) => new Date(e.starts_at).getTime() >= now - 86_400_000,
+  )
+  const past = events.filter(
+    (e) => new Date(e.starts_at).getTime() < now - 86_400_000,
+  )
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -37,10 +43,10 @@ export default async function EventsPage() {
           Custom foundation gatherings — register in a minute from your phone.
         </p>
 
-        {upcoming.length === 0 ? (
-          <p className="mt-12 text-muted">
-            No published events yet. Check back soon.
-          </p>
+        {loadFailed ? (
+          <LoadError title="Events unavailable" />
+        ) : upcoming.length === 0 ? (
+          <EmptyEvents />
         ) : (
           <ul className="mt-12 divide-y divide-line border-t border-line">
             {upcoming.map((event) => {
@@ -49,10 +55,10 @@ export default async function EventsPage() {
               return (
                 <li key={event.id} className="py-8">
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div className="max-w-2xl">
+                    <div className="min-w-0 max-w-2xl">
                       <Link
                         href={`/events/${event.slug}`}
-                        className="font-display text-2xl hover:text-accent-ink md:text-3xl"
+                        className="break-words font-display text-2xl hover:text-accent-ink md:text-3xl"
                       >
                         {event.title}
                       </Link>
@@ -62,7 +68,9 @@ export default async function EventsPage() {
                         {fee ? ` · ${fee}` : ""}
                       </p>
                       {event.summary ? (
-                        <p className="mt-3 text-muted">{event.summary}</p>
+                        <p className="mt-3 line-clamp-3 text-muted">
+                          {event.summary}
+                        </p>
                       ) : null}
                     </div>
                     <Link
@@ -71,7 +79,7 @@ export default async function EventsPage() {
                           ? `/events/${event.slug}/register`
                           : `/events/${event.slug}`
                       }
-                      className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-deep px-5 text-center text-sm font-medium text-white sm:w-auto"
+                      className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-deep px-5 text-center text-sm font-medium text-white sm:w-auto"
                     >
                       {open ? "Register" : "Details"}
                     </Link>
@@ -82,13 +90,16 @@ export default async function EventsPage() {
           </ul>
         )}
 
-        {past.length > 0 ? (
+        {!loadFailed && past.length > 0 ? (
           <section className="mt-20">
             <h2 className="font-display text-2xl text-muted">Past</h2>
             <ul className="mt-6 space-y-3 text-sm text-muted">
               {past.map((event) => (
-                <li key={event.id}>
-                  <Link href={`/events/${event.slug}`} className="hover:text-ink">
+                <li key={event.id} className="min-w-0">
+                  <Link
+                    href={`/events/${event.slug}`}
+                    className="break-words hover:text-ink"
+                  >
                     {event.title} — {formatEventDate(event.starts_at)}
                   </Link>
                 </li>

@@ -8,10 +8,11 @@ export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
   let upcoming: Awaited<ReturnType<typeof listPublishedEvents>> = []
+  let loadFailed = false
   try {
     upcoming = (await listPublishedEvents()).slice(0, 3)
   } catch {
-    upcoming = []
+    loadFailed = true
   }
 
   return (
@@ -113,7 +114,15 @@ export default async function HomePage() {
               View all
             </Link>
           </div>
-          {upcoming.length === 0 ? (
+          {loadFailed ? (
+            <p className="mt-8 max-w-lg text-sm text-muted" role="status">
+              Event listings are temporarily unavailable.{" "}
+              <Link href="/events" className="font-medium text-accent-ink underline underline-offset-4">
+                Try the events page
+              </Link>
+              .
+            </p>
+          ) : upcoming.length === 0 ? (
             <p className="mt-8 max-w-lg text-muted">
               New gatherings are on the way. Check back soon — or follow along as
               we open registration for the next event.
@@ -126,12 +135,12 @@ export default async function HomePage() {
                     href={`/events/${event.slug}`}
                     className="group flex flex-col gap-2 py-6 transition md:flex-row md:items-baseline md:justify-between"
                   >
-                    <div>
-                      <h3 className="font-display text-2xl group-hover:text-accent-ink">
+                    <div className="min-w-0">
+                      <h3 className="break-words font-display text-2xl group-hover:text-accent-ink">
                         {event.title}
                       </h3>
                       {event.summary ? (
-                        <p className="mt-1 text-muted">{event.summary}</p>
+                        <p className="mt-1 line-clamp-2 text-muted">{event.summary}</p>
                       ) : null}
                     </div>
                     <p className="shrink-0 text-sm font-medium text-muted">
