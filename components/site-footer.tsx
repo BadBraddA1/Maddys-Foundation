@@ -13,6 +13,7 @@ const utilityLinks = [
   { href: "/admin", label: "Staff" },
 ]
 
+/** Site footer — playbook 05 / LECYC-style columns + BraddCorp credit. */
 export function SiteFooter() {
   const host = new URL(siteUrl).host
 
@@ -76,7 +77,20 @@ export function SiteFooter() {
         </nav>
       </div>
       <div className="border-t border-on-deep-border px-5 py-4 text-center text-sm text-on-deep-faint sm:px-6 md:px-8">
-        © {new Date().getFullYear()} {siteName} · {host}
+        <p>
+          © {new Date().getFullYear()} {siteName} · {host}
+        </p>
+        <p className="mt-1">
+          Powered by{" "}
+          <a
+            href="https://braddcorp.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 hover:text-on-deep"
+          >
+            BraddCorp
+          </a>
+        </p>
       </div>
     </footer>
   )

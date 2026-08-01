@@ -75,25 +75,27 @@ When the domain is purchased:
 
 - Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` source
 - Maddy photo: responsive WebP (`maddy-640/960.webp` + `maddy.webp`) with JPEG fallback
-- Favicon / apple-touch: real PNG from logo (`app/icon.png` 192, `app/apple-icon.png` 180)
-- Open Graph: site card with Maddy photo + logo (`/opengraph-image`); per-event cards at `/events/[slug]/opengraph-image`
-- Footer: Explore + Site columns, Privacy, optional `NEXT_PUBLIC_CONTACT_EMAIL`
+- Favicon / apple-touch: logo PNGs (`app/icon.png` **512**, `app/apple-icon.png` **180**) — Camp Ruby / playbook 05
+- Open Graph: static `app/opengraph-image.jpg` + `twitter-image.jpg` (~70KB, 1200×630) + `opengraph-image.alt.txt`; per-event ImageResponse at `/events/[slug]/opengraph-image`
+- Footer: Explore + Site columns, Privacy, optional contact, BraddCorp credit (LECYC pattern)
 - Type: Literata (display) + Source Sans 3 (body) — major-third scale; limited weights
 - Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
 - A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
 
-## Site chrome checklist (playbook 05)
+## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 
 - [x] `lib/site-metadata.ts` + `metadataBase`
-- [x] Favicon + apple-icon
-- [x] Site `opengraph-image` + `twitter-image`
-- [x] Per-event `opengraph-image`
+- [x] Favicon + apple-icon (512 / 180, matching Camp Ruby)
+- [x] Site `opengraph-image.jpg` + `twitter-image.jpg` + alt.txt (static JPEG like LECYC)
+- [x] Per-event `opengraph-image` (ImageResponse)
 - [x] Custom `not-found` (header/footer + Home/Events)
 - [x] `@vercel/analytics`
 - [x] `/privacy` + footer link
 - [x] `robots.ts` + `sitemap.ts`
 - Spot-check after deploy: `/opengraph-image` and a bogus URL for 404
+
+Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBraddA1/braddcorp-reg-kit/tree/main/templates/site-chrome).
 
 ## Useful paths
 
