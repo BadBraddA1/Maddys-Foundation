@@ -7,6 +7,8 @@ import {
 } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { normalizeUsPhone } from "@/lib/phone"
+import { createEventCheckoutSession } from "@/lib/stripe-checkout"
+import { stripeConfigured } from "@/lib/stripe"
 
 export const runtime = "nodejs"
 
@@ -217,20 +219,14 @@ export async function POST(req: Request) {
   const status = requirePayment ? "pending" : "confirmed"
   const paid = requirePayment ? 0 : 1
 
+  let registrationId = 0
   try {
-    await sql`
-      INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid)
-      VALUES (
-        ${event.id},
-        ${name},
-        ${email},
-        ${phone},
-        ${guests},
-        ${notes},
-        ${status},
-        ${paid}
-      )
-    `
+    const result = await sql.execute(
+      `INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [event.id, name, email, phone, guests, notes, status, paid],
+    )
+    registrationId = Number(result.lastInsertRowid ?? 0)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     if (message.includes("UNIQUE") || message.includes("unique")) {
@@ -247,6 +243,31 @@ export async function POST(req: Request) {
     () => undefined,
   )
 
+  let checkoutUrl: string | null = null
+  if (requirePayment && stripeConfigured() && registrationId > 0) {
+    try {
+      const session = await createEventCheckoutSession({
+        eventId: event.id,
+        eventSlug: event.slug,
+        eventTitle: event.title,
+        feeCents: event.fee_cents,
+        registrationId,
+        customerEmail: email,
+        teamName: teamName || undefined,
+      })
+      checkoutUrl = session?.url ?? null
+    } catch (err) {
+      console.error("[register] stripe checkout", err)
+      // Registration is saved pending — staff can still confirm after manual pay.
+    }
+  }
+
   revalidatePublicEvents(slug)
-  return NextResponse.json({ ok: true, status })
+  return NextResponse.json({
+    ok: true,
+    status,
+    registrationId,
+    checkoutUrl,
+    stripe: stripeConfigured(),
+  })
 }

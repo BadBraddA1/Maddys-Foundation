@@ -16,7 +16,10 @@ import { siteName } from "@/lib/site-metadata"
 /** Fresh enough for capacity; registration POST also revalidates. */
 export const revalidate = 30
 
-type Props = { params: Promise<{ slug: string }> }
+type Props = {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ paid?: string; canceled?: string }>
+}
 
 export async function generateStaticParams() {
   try {
@@ -37,8 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function RegisterPage({ params }: Props) {
+export default async function RegisterPage({ params, searchParams }: Props) {
   const { slug } = await params
+  const query = await searchParams
   const event = await getEventBySlug(slug).catch(() => null)
   if (!event || !event.is_published) notFound()
 
@@ -46,6 +50,8 @@ export default async function RegisterPage({ params }: Props) {
   const fee = formatEventFeeLabel(event)
   const teamSize = event.team_size && event.team_size > 1 ? event.team_size : null
   const requirePayment = event.fee_cents > 0
+  const paidReturn = query.paid === "1"
+  const canceledReturn = query.canceled === "1"
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -62,11 +68,46 @@ export default async function RegisterPage({ params }: Props) {
         </h1>
         <p className="mt-2 text-muted">{formatEventDate(event.starts_at)}</p>
 
-        {!open ? (
+        {paidReturn ? (
+          <div
+            className="success-enter mt-10 border border-success/25 bg-success-soft px-6 py-8"
+            role="status"
+          >
+            <h2 className="font-display text-2xl text-ink">Payment received</h2>
+            <p className="mt-3 text-ink/75">
+              Thanks — your team registration for{" "}
+              <span className="font-medium text-ink">{event.title}</span> is
+              confirmed. We&apos;ll be in touch with details closer to the date.
+            </p>
+            <Link
+              href={`/events/${event.slug}`}
+              className="mt-6 inline-flex min-h-11 items-center text-sm font-medium text-ink underline underline-offset-4"
+            >
+              Back to event
+            </Link>
+          </div>
+        ) : null}
+
+        {canceledReturn && !paidReturn ? (
+          <div
+            className="mt-10 border border-line bg-surface px-6 py-6"
+            role="status"
+          >
+            <p className="text-ink">
+              Checkout was canceled. Your team details may still be saved as
+              pending — finish payment below when you&apos;re ready, or contact
+              the foundation.
+            </p>
+          </div>
+        ) : null}
+
+        {!paidReturn && !open ? (
           <p className="mt-10 text-muted">
             Registration isn&apos;t open for this event right now.
           </p>
-        ) : (
+        ) : null}
+
+        {!paidReturn && open ? (
           <div className="mt-10">
             <RegisterForm
               eventSlug={event.slug}
@@ -77,7 +118,7 @@ export default async function RegisterPage({ params }: Props) {
               requirePayment={requirePayment}
             />
           </div>
-        )}
+        ) : null}
       </main>
       <SiteFooter />
     </div>

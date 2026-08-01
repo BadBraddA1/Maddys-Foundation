@@ -8,9 +8,9 @@ Wire Stripe for **donations** (replace / complement `NEXT_PUBLIC_DONATE_URL`) an
 | --- | --- |
 | Stripe account created | ☐ |
 | Test API keys in `.env.local` | ☐ |
-| Test keys on Vercel (Preview + Production) | ☐ |
-| Webhook endpoint + signing secret | ☐ |
-| App: Checkout + `/api/stripe/webhook` | ☐ (not built yet) |
+| Test keys on Vercel (Preview + Production) | ☐ (vars exist — must be non-empty `pk_` / `sk_` / `whsec_`) |
+| Webhook endpoint + signing secret | ☐ URL: `/api/stripe/webhook` |
+| App: Checkout + `/api/stripe/webhook` | ✅ built — team/event fees redirect to Stripe Checkout; webhook marks registration paid |
 | Live keys + live webhook after soft launch | ☐ |
 
 ## Keys you need
@@ -98,4 +98,4 @@ Add the same three for Preview + Production (test keys first; swap to `pk_live_`
 ## Related
 
 - Current placeholder: `NEXT_PUBLIC_DONATE_URL` (external link until Stripe ships)
-- Event fees today: optional `paypal_link` on events in admin
+- Event fees today: Stripe Checkout when `STRIPE_SECRET_KEY` is set; otherwise pending + optional `paypal_link`

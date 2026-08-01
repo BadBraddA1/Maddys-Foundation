@@ -152,9 +152,14 @@ export function RegisterForm({
         }),
       })
 
-      let data: { error?: string; status?: string } = {}
+      let data: {
+        error?: string
+        status?: string
+        checkoutUrl?: string | null
+        stripe?: boolean
+      } = {}
       try {
-        data = (await res.json()) as { error?: string; status?: string }
+        data = (await res.json()) as typeof data
       } catch {
         data = {}
       }
@@ -172,6 +177,12 @@ export function RegisterForm({
         }
         return
       }
+
+      if (data.checkoutUrl) {
+        window.location.assign(data.checkoutUrl)
+        return
+      }
+
       setAwaitingPayment(data.status === "pending" || requirePayment)
       setDone(true)
     } catch (err) {

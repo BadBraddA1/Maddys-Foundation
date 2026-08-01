@@ -110,6 +110,7 @@ When the domain is purchased:
 - Event dates format in `America/Chicago`
 - Her Story: Maddy’s bio (Herculaneum High, sports, sister Lydia) + day-on-the-green invite; purpose = scholarships (Herculaneum & DeSoto)
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
+- Stripe: Checkout on paid registration + `/api/stripe/webhook` confirms roster (needs real `pk_`/`sk_`/`whsec_` in Vercel — empty placeholders won’t work)
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 
