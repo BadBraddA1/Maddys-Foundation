@@ -81,11 +81,15 @@ Never commit `.env.local` or tokens.
 
 ## Domain cutover (`maddysfoundation.org`)
 
-When the domain is purchased:
+When DNS is ready (Cloudflare preferred):
 
-1. Point DNS (Cloudflare preferred) to the Vercel project.
+1. Point DNS to the Vercel project `maddys-foundation`.
 2. Add `maddysfoundation.org` (+ `www`) in Vercel → Domains.
-3. Set `NEXT_PUBLIC_SITE_URL=https://maddysfoundation.org` and redeploy.
+3. Set `NEXT_PUBLIC_SITE_URL=https://maddysfoundation.org` on Vercel (Production + Preview) — currently temporarily set to `https://maddys-foundation.vercel.app` so OG images work.
+4. Redeploy production.
+5. Confirm `https://maddysfoundation.org/opengraph-image.jpg` returns 200.
+
+Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask to set up Cloudflare/DNS).
 
 ## Brand assets
 
