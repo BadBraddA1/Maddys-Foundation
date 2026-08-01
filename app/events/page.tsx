@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { EmptyEvents, LoadError } from "@/components/load-state"
-import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
   formatEventDate,
@@ -36,7 +35,7 @@ export default async function EventsPage() {
   )
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-1 flex-col">
       <SiteHeaderSolid />
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <h1 className="font-display">Events</h1>
@@ -109,7 +108,6 @@ export default async function EventsPage() {
           </section>
         ) : null}
       </main>
-      <SiteFooter />
     </div>
   )
 }

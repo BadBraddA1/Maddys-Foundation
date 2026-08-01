@@ -1,10 +1,9 @@
 import Link from "next/link"
-import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-1 flex-col">
       <SiteHeaderSolid />
       <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-5 py-24 md:px-8">
         <h1 className="font-display">Page not found</h1>
@@ -27,7 +26,6 @@ export default function NotFound() {
           </Link>
         </div>
       </main>
-      <SiteFooter />
     </div>
   )
 }

@@ -1,9 +1,9 @@
 "use client"
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { PublicSponsor } from "@/lib/sponsors"
 
-/** Must match `.sponsor-marquee-track` animation duration in globals.css */
+/** One full loop (half the duplicated track) in ms — used for wall-clock phase. */
 export const SPONSOR_MARQUEE_DURATION_MS = 40_000
 
 type Props = { sponsors: PublicSponsor[] }
@@ -45,16 +45,27 @@ function SponsorMark({ sponsor }: { sponsor: PublicSponsor }) {
   )
 }
 
+function estimateCopies(sponsorCount: number): number {
+  const width =
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  const approxSet = Math.max(sponsorCount, 1) * 160
+  return Math.max(1, Math.ceil(width / approxSet)) * 2
+}
+
 /**
  * Infinite horizontal sponsor strip.
- * Duplicates the logo set until each animation half fills the viewport
- * (so few sponsors don’t leave a blank right half of the screen).
+ * Position is driven by wall-clock time (rAF), not CSS animation — remounts
+ * and navigations land on the same phase. Logo set is duplicated until each
+ * half fills the viewport.
  */
 export function SponsorMarquee({ sponsors }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
-  /** How many copies of the full sponsor list are in the track (always even ≥ 2). */
-  const [copies, setCopies] = useState(4)
+  const pausedRef = useRef(false)
+  const [copies, setCopies] = useState(() =>
+    estimateCopies(Math.max(sponsors.length, 1)),
+  )
+  const [reduceMotion, setReduceMotion] = useState(false)
 
   const loop = useMemo(() => {
     if (sponsors.length === 0) return []
@@ -69,51 +80,65 @@ export function SponsorMarquee({ sponsors }: Props) {
     const track = trackRef.current
     if (!viewport || !track) return
 
-    let cancelled = false
-
-    const measureAndFill = () => {
-      if (cancelled) return
+    const measure = () => {
       const kids = track.children
       if (kids.length < sponsors.length) return
-
       let setWidth = 0
       for (let i = 0; i < sponsors.length; i++) {
         setWidth += (kids[i] as HTMLElement).offsetWidth
       }
       if (setWidth <= 0) return
-
-      // One animation half must cover the viewport; track = 2 halves (−50% keyframes).
-      const setsPerHalf = Math.max(1, Math.ceil(viewport.clientWidth / setWidth))
-      const nextCopies = setsPerHalf * 2
-      setCopies((prev) => (prev === nextCopies ? prev : nextCopies))
+      const setsPerHalf = Math.max(
+        1,
+        Math.ceil(viewport.clientWidth / setWidth),
+      )
+      const next = setsPerHalf * 2
+      setCopies((prev) => (prev === next ? prev : next))
     }
 
-    const syncClock = () => {
-      if (cancelled || !trackRef.current) return
-      const offsetMs = Date.now() % SPONSOR_MARQUEE_DURATION_MS
-      trackRef.current.style.animationDelay = `-${offsetMs}ms`
-    }
-
-    measureAndFill()
-    syncClock()
-
+    measure()
     const onResize = () => {
-      measureAndFill()
-      syncClock()
+      setCopies(estimateCopies(sponsors.length))
+      requestAnimationFrame(measure)
     }
     window.addEventListener("resize", onResize)
-
-    // Logos loading can change widths.
-    const imgs = track.querySelectorAll("img")
-    imgs.forEach((img) => {
-      if (!img.complete) img.addEventListener("load", measureAndFill, { once: true })
+    track.querySelectorAll("img").forEach((img) => {
+      if (!img.complete) img.addEventListener("load", measure, { once: true })
     })
-
-    return () => {
-      cancelled = true
-      window.removeEventListener("resize", onResize)
-    }
+    return () => window.removeEventListener("resize", onResize)
   }, [sponsors, copies])
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const apply = () => setReduceMotion(mq.matches)
+    apply()
+    mq.addEventListener("change", apply)
+    return () => mq.removeEventListener("change", apply)
+  }, [])
+
+  // Wall-clock driven scroll — same Date.now() phase after any remount.
+  useEffect(() => {
+    if (reduceMotion || sponsors.length === 0) return
+    const track = trackRef.current
+    if (!track) return
+
+    let raf = 0
+    const tick = () => {
+      const el = trackRef.current
+      if (el && !pausedRef.current) {
+        const half = el.scrollWidth / 2
+        if (half > 0) {
+          const phase =
+            (Date.now() % SPONSOR_MARQUEE_DURATION_MS) /
+            SPONSOR_MARQUEE_DURATION_MS
+          el.style.transform = `translate3d(${-phase * half}px,0,0)`
+        }
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [reduceMotion, sponsors.length, copies, loop.length])
 
   if (sponsors.length === 0) return null
 
@@ -127,16 +152,23 @@ export function SponsorMarquee({ sponsors }: Props) {
       <div
         ref={viewportRef}
         className="sponsor-marquee relative mt-3 overflow-hidden pb-5"
+        onMouseEnter={() => {
+          pausedRef.current = true
+        }}
+        onMouseLeave={() => {
+          pausedRef.current = false
+        }}
       >
         <div
           ref={trackRef}
-          className="sponsor-marquee-track flex w-max items-center"
+          className={
+            reduceMotion
+              ? "sponsor-marquee-track sponsor-marquee-track--static flex w-max items-center"
+              : "sponsor-marquee-track flex w-max items-center will-change-transform"
+          }
         >
           {loop.map((sponsor, i) => (
-            <SponsorMark
-              key={`${sponsor.id}-${i}`}
-              sponsor={sponsor}
-            />
+            <SponsorMark key={`${sponsor.id}-${i}`} sponsor={sponsor} />
           ))}
         </div>
       </div>

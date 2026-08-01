@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Analytics } from "@vercel/analytics/next"
 import { Literata, Source_Sans_3 } from "next/font/google"
+import { SiteFooter } from "@/components/site-footer"
+import { SiteFooterGate } from "@/components/site-footer-gate"
 import { clerkConfigured } from "@/lib/auth"
 import {
   ogImageAlt,
@@ -91,9 +93,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${literata.variable} ${sourceSans.variable}`}>
-      <body className="min-h-screen bg-bg font-sans text-ink antialiased">
+      <body className="flex min-h-screen flex-col bg-bg font-sans text-ink antialiased">
         <Providers>
-          {children}
+          <div className="flex flex-1 flex-col">{children}</div>
+          <SiteFooterGate>
+            <SiteFooter />
+          </SiteFooterGate>
           <Analytics />
         </Providers>
         {/* Favicons: app/icon.png + app/apple-icon.png (playbook 05) */}

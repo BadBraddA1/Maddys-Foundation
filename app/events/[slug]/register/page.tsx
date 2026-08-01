@@ -3,7 +3,6 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { RegisterForm } from "@/components/register-form"
 import { ClearRegistrationHold } from "@/components/clear-registration-hold"
-import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
   formatEventDate,
@@ -68,7 +67,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-1 flex-col">
       <SiteHeaderSolid />
       <main id="main" className="mx-auto w-full max-w-xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <Link
@@ -136,7 +135,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           </div>
         ) : null}
       </main>
-      <SiteFooter />
     </div>
   )
 }

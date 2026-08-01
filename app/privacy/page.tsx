@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import { siteName, siteUrl } from "@/lib/site-metadata"
 
@@ -10,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-1 flex-col">
       <SiteHeaderSolid />
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8">
         <h1 className="font-display">Privacy</h1>
@@ -34,7 +33,6 @@ export default function PrivacyPage() {
           <p className="text-sm">Last updated: August 1, 2026</p>
         </div>
       </main>
-      <SiteFooter />
     </div>
   )
 }

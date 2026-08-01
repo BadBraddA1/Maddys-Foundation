@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import { getNextUpcomingEvent } from "@/lib/events"
 
@@ -19,7 +18,7 @@ export default async function StoryPage() {
   const eventCta = nextEvent ? "Join the scramble" : "See events"
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-1 flex-col">
       <SiteHeaderSolid />
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_0.9fr]">
@@ -78,7 +77,6 @@ export default async function StoryPage() {
           </p>
         </section>
       </main>
-      <SiteFooter />
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import { donateUrl } from "@/lib/site-metadata"
 
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function DonatePage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-1 flex-col">
       <SiteHeaderSolid />
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <h1 className="font-display">
@@ -32,7 +31,6 @@ export default function DonatePage() {
           Donate with Venmo
         </a>
       </main>
-      <SiteFooter />
     </div>
   )
 }

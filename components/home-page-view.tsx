@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { HeroPhoto } from "@/components/hero-photo"
 import { NextEventCountdown } from "@/components/next-event-countdown"
-import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import {
   formatEventDate,
@@ -35,7 +34,7 @@ export async function HomePageView() {
   const { upcoming, next, loadFailed } = await loadHomeEvents()
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg text-ink">
+    <div className="flex flex-1 flex-col bg-bg text-ink">
       <main id="main" className="flex flex-1 flex-col">
         <section
           data-home-hero
@@ -185,8 +184,6 @@ export async function HomePageView() {
           </div>
         </section>
       </main>
-
-      <SiteFooter />
     </div>
   )
 }
