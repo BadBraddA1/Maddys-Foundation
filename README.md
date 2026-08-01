@@ -59,6 +59,7 @@ Without Clerk keys the public site still runs; `/admin` shows setup instructions
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | admin | Clerk |
 | `CLERK_SECRET_KEY` | admin | Clerk |
 | `NEXT_PUBLIC_DONATE_URL` | no | External donate link |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | no | Shown in footer when set |
 
 Never commit `.env.local` or tokens.
 
@@ -74,11 +75,25 @@ When the domain is purchased:
 
 - Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` source
 - Maddy photo: responsive WebP (`maddy-640/960.webp` + `maddy.webp`) with JPEG fallback
-- Favicon / apple-touch: real PNG (`app/icon.png`, `app/apple-icon.png`)
+- Favicon / apple-touch: real PNG from logo (`app/icon.png` 192, `app/apple-icon.png` 180)
+- Open Graph: site card with Maddy photo + logo (`/opengraph-image`); per-event cards at `/events/[slug]/opengraph-image`
+- Footer: Explore + Site columns, Privacy, optional `NEXT_PUBLIC_CONTACT_EMAIL`
 - Type: Literata (display) + Source Sans 3 (body) — major-third scale; limited weights
 - Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
 - A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
+
+## Site chrome checklist (playbook 05)
+
+- [x] `lib/site-metadata.ts` + `metadataBase`
+- [x] Favicon + apple-icon
+- [x] Site `opengraph-image` + `twitter-image`
+- [x] Per-event `opengraph-image`
+- [x] Custom `not-found` (header/footer + Home/Events)
+- [x] `@vercel/analytics`
+- [x] `/privacy` + footer link
+- [x] `robots.ts` + `sitemap.ts`
+- Spot-check after deploy: `/opengraph-image` and a bogus URL for 404
 
 ## Useful paths
 

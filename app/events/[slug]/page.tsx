@@ -9,7 +9,7 @@ import {
   getEventBySlug,
   isRegistrationAvailable,
 } from "@/lib/events"
-import { siteName } from "@/lib/site-metadata"
+import { siteName, siteUrl } from "@/lib/site-metadata"
 
 export const dynamic = "force-dynamic"
 
@@ -23,10 +23,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   return {
     title: event.title,
-    description: event.summary || `Join us for ${event.title} — ${siteName}`,
+    description: (
+      event.summary || `Join us for ${event.title} — ${siteName}`
+    ).slice(0, 125),
     openGraph: {
       title: `${event.title} | ${siteName}`,
-      description: event.summary || undefined,
+      description: event.summary?.slice(0, 125) || undefined,
+      url: `${siteUrl}/events/${event.slug}`,
+      siteName,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${event.title} | ${siteName}`,
+      description: event.summary?.slice(0, 125) || undefined,
     },
   }
 }

@@ -75,6 +75,7 @@ export default function RootLayout({
           {children}
           <Analytics />
         </Providers>
+        {/* Favicons: app/icon.png + app/apple-icon.png (playbook 05) */}
       </body>
     </html>
   )

@@ -12,12 +12,20 @@ export default function NotFound() {
           That link doesn&apos;t lead anywhere — let&apos;s get you back to the
           light.
         </p>
-        <Link
-          href="/"
-          className="mt-8 motion-press inline-flex min-h-11 w-full max-w-xs items-center justify-center bg-deep px-6 text-sm font-medium text-on-deep"
-        >
-          Home
-        </Link>
+        <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row">
+          <Link
+            href="/"
+            className="motion-press inline-flex min-h-11 flex-1 items-center justify-center bg-deep px-6 text-sm font-medium text-on-deep"
+          >
+            Home
+          </Link>
+          <Link
+            href="/events"
+            className="motion-press inline-flex min-h-11 flex-1 items-center justify-center border border-line px-6 text-sm font-medium text-ink hover:bg-surface"
+          >
+            Events
+          </Link>
+        </div>
       </main>
       <SiteFooter />
     </div>
