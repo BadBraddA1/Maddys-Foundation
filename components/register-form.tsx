@@ -473,8 +473,6 @@ export function RegisterForm({
           </div>
         )}
 
-        )}
-
       {isTeam ? (
         <fieldset className="space-y-3 border-t border-line pt-5">
           <legend className="text-sm font-medium text-ink">
