@@ -785,13 +785,6 @@ export function RegisterForm({
           Suggested contribution: <strong className="text-ink">{feeLabel}</strong>
         </p>
       ) : null}
-      {requirePayment ? (
-        <p className="text-sm text-muted">
-          Opening this form reserves a {isTeam ? "team spot" : "spot"} in
-          capacity for {CHECKOUT_HOLD_MINUTES} minutes. Submit and pay before
-          the timer ends, or it goes back in the pool.
-        </p>
-      ) : null}
       {error ? (
         <div className="space-y-2" role="alert">
           <p className="text-sm font-medium text-danger">{error}</p>

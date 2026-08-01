@@ -91,7 +91,7 @@ export function EventCapacityBanner({ event }: Props) {
         </p>
       ) : left > 0 ? (
         <p className="mt-4 text-sm text-muted">
-          Checkout holds your {unitOne} for{" "}
+          Opening register reserves your {unitOne} for{" "}
           <strong className="text-ink">{CHECKOUT_HOLD_MINUTES} minutes</strong>.
           Pay in time or the spot returns to the pool.
         </p>

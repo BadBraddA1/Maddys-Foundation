@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ConfirmRegistrationButton } from "@/components/admin/confirm-registration-button"
+import { ReleaseHoldsButton } from "@/components/admin/release-holds-button"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import {
   capacityUnitLabel,
@@ -9,6 +10,7 @@ import {
   listRegistrations,
 } from "@/lib/events"
 import { formatPhoneDisplay, phoneTelHref } from "@/lib/phone"
+import { countOpenUnpaidHolds } from "@/lib/registration-hold"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +26,11 @@ export default async function RegistrationsPage({ params }: Props) {
   if (!event) notFound()
 
   const rows = await listRegistrations(event.id)
+  const holds = await countOpenUnpaidHolds(event.id).catch(() => ({
+    formHolds: 0,
+    pendingCheckouts: 0,
+    total: 0,
+  }))
 
   return (
     <div>
@@ -40,7 +47,12 @@ export default async function RegistrationsPage({ params }: Props) {
           ? ` · capacity ${event.capacity} ${capacityUnitLabel(event)}`
           : ""}
         {isTeamEvent(event) ? ` · ${event.team_size}-person teams` : ""}
+        {holds.total > 0
+          ? ` · ${holds.total} unpaid hold${holds.total === 1 ? "" : "s"} (${holds.formHolds} form · ${holds.pendingCheckouts} checkout)`
+          : ""}
       </p>
+
+      <ReleaseHoldsButton eventId={event.id} heldCount={holds.total} />
 
       {rows.length === 0 ? (
         <p className="mt-10 text-muted">

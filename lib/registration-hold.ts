@@ -243,3 +243,92 @@ export async function releaseExpiredHolds(eventId?: number): Promise<number> {
 
   return released
 }
+
+/** Active unpaid slots: form timers + pending checkout drafts. */
+export async function countOpenUnpaidHolds(eventId: number): Promise<{
+  formHolds: number
+  pendingCheckouts: number
+  total: number
+}> {
+  const now = Math.floor(Date.now() / 1000)
+  const formRows = await sql`
+    SELECT COUNT(*) AS c FROM capacity_holds
+    WHERE event_id = ${eventId} AND hold_expires_at > ${now}
+  `
+  const pendingRows = await sql`
+    SELECT COUNT(*) AS c FROM registrations
+    WHERE event_id = ${eventId} AND status = 'pending' AND paid = 0
+  `
+  const formHolds = Number(formRows[0]?.c ?? 0)
+  const pendingCheckouts = Number(pendingRows[0]?.c ?? 0)
+  return {
+    formHolds,
+    pendingCheckouts,
+    total: formHolds + pendingCheckouts,
+  }
+}
+
+/**
+ * Admin: release every unpaid hold for an event (form timers + pending checkouts).
+ * Paid / confirmed registrations are never touched.
+ */
+export async function releaseAllUnpaidHolds(
+  eventId: number,
+  actor: string,
+): Promise<{ formHolds: number; pendingCheckouts: number; total: number }> {
+  const stripe = stripeConfigured() ? getStripe() : null
+
+  const pending = await sql`
+    SELECT id, stripe_checkout_session_id FROM registrations
+    WHERE event_id = ${eventId} AND status = 'pending' AND paid = 0
+  `
+
+  let pendingCheckouts = 0
+  for (const row of pending) {
+    const id = Number(row.id)
+    const sessionId =
+      row.stripe_checkout_session_id == null
+        ? null
+        : String(row.stripe_checkout_session_id)
+
+    if (stripe && sessionId) {
+      try {
+        await stripe.checkout.sessions.expire(sessionId)
+      } catch {
+        // ignore
+      }
+    }
+
+    const result = await sql.execute(
+      `DELETE FROM registrations WHERE id = ? AND status = 'pending' AND paid = 0`,
+      [id],
+    )
+    if (result.rowsAffected > 0) pendingCheckouts += 1
+  }
+
+  const holdResult = await sql.execute(
+    `DELETE FROM capacity_holds WHERE event_id = ?`,
+    [eventId],
+  )
+  const formHolds = holdResult.rowsAffected
+
+  await audit(
+    actor,
+    "release_all_unpaid_holds",
+    "event",
+    String(eventId),
+    `form:${formHolds};pending:${pendingCheckouts}`,
+  ).catch(() => undefined)
+
+  const eventRows = await sql`
+    SELECT slug FROM events WHERE id = ${eventId} LIMIT 1
+  `
+  if (eventRows[0]?.slug) revalidatePublicEvents(String(eventRows[0].slug))
+
+  return {
+    formHolds,
+    pendingCheckouts,
+    total: formHolds + pendingCheckouts,
+  }
+}
+
