@@ -7,7 +7,7 @@ Public foundation site + custom event registration for **maddysfoundation.org** 
 - Marketing site (home, Maddy’s story, donate, privacy)
 - Published events list + detail pages (Google / Apple Maps links from location)
 - Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set; opening the register form **reserves a capacity slot** for **10 minutes** (assumes they’ll pay); unpaid / expired holds return to the pool; roster only shows paid teams
-- Staff admin (`/admin`) to create/edit events, view rosters, and confirm payment
+- Staff admin (`/admin`) to create/edit events, view rosters, confirm payment, **release unpaid holds**, and **day-of player check-in** (desk + dashboard)
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.
 
@@ -127,6 +127,18 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Her Story: Maddy’s bio (Herculaneum High, sports, sister Lydia) + day-on-the-green invite; purpose = scholarships (Herculaneum & DeSoto)
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, **31 team capacity**, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 - Stripe: Checkout on paid registration + webhook confirms roster; **10-minute hold** then unpaid drafts are released (Stripe session expired + row deleted) and never shown in admin
+- Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
+
+## Day-of check-in (ops)
+
+1. Staff sign in at `/admin` (password or Clerk).
+2. Open **Check-in desk** (or Roster → Day-of check-in).
+3. First time / after imports: on the event roster, **Sync players from roster notes**.
+4. Search team → Load → check players in as they arrive; **Save add-ons** separately (Skins / Golf Cannon / Golf Pro per player).
+5. Print/copy the team QR (`/admin/check-in?team={registrationId}`) — phone must already be staff-logged-in.
+6. Dashboard for live totals and CSV export.
+
+Paid registration Mulligans/Skins stay on the registration notes; desk add-ons are separate day-of sales.
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 
@@ -145,5 +157,5 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 ## Useful paths
 
 - Public: `/` `/story` `/events` `/events/[slug]/register` `/donate` `/privacy`
-- Staff: `/admin` `/admin/events/new` `/admin/events/[id]/registrations`
-- API: `POST /api/register` · `POST/PATCH /api/admin/events`
+- Staff: `/admin` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]/registrations`
+- API: `POST /api/register` · `POST/PATCH /api/admin/events` · `/api/admin/check-in/*`

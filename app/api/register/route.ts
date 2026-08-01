@@ -292,9 +292,20 @@ export async function POST(req: Request) {
   let registrationId = 0
   try {
     const result = await sql.execute(
-      `INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid, hold_expires_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [event.id, name, email, phone, guests, notes, status, paid, holdUntil],
+      `INSERT INTO registrations (event_id, name, email, phone, guests, notes, status, paid, hold_expires_at, team_name)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        event.id,
+        name,
+        email,
+        phone,
+        guests,
+        notes,
+        status,
+        paid,
+        holdUntil,
+        teamName || "",
+      ],
     )
     registrationId = Number(result.lastInsertRowid ?? 0)
   } catch (err) {
@@ -317,6 +328,23 @@ export async function POST(req: Request) {
   await audit("public", "register", "event", String(event.id), `${email}:${status}`).catch(
     () => undefined,
   )
+
+  if (!requirePayment && registrationId > 0 && teamSize) {
+    const { ensureCheckInRosterForRegistration } = await import("@/lib/check-in")
+    const playerNames = [
+      name,
+      ...(Array.isArray(body.teammates)
+        ? body.teammates
+            .map((t) => parseNameParts(t))
+            .filter((t): t is NonNullable<typeof t> => Boolean(t))
+            .map((t) => t.full)
+        : []),
+    ]
+    await ensureCheckInRosterForRegistration(registrationId, {
+      teamName: teamName || undefined,
+      playerNames,
+    }).catch(() => undefined)
+  }
 
   let checkoutUrl: string | null = null
   let holdExpiresAt: number | null = holdUntil

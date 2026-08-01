@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS registrations (
   stripe_checkout_session_id TEXT,
   /** Unix seconds — unpaid draft holds capacity until this time (10 min). */
   hold_expires_at INTEGER,
+  team_name TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   UNIQUE (event_id, email)
 );
@@ -61,6 +62,60 @@ CREATE TABLE IF NOT EXISTS capacity_holds (
 
 CREATE INDEX IF NOT EXISTS idx_capacity_holds_event_expires
   ON capacity_holds (event_id, hold_expires_at);
+
+-- Denormalized team name for check-in search (parsed from notes / set on register).
+-- Applied via ALTER on existing DBs: ALTER TABLE registrations ADD COLUMN team_name TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS event_players (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  registration_id INTEGER NOT NULL REFERENCES registrations(id) ON DELETE CASCADE,
+  display_name TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  checked_in INTEGER NOT NULL DEFAULT 0,
+  checked_in_at TEXT,
+  skins INTEGER NOT NULL DEFAULT 0,
+  golf_cannon INTEGER NOT NULL DEFAULT 0,
+  golf_pro INTEGER NOT NULL DEFAULT 0,
+  addon_total_cents INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  UNIQUE (registration_id, sort_order)
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_players_event
+  ON event_players (event_id);
+
+CREATE INDEX IF NOT EXISTS idx_event_players_registration
+  ON event_players (registration_id);
+
+CREATE TABLE IF NOT EXISTS addon_prices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER REFERENCES events(id) ON DELETE CASCADE,
+  addon_key TEXT NOT NULL,
+  label TEXT NOT NULL,
+  price_cents INTEGER NOT NULL,
+  UNIQUE (event_id, addon_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_addon_prices_event
+  ON addon_prices (event_id);
+
+CREATE TABLE IF NOT EXISTS check_in_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  registration_id INTEGER NOT NULL REFERENCES registrations(id) ON DELETE CASCADE,
+  player_id INTEGER REFERENCES event_players(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,
+  actor TEXT NOT NULL DEFAULT 'staff',
+  detail TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE INDEX IF NOT EXISTS idx_check_in_history_event
+  ON check_in_history (event_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_check_in_history_registration
+  ON check_in_history (registration_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

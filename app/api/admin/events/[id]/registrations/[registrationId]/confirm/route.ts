@@ -40,6 +40,9 @@ export async function POST(_req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Registration not found" }, { status: 404 })
   }
 
+  const { ensureCheckInRosterForRegistration } = await import("@/lib/check-in")
+  await ensureCheckInRosterForRegistration(registrationId).catch(() => undefined)
+
   await audit(
     admin.email,
     "confirm_registration",

@@ -243,11 +243,17 @@ export async function confirmRegistrationFromCheckout(
     return
   }
 
+  const confirmedId = Number(still[0].id ?? registrationId)
+  const { ensureCheckInRosterForRegistration } = await import("@/lib/check-in")
+  await ensureCheckInRosterForRegistration(confirmedId).catch((err) => {
+    console.error("[stripe] check-in roster", err)
+  })
+
   await audit(
     "stripe",
     "confirm_registration",
     "registration",
-    String(still[0].id ?? registrationId),
+    String(confirmedId),
     session.id,
   )
 

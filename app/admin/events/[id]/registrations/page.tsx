@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ConfirmRegistrationButton } from "@/components/admin/confirm-registration-button"
 import { ReleaseHoldsButton } from "@/components/admin/release-holds-button"
+import { SyncPlayersButton } from "@/components/admin/sync-players-button"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import {
   capacityUnitLabel,
@@ -53,7 +54,16 @@ export default async function RegistrationsPage({ params }: Props) {
       </p>
 
       <ReleaseHoldsButton eventId={event.id} heldCount={holds.total} />
+      {isTeamEvent(event) ? <SyncPlayersButton eventId={event.id} /> : null}
 
+      <p className="mt-4">
+        <Link
+          href={`/admin/check-in?eventId=${event.id}`}
+          className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
+        >
+          Day-of check-in desk
+        </Link>
+      </p>
       {rows.length === 0 ? (
         <p className="mt-10 text-muted">
           No paid {capacityUnitLabel(event)} yet.

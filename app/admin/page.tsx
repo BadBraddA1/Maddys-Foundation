@@ -44,12 +44,20 @@ export default async function AdminHomePage() {
             Create gatherings and open registration.
           </p>
         </div>
-        <Link
-          href="/admin/events/new"
-          className="inline-flex min-h-11 items-center bg-deep px-5 text-sm font-medium text-on-deep"
-        >
-          New event
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/admin/events/new"
+            className="inline-flex min-h-11 items-center bg-deep px-5 text-sm font-medium text-on-deep"
+          >
+            New event
+          </Link>
+          <Link
+            href="/admin/check-in"
+            className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
+          >
+            Check-in desk
+          </Link>
+        </div>
       </div>
 
       {events.length === 0 ? (
