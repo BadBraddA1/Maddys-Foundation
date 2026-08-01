@@ -3,9 +3,17 @@ import { sql } from "@/lib/db"
 import { audit, getEventById } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { getStripe, publicSiteUrl, stripeConfigured } from "@/lib/stripe"
-import { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/team-addons"
+import {
+  TEAM_ADDON_CENTS,
+  registrationTotalCents,
+} from "@/lib/team-addons"
 
-export { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/team-addons"
+export {
+  TEAM_ADDON_CENTS,
+  cardFeeCoverCents,
+  registrationTotalCents,
+  teamAddonTotalCents,
+} from "@/lib/team-addons"
 
 export async function createEventCheckoutSession(opts: {
   eventId: number
@@ -17,10 +25,10 @@ export async function createEventCheckoutSession(opts: {
   teamName?: string
   mulligans?: boolean
   skins?: boolean
+  coverCardFees?: boolean
 }): Promise<{ url: string; sessionId: string; totalCents: number } | null> {
-  const addonCents = teamAddonTotalCents(opts)
-  const totalCents = opts.feeCents + addonCents
-  if (!stripeConfigured() || totalCents <= 0) return null
+  const totals = registrationTotalCents(opts)
+  if (!stripeConfigured() || totals.totalCents <= 0) return null
 
   const stripe = getStripe()
   const base = publicSiteUrl()
@@ -30,12 +38,12 @@ export async function createEventCheckoutSession(opts: {
 
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = []
 
-  if (opts.feeCents > 0) {
+  if (totals.baseCents > 0) {
     line_items.push({
       quantity: 1,
       price_data: {
         currency: "usd",
-        unit_amount: opts.feeCents,
+        unit_amount: totals.baseCents,
         product_data: {
           name: productName,
           description: "Tournament registration fee",
@@ -72,6 +80,20 @@ export async function createEventCheckoutSession(opts: {
     })
   }
 
+  if (totals.feeCoverCents > 0) {
+    line_items.push({
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: totals.feeCoverCents,
+        product_data: {
+          name: "Cover card processing fees",
+          description: "So the foundation receives the full registration amount (est. 2.9% + $0.30)",
+        },
+      },
+    })
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     customer_email: opts.customerEmail,
@@ -84,14 +106,21 @@ export async function createEventCheckoutSession(opts: {
       kind: "event_registration",
       mulligans: opts.mulligans ? "1" : "0",
       skins: opts.skins ? "1" : "0",
-      totalCents: String(totalCents),
+      coverCardFees: opts.coverCardFees ? "1" : "0",
+      netCents: String(totals.netCents),
+      feeCoverCents: String(totals.feeCoverCents),
+      totalCents: String(totals.totalCents),
     },
     success_url: `${base}/events/${opts.eventSlug}/register?paid=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${base}/events/${opts.eventSlug}/register?canceled=1`,
   })
 
   if (!session.url) return null
-  return { url: session.url, sessionId: session.id, totalCents }
+  return {
+    url: session.url,
+    sessionId: session.id,
+    totalCents: totals.totalCents,
+  }
 }
 
 export async function confirmRegistrationFromCheckout(

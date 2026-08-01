@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useId, useMemo, useRef, useState } from "react"
 import { formatFee } from "@/lib/events"
 import { normalizeUsPhone } from "@/lib/phone"
-import { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/team-addons"
+import { TEAM_ADDON_CENTS, registrationTotalCents } from "@/lib/team-addons"
 
 type Props = {
   eventSlug: string
@@ -52,6 +52,7 @@ export function RegisterForm({
   const [guests, setGuests] = useState(1)
   const [mulligans, setMulligans] = useState(false)
   const [skins, setSkins] = useState(false)
+  const [coverCardFees, setCoverCardFees] = useState(false)
   const [notes, setNotes] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -59,13 +60,19 @@ export function RegisterForm({
   const [pending, setPending] = useState(false)
   const [awaitingPayment, setAwaitingPayment] = useState(false)
 
-  const addonCents = useMemo(
-    () => teamAddonTotalCents({ mulligans, skins }),
-    [mulligans, skins],
+  const totals = useMemo(
+    () =>
+      registrationTotalCents({
+        feeCents,
+        mulligans: isTeam ? mulligans : false,
+        skins: isTeam ? skins : false,
+        coverCardFees: isTeam ? coverCardFees : false,
+      }),
+    [feeCents, isTeam, mulligans, skins, coverCardFees],
   )
-  const totalCents = Math.max(0, feeCents) + (isTeam ? addonCents : 0)
-  const totalLabel = formatFee(totalCents)
+  const totalLabel = formatFee(totals.totalCents)
   const addonPriceLabel = formatFee(TEAM_ADDON_CENTS) ?? "$20"
+  const feeCoverLabel = formatFee(totals.feeCoverCents)
 
   function setPlayer(index: number, patch: Partial<NameParts>) {
     setPlayers((prev) => {
@@ -161,6 +168,7 @@ export function RegisterForm({
             : undefined,
           mulligans: isTeam ? mulligans : undefined,
           skins: isTeam ? skins : undefined,
+          coverCardFees: isTeam ? coverCardFees : undefined,
           notes: notes.trim(),
         }),
       })
@@ -559,17 +567,41 @@ export function RegisterForm({
             />
             Skins (+{addonPriceLabel})
           </label>
+          <label
+            htmlFor={`${formId}-cover-fees`}
+            className="flex min-h-11 items-start gap-3 text-sm text-ink"
+          >
+            <input
+              id={`${formId}-cover-fees`}
+              name="coverCardFees"
+              type="checkbox"
+              checked={coverCardFees}
+              onChange={(e) => setCoverCardFees(e.target.checked)}
+              className="mt-1 size-4 shrink-0 accent-[var(--accent)]"
+            />
+            <span>
+              Cover card processing fees
+              {feeCoverLabel ? (
+                <span className="text-muted"> (+{feeCoverLabel})</span>
+              ) : null}
+              <span className="mt-0.5 block text-muted">
+                Optional — so the foundation keeps the full registration amount
+                (about 2.9% + $0.30).
+              </span>
+            </span>
+          </label>
           {totalLabel ? (
             <p className="pt-1 text-sm text-muted">
               Total due: <strong className="text-ink">{totalLabel}</strong>
-              {addonCents > 0 ? (
+              {(totals.addonCents > 0 || totals.feeCoverCents > 0) && (
                 <span>
                   {" "}
                   ({feeLabel ?? formatFee(feeCents)}
-                  {mulligans ? ` + mulligans` : ""}
-                  {skins ? ` + skins` : ""})
+                  {mulligans ? " + mulligans" : ""}
+                  {skins ? " + skins" : ""}
+                  {coverCardFees ? " + card fees" : ""})
                 </span>
-              ) : null}
+              )}
             </p>
           ) : null}
         </fieldset>

@@ -9,7 +9,7 @@ import {
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { normalizeUsPhone } from "@/lib/phone"
 import { createEventCheckoutSession } from "@/lib/stripe-checkout"
-import { teamAddonTotalCents } from "@/lib/team-addons"
+import { registrationTotalCents } from "@/lib/team-addons"
 import { stripeConfigured } from "@/lib/stripe"
 
 export const runtime = "nodejs"
@@ -33,6 +33,7 @@ type Body = {
   teammates?: Array<string | NameParts>
   mulligans?: boolean
   skins?: boolean
+  coverCardFees?: boolean
 }
 
 const PART_MAX = 60
@@ -178,20 +179,26 @@ export async function POST(req: Request) {
     guests = teamSize
     const wantMulligans = Boolean(body.mulligans)
     const wantSkins = Boolean(body.skins)
-    const addonCents = teamAddonTotalCents({
+    const coverCardFees = Boolean(body.coverCardFees)
+    const totals = registrationTotalCents({
+      feeCents: event.fee_cents,
       mulligans: wantMulligans,
       skins: wantSkins,
+      coverCardFees,
     })
-    const totalCents = event.fee_cents + addonCents
     const addOns = [
       wantMulligans ? "Mulligans: yes (+$20)" : "Mulligans: no",
       wantSkins ? "Skins: yes (+$20)" : "Skins: no",
+      coverCardFees
+        ? `Cover card fees: yes (+${formatFee(totals.feeCoverCents) ?? `$${(totals.feeCoverCents / 100).toFixed(2)}`})`
+        : "Cover card fees: no",
     ].join(" · ")
     const roster = [
       `Captain: ${name}`,
       ...teammates.map((t, i) => `Player ${i + 2}: ${t.full}`),
     ]
-    const totalLabel = formatFee(totalCents) ?? `$${(totalCents / 100).toFixed(0)}`
+    const totalLabel =
+      formatFee(totals.totalCents) ?? `$${(totals.totalCents / 100).toFixed(2)}`
     notes = [
       `Team: ${teamName}`,
       `Add-ons (whole team): ${addOns}`,
@@ -267,6 +274,7 @@ export async function POST(req: Request) {
         teamName: teamName || undefined,
         mulligans: Boolean(body.mulligans),
         skins: Boolean(body.skins),
+        coverCardFees: Boolean(body.coverCardFees),
       })
       checkoutUrl = session?.url ?? null
     } catch (err) {
