@@ -115,7 +115,7 @@ When DNS is ready (Cloudflare preferred):
 2. Add `maddysfoundation.org` (+ `www`) in Vercel → Domains.
 3. Set `NEXT_PUBLIC_SITE_URL=https://maddysfoundation.org` on Vercel (Production + Preview) — currently temporarily set to `https://maddys-foundation.vercel.app` so OG images work.
 4. Redeploy production.
-5. Confirm `https://maddysfoundation.org/opengraph-image` returns 200.
+5. Confirm `https://maddysfoundation.org/opengraph-image.jpg` returns 200.
 
 Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask to set up Cloudflare/DNS).
 
@@ -124,7 +124,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` source
 - Maddy photo: responsive WebP (`maddy-640/960.webp` + `maddy.webp`) with JPEG fallback
 - Favicon / apple-touch: `app/favicon.ico` (16/32/48 from brand logo), `app/icon.png` **192**, `app/apple-icon.png` **180**
-- Open Graph: `app/opengraph-image.tsx` + `twitter-image.tsx` (1200×630) — top fairway-green tent + text, bottom photo with green tent; host from `siteUrl`; per-event card at `/events/[slug]/opengraph-image`
+- Open Graph: static `app/opengraph-image.jpg` + `twitter-image.jpg` (1200×630) + `opengraph-image.alt.txt`; per-event ImageResponse at `/events/[slug]/opengraph-image`
 - Footer: Explore + Site columns, Privacy, optional contact, BraddCorp credit (LECYC pattern)
 - Type: Literata (display 400/600) + Source Sans 3 (body 400/500) — major-third scale
 - Performance: public home/events ISR (60s; register 30s); admin/register writes call `revalidatePublicEvents`; hero WebP preloaded; logo not priority; `/brand/*` long-cache
@@ -172,13 +172,13 @@ Paid registration Mulligans/Skins stay on the registration notes; desk add-ons a
 
 - [x] `lib/site-metadata.ts` + `metadataBase`
 - [x] Favicon + apple-icon (48 / 180)
-- [x] Site `opengraph-image` + `twitter-image` (ImageResponse) + alt.txt
+- [x] Site `opengraph-image.jpg` + `twitter-image.jpg` + alt.txt (static JPEG like LECYC)
 - [x] Per-event `opengraph-image` (ImageResponse)
 - [x] Custom `not-found` (header/footer + Home/Events)
 - [x] `@vercel/analytics`
 - [x] `/privacy` + footer link
 - [x] `robots.ts` + `sitemap.ts`
-- Spot-check after deploy: `/opengraph-image` (green wash, no localhost) and a bogus URL for 404
+- Spot-check after deploy: `/opengraph-image` and a bogus URL for 404
 
 Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBraddA1/braddcorp-reg-kit/tree/main/templates/site-chrome).
 
