@@ -32,10 +32,7 @@ export default async function EventsPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 md:px-8 md:py-24">
-        <p className="label-caps text-muted">
-          Gather with us
-        </p>
-        <h1 className="mt-3 font-display">Events</h1>
+        <h1 className="font-display">Events</h1>
         <p className="prose-measure mt-4 text-lg text-muted">
           Custom foundation gatherings — register in a minute from your phone.
         </p>
@@ -74,7 +71,7 @@ export default async function EventsPage() {
                           ? `/events/${event.slug}/register`
                           : `/events/${event.slug}`
                       }
-                      className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-deep px-5 text-center text-sm font-semibold text-white sm:w-auto"
+                      className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-deep px-5 text-center text-sm font-medium text-white sm:w-auto"
                     >
                       {open ? "Register" : "Details"}
                     </Link>

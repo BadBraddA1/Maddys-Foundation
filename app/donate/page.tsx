@@ -15,10 +15,7 @@ export default function DonatePage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeaderSolid />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-16 md:px-8 md:py-24">
-        <p className="label-caps text-muted">
-          Give
-        </p>
-        <h1 className="mt-3 font-display">
+        <h1 className="font-display">
           Every gift matters
         </h1>
         <p className="prose-measure mt-6 text-lg leading-relaxed text-muted">
@@ -33,7 +30,7 @@ export default function DonatePage() {
             href={donateUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-10 motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-semibold text-accent-ink sm:w-auto"
+            className="mt-10 motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink sm:w-auto"
           >
             Donate now
           </a>

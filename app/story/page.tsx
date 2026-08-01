@@ -17,10 +17,7 @@ export default function StoryPage() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <div className="grid items-start gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <p className="label-caps text-muted">
-              Her story
-            </p>
-            <h1 className="mt-3 font-display">
+            <h1 className="font-display">
               Maddy&apos;s light
             </h1>
             <div className="prose-measure mt-8 space-y-5 text-lg leading-relaxed text-muted">
@@ -46,13 +43,13 @@ export default function StoryPage() {
             <div className="mt-10 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
               <Link
                 href="/events"
-                className="motion-press inline-flex min-h-11 items-center justify-center bg-deep px-6 text-sm font-semibold text-white"
+                className="motion-press inline-flex min-h-11 items-center justify-center bg-deep px-6 text-sm font-medium text-white"
               >
                 Join an event
               </Link>
               <Link
                 href="/donate"
-                className="motion-press inline-flex min-h-11 items-center justify-center border border-line px-6 text-sm font-semibold text-ink hover:bg-surface"
+                className="motion-press inline-flex min-h-11 items-center justify-center border border-line px-6 text-sm font-medium text-ink hover:bg-surface"
               >
                 Give
               </Link>

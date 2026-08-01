@@ -6,8 +6,8 @@
   --ink: oklch(0.22 0.02 250);
   --muted: oklch(0.42 0.02 250);
   --line: oklch(0.88 0.01 240);
-  --accent: oklch(0.72 0.14 85);
-  --accent-ink: oklch(0.28 0.06 70);
+  --accent: oklch(0.68 0.10 85);
+  --accent-ink: oklch(0.30 0.05 70);
   --deep: oklch(0.28 0.04 250);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 
@@ -114,12 +114,12 @@ p {
   line-height: var(--leading-tight);
 }
 
-/* Short labels — open tracking without AI 0.22em shout */
+/* Short labels — reserved for rare chrome (e.g. logo lockup), not section kickers */
 .label-caps {
   font-family: var(--font-sans);
   font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -181,8 +181,8 @@ a {
 /* Readable throughout — transform + soft blur only */
 @keyframes hero-rise {
   from {
-    transform: translateY(0.85rem);
-    filter: blur(5px);
+    transform: translateY(0.5rem);
+    filter: blur(2px);
   }
   to {
     transform: translateY(0);
@@ -215,22 +215,21 @@ a {
 }
 
 .hero-enter {
-  /* Default = final resting look (visible even if animation never runs) */
   transform: translateY(0);
   filter: blur(0);
-  animation: hero-rise 0.7s var(--ease-out-quart) both;
+  animation: hero-rise 0.55s var(--ease-out-quart) both;
 }
 
 .hero-enter[data-enter="1"] {
-  animation-delay: 70ms;
+  animation-delay: 60ms;
 }
 
 .hero-enter[data-enter="2"] {
-  animation-delay: 140ms;
+  animation-delay: 120ms;
 }
 
 .hero-enter[data-enter="3"] {
-  animation-delay: 210ms;
+  animation-delay: 180ms;
 }
 
 .nav-panel-enter {

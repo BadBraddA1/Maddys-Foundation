@@ -18,28 +18,17 @@ export default async function Image() {
           flexDirection: "column",
           justifyContent: "flex-end",
           padding: 64,
-          background: "linear-gradient(160deg, #1c2430 0%, #3a4658 55%, #c9a227 160%)",
+          background: "linear-gradient(165deg, #1c2a3c 0%, #2a3a4d 70%, #5c6a4a 140%)",
           color: "#fff",
         }}
       >
-        <div
-          style={{
-            fontSize: 22,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            opacity: 0.85,
-            marginBottom: 16,
-          }}
-        >
-          Foundation
-        </div>
-        <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.02em", maxWidth: 900 }}>
+        <div style={{ fontSize: 56, fontWeight: 600, letterSpacing: "-0.02em", maxWidth: 900 }}>
           {siteName}
         </div>
-        <div style={{ marginTop: 18, fontSize: 28, opacity: 0.9, maxWidth: 800 }}>
+        <div style={{ marginTop: 16, fontSize: 26, opacity: 0.88, maxWidth: 760 }}>
           Joy that still moves mountains
         </div>
-        <div style={{ marginTop: 36, fontSize: 22, opacity: 0.65 }}>{host}</div>
+        <div style={{ marginTop: 40, fontSize: 20, opacity: 0.55 }}>{host}</div>
       </div>
     ),
     { ...size },

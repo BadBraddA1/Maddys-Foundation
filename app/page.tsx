@@ -35,38 +35,32 @@ export default async function HomePage() {
         />
         <SiteHeader />
         <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
-          <p
-            className="hero-enter label-caps text-accent"
-            data-enter="0"
-          >
-            Madalyn Robinson Foundation
-          </p>
           <h1
-            className="hero-enter mt-4 max-w-3xl font-display text-white"
-            data-enter="1"
+            className="hero-enter max-w-3xl font-display text-white"
+            data-enter="0"
           >
             Joy that still moves mountains
           </h1>
           <p
-            className="hero-enter on-dark mt-5 max-w-xl text-base text-white sm:text-lg"
-            data-enter="2"
+            className="hero-enter on-dark mt-5 max-w-xl text-base text-white/90 sm:text-lg"
+            data-enter="1"
           >
             We gather people, host events, and keep spreading the light Maddy
             carried so fiercely.
           </p>
           <div
             className="hero-enter mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap"
-            data-enter="3"
+            data-enter="2"
           >
             <Link
               href="/events"
-              className="motion-press inline-flex min-h-11 items-center justify-center bg-accent px-6 py-3 text-center text-sm font-semibold text-accent-ink"
+              className="motion-press inline-flex min-h-11 items-center justify-center bg-accent px-6 py-3 text-center text-sm font-medium text-accent-ink"
             >
               Upcoming events
             </Link>
             <Link
               href="/story"
-              className="motion-press inline-flex min-h-11 items-center justify-center border border-white/50 bg-deep/50 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-deep/70"
+              className="motion-press inline-flex min-h-11 items-center justify-center border border-white/35 px-6 py-3 text-center text-sm font-medium text-white hover:bg-white/10"
             >
               Her story
             </Link>
@@ -94,13 +88,13 @@ export default async function HomePage() {
           <div className="flex flex-col justify-end gap-1">
             <Link
               href="/donate"
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink underline decoration-accent underline-offset-4"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
             >
               Give in her honor →
             </Link>
             <Link
               href="/story"
-              className="inline-flex min-h-11 items-center text-sm font-semibold text-muted underline decoration-line underline-offset-4 hover:text-ink"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-muted underline decoration-line underline-offset-4 hover:text-ink"
             >
               Read Maddy&apos;s story →
             </Link>
@@ -114,7 +108,7 @@ export default async function HomePage() {
             <h2 className="font-display">Events</h2>
             <Link
               href="/events"
-              className="inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-muted hover:text-ink"
+              className="inline-flex min-h-11 shrink-0 items-center text-sm font-medium text-muted hover:text-ink"
             >
               View all
             </Link>

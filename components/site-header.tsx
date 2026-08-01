@@ -13,9 +13,8 @@ function BrandMark({
   tone: "light" | "dark"
 }) {
   const text = tone === "light" ? "text-white" : "text-ink"
-  const sub = tone === "light" ? "text-white" : "text-muted"
-  const ring =
-    tone === "light" ? "ring-white/90" : "ring-line"
+  const sub = tone === "light" ? "text-white/75" : "text-muted"
+  const ring = tone === "light" ? "ring-white/70" : "ring-line/80"
 
   return (
     <Link
@@ -27,15 +26,13 @@ function BrandMark({
         alt="Madalyn Robinson Foundation"
         width={44}
         height={44}
-        className={`h-11 w-11 shrink-0 rounded-full bg-white object-cover ring-2 ${ring}`}
+        className={`h-11 w-11 shrink-0 rounded-full bg-white object-cover ring-1 ${ring}`}
         priority
       />
       <span className="min-w-0 font-display text-base leading-tight tracking-tight sm:text-lg md:text-xl">
         <span className="sm:hidden">Maddy&apos;s</span>
         <span className="hidden sm:inline">Madalyn Robinson</span>
-        <span
-          className={`mt-0.5 block label-caps ${sub}`}
-        >
+        <span className={`mt-0.5 block font-sans text-xs font-normal ${sub}`}>
           Foundation
         </span>
       </span>
@@ -55,8 +52,8 @@ function PrimaryNav({
 
   const panel =
     tone === "light"
-      ? "border-white/20 bg-deep text-white shadow-lg"
-      : "border-line bg-surface text-ink shadow-lg"
+      ? "border-white/15 bg-deep text-white"
+      : "border-line bg-surface text-ink"
 
   const mobileLink =
     tone === "light"

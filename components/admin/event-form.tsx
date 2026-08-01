@@ -241,7 +241,7 @@ export function EventForm({ event }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-deep px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+        className="inline-flex min-h-11 items-center bg-deep px-6 text-sm font-medium text-white disabled:opacity-60"
       >
         {pending ? "Saving…" : event ? "Update event" : "Create event"}
       </button>

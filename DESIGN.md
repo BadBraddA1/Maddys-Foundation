@@ -13,8 +13,8 @@ Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink 
 | `--ink` | `oklch(0.22 0.02 250)` | Primary text |
 | `--muted` | `oklch(0.45 0.02 250)` | Secondary text |
 | `--line` | `oklch(0.88 0.01 240)` | Hairlines |
-| `--accent` | `oklch(0.72 0.14 85)` | Sunflower gold |
-| `--accent-ink` | `oklch(0.28 0.06 70)` | Text on accent |
+| `--accent` | `oklch(0.68 0.10 85)` | Sunflower gold (restrained) |
+| `--accent-ink` | `oklch(0.30 0.05 70)` | Text on accent |
 | `--deep` | `oklch(0.28 0.04 250)` | Hero overlays / footer |
 
 ## Typography
@@ -30,8 +30,8 @@ Scale: major third (1.25) via `--text-xs` … `--text-display`.
 Display: `clamp` max ≤ 4.25rem; letter-spacing ≥ -0.025em on H1.  
 Body measure: `--measure` 65ch (`.prose-measure`).  
 On-dark: `.on-dark` bumps leading + tracking.  
-Labels: `.label-caps` at 0.08em tracking (not 0.2em+ shout).  
-`text-wrap: balance` on headings; `pretty` on paragraphs; `font-optical-sizing: auto`.
+Labels: `.label-caps` reserved for rare chrome only — **no section kickers**.  
+CTAs: squared, `font-medium` (not pill / semibold shout). Accent ≤10% of surface.
 
 ## Layout
 
@@ -44,7 +44,7 @@ Labels: `.label-caps` at 0.08em tracking (not 0.2em+ shout).
 
 ## Motion
 
-- Signature: hero photo soft settle (`hero-drift`) + copy rise with blur clear (`hero-rise`) — never opacity-0 gated
-- Stagger capped (~210ms) via `data-enter`; content readable during delay (transform/blur only)
-- Feedback: `.motion-press` on primary CTAs; mobile menu `.nav-panel-enter`; registration success settle
-- Ease-out-quart throughout; respect `prefers-reduced-motion` (animations off, transforms cleared)
+- Signature: soft photo settle + short rise (≤0.55s, light blur) — never opacity-0 gated
+- Stagger capped (~120ms); feedback via `.motion-press` only
+- No decorative glass, shadows, or scroll-section fades
+- Ease-out-quart; `prefers-reduced-motion` clears animation
