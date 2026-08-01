@@ -1,4 +1,9 @@
 import { auth, currentUser } from "@clerk/nextjs/server"
+import {
+  hasStaffPasswordSession,
+  staffPasswordConfigured,
+  staffPasswordUser,
+} from "@/lib/staff-password"
 
 export type StaffUser = {
   userId: string
@@ -6,6 +11,8 @@ export type StaffUser = {
   role: "admin"
   /** True when access comes from local/preview bypass, not Clerk. */
   viaBypass?: boolean
+  /** Shared staff password session (temporary until Clerk + domain). */
+  viaPassword?: boolean
 }
 
 export function clerkConfigured(): boolean {
@@ -28,9 +35,13 @@ export function adminDevBypassEnabled(): boolean {
   )
 }
 
-/** Clerk is ready, or safe dev bypass is on. */
+/** Clerk, staff password, or safe dev bypass. */
 export function adminAvailable(): boolean {
-  return clerkConfigured() || adminDevBypassEnabled()
+  return (
+    clerkConfigured() ||
+    adminDevBypassEnabled() ||
+    staffPasswordConfigured()
+  )
 }
 
 const bypassStaff: StaffUser = {
@@ -45,8 +56,12 @@ export async function requireAdmin(): Promise<StaffUser> {
     return bypassStaff
   }
 
+  if (await hasStaffPasswordSession()) {
+    return { ...staffPasswordUser }
+  }
+
   if (!clerkConfigured()) {
-    throw new Error("Clerk is not configured. Set Clerk keys to use admin.")
+    throw new Error("Unauthorized")
   }
 
   const session = await auth()

@@ -1,7 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 import { NextResponse, type NextRequest } from "next/server"
+import {
+  STAFF_COOKIE,
+  verifyStaffSessionTokenEdge,
+} from "@/lib/staff-password"
 
 const isStaffRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"])
+const isStaffLogin = createRouteMatcher([
+  "/api/admin/login",
+  "/api/admin/logout",
+])
 const isSignIn = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"])
 
 const hasClerk = Boolean(
@@ -17,8 +25,12 @@ function adminDevBypassEnabled(): boolean {
   )
 }
 
+async function hasStaffCookie(req: NextRequest): Promise<boolean> {
+  return verifyStaffSessionTokenEdge(req.cookies.get(STAFF_COOKIE)?.value)
+}
+
 const clerkHandler = clerkMiddleware(async (auth, req) => {
-  if (isSignIn(req)) {
+  if (isSignIn(req) || isStaffLogin(req)) {
     return NextResponse.next()
   }
 
@@ -26,8 +38,7 @@ const clerkHandler = clerkMiddleware(async (auth, req) => {
     return NextResponse.next()
   }
 
-  // Bypass short-circuits Clerk gate for local/preview testing.
-  if (adminDevBypassEnabled()) {
+  if (adminDevBypassEnabled() || (await hasStaffCookie(req))) {
     return NextResponse.next()
   }
 
@@ -40,31 +51,43 @@ const clerkHandler = clerkMiddleware(async (auth, req) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  // Stay on /admin so the staff password form can render.
+  if (req.nextUrl.pathname.startsWith("/admin")) {
+    return NextResponse.next()
+  }
+
   const signIn = req.nextUrl.clone()
   signIn.pathname = "/sign-in"
   signIn.searchParams.set("redirect_url", req.nextUrl.pathname)
   return NextResponse.redirect(signIn)
 })
 
-export default function middleware(req: NextRequest, event: unknown) {
+export default async function middleware(req: NextRequest, event: unknown) {
   if (adminDevBypassEnabled()) {
     return NextResponse.next()
   }
 
+  if (isStaffLogin(req)) {
+    return NextResponse.next()
+  }
+
   if (!hasClerk) {
+    // Password session unlocks admin APIs without Clerk.
     if (isStaffRoute(req) && req.nextUrl.pathname.startsWith("/api/admin")) {
-      return NextResponse.json(
-        { error: "Clerk is not configured" },
-        { status: 503 },
-      )
+      if (await hasStaffCookie(req)) {
+        return NextResponse.next()
+      }
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
     return NextResponse.next()
   }
 
-  return (clerkHandler as (req: NextRequest, event: unknown) => Response | Promise<Response>)(
-    req,
-    event,
-  )
+  return (
+    clerkHandler as (
+      req: NextRequest,
+      event: unknown,
+    ) => Response | Promise<Response>
+  )(req, event)
 }
 
 export const config = {

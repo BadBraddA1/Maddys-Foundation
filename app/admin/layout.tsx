@@ -1,5 +1,7 @@
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
+import { StaffLogoutButton } from "@/components/admin/staff-logout-button"
+import { StaffPasswordForm } from "@/components/admin/staff-password-form"
 import { SkipLink } from "@/components/skip-link"
 import {
   adminAvailable,
@@ -20,18 +22,9 @@ export default async function AdminLayout({
         <main id="main">
           <h1 className="font-display text-3xl">Staff admin</h1>
           <p className="mt-4 text-muted">
-            Clerk is not configured yet. Create a Clerk application, set{" "}
-            <code className="text-ink">NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> and{" "}
-            <code className="text-ink">CLERK_SECRET_KEY</code> in Vercel /{" "}
-            <code className="text-ink">.env.local</code>, then set{" "}
-            <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
-            on your user.
-          </p>
-          <p className="mt-4 text-sm text-muted">
-            For local testing without Clerk, set{" "}
-            <code className="text-ink">ADMIN_DEV_BYPASS=1</code> in{" "}
-            <code className="text-ink">.env.local</code> and restart{" "}
-            <code className="text-ink">pnpm dev</code>.
+            Staff access is not configured. Set{" "}
+            <code className="text-ink">ADMIN_STAFF_PASSWORD</code> or Clerk
+            keys.
           </p>
           <Link
             href="/"
@@ -47,6 +40,28 @@ export default async function AdminLayout({
   const bypass = adminDevBypassEnabled()
   const admin = await getAdminOrNull()
 
+  if (!admin) {
+    return (
+      <div className="mx-auto max-w-xl px-5 py-24">
+        <SkipLink />
+        <main id="main">
+          <h1 className="font-display text-3xl">Staff admin</h1>
+          <p className="mt-4 text-muted">
+            Enter the staff password to manage events. This is temporary until
+            Clerk is wired on the real domain.
+          </p>
+          <StaffPasswordForm />
+          <Link
+            href="/"
+            className="mt-8 inline-flex min-h-11 items-center text-sm font-medium text-muted underline underline-offset-4 hover:text-ink"
+          >
+            ← Home
+          </Link>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-bg">
       <SkipLink />
@@ -57,6 +72,14 @@ export default async function AdminLayout({
         >
           Admin dev bypass is on — not for production. Remove{" "}
           <code className="font-medium">ADMIN_DEV_BYPASS</code> when done testing.
+        </div>
+      ) : null}
+      {admin.viaPassword ? (
+        <div
+          className="border-b border-accent bg-accent-soft px-5 py-2 text-center text-sm text-accent-ink"
+          role="status"
+        >
+          Signed in with staff password — temporary until Clerk + domain.
         </div>
       ) : null}
       <header className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-surface">
@@ -73,14 +96,11 @@ export default async function AdminLayout({
             </Link>
           </div>
           <div className="flex min-w-0 items-center gap-3">
-            {admin ? (
-              <span className="truncate text-sm text-muted">{admin.email}</span>
-            ) : (
-              <span className="text-sm text-danger">
-                Signed in, but role is not admin
-              </span>
-            )}
-            {clerkConfigured() && !bypass ? <UserButton /> : null}
+            <span className="truncate text-sm text-muted">{admin.email}</span>
+            {admin.viaPassword ? <StaffLogoutButton /> : null}
+            {clerkConfigured() && !bypass && !admin.viaPassword ? (
+              <UserButton />
+            ) : null}
           </div>
         </div>
       </header>

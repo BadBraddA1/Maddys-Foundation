@@ -49,6 +49,16 @@ turso db shell maddys-foundation < scripts/schema-turso.sql
 
 Without Clerk keys the public site still runs; `/admin` shows setup instructions.
 
+### Staff password (temporary)
+
+Until Clerk is live on the real domain, `/admin` accepts a shared password:
+
+1. Set `ADMIN_STAFF_PASSWORD` (default in code is `Braddcorp` if unset — set it explicitly on Vercel).
+2. Open `/admin`, enter the password.
+3. Optional: `ADMIN_STAFF_SECRET` for cookie signing (otherwise uses the password / Stripe secret).
+
+Remove or rotate the password once Clerk admins are wired.
+
 ### Local admin without Clerk
 
 For testing events/rosters before Clerk is wired:
@@ -69,6 +79,8 @@ A yellow banner shows when bypass is active. It only works in **development** or
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | admin | Clerk |
 | `CLERK_SECRET_KEY` | admin | Clerk |
 | `ADMIN_DEV_BYPASS` | no | `1` = local/preview staff access without Clerk |
+| `ADMIN_STAFF_PASSWORD` | no | Shared `/admin` password (temp; default `Braddcorp` if unset) |
+| `ADMIN_STAFF_SECRET` | no | Cookie signing secret for staff password sessions |
 | `NEXT_PUBLIC_DONATE_URL` | no | External donate link (default: Venmo `@MadalynRobinsonFoundation`) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | no | Shown in footer when set |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Publishable key (`pk_test_` / `pk_live_`) |
