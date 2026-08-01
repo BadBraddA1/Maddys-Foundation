@@ -69,7 +69,7 @@ A yellow banner shows when bypass is active. It only works in **development** or
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | admin | Clerk |
 | `CLERK_SECRET_KEY` | admin | Clerk |
 | `ADMIN_DEV_BYPASS` | no | `1` = local/preview staff access without Clerk |
-| `NEXT_PUBLIC_DONATE_URL` | no | External donate link (until Stripe Checkout ships) |
+| `NEXT_PUBLIC_DONATE_URL` | no | External donate link (default: Venmo `@MadalynRobinsonFoundation`) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | no | Shown in footer when set |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Publishable key (`pk_test_` / `pk_live_`) |
 | `STRIPE_SECRET_KEY` | Stripe | Secret key — server only |

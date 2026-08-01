@@ -9,7 +9,9 @@ export const ogImageAlt =
 export const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
   "https://maddysfoundation.org"
+/** Venmo profile — override with NEXT_PUBLIC_DONATE_URL if needed. */
 export const donateUrl =
-  process.env.NEXT_PUBLIC_DONATE_URL?.trim() || ""
+  process.env.NEXT_PUBLIC_DONATE_URL?.trim() ||
+  "https://venmo.com/u/MadalynRobinsonFoundation"
 export const contactEmail =
   process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() || ""
