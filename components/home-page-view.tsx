@@ -39,11 +39,11 @@ export async function HomePageView() {
       <main id="main" className="flex flex-1 flex-col">
         <section
           data-home-hero
-          className="relative min-h-[100svh] overflow-hidden bg-hero-veil text-on-deep"
+          className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep"
         >
           <HeroPhoto />
           <div
-            className="absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-hero-veil from-25% via-hero-veil/75 to-transparent"
+            className="absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-deep from-25% via-deep/75 to-transparent"
             aria-hidden="true"
           />
           <SiteHeader />

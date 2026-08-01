@@ -61,7 +61,7 @@ export function HeroHeaderChrome() {
       >
         {!pastHero ? (
           <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-hero-veil/80 from-25% via-hero-veil/40 to-transparent"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-deep/80 from-25% via-deep/40 to-transparent"
             aria-hidden="true"
           />
         ) : null}

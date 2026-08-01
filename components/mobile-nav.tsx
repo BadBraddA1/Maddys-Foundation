@@ -32,7 +32,7 @@ export function MobileNav({
 
   const panel =
     tone === "light"
-      ? "border-on-deep-border bg-hero-veil text-on-deep"
+      ? "border-on-deep-border bg-deep text-on-deep"
       : "border-line bg-surface text-ink"
 
   const mobileLink =
@@ -51,7 +51,7 @@ export function MobileNav({
       <summary
         className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center border text-sm font-medium transition [&::-webkit-details-marker]:hidden ${
           tone === "light"
-            ? "border-on-deep-border bg-hero-veil/80 text-on-deep"
+            ? "border-on-deep-border bg-deep/80 text-on-deep"
             : "border-line bg-surface text-ink"
         }`}
         aria-controls={menuId}
