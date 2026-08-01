@@ -92,6 +92,9 @@ A yellow banner shows when bypass is active. It only works in **development** or
 | `R2_UPLOAD_WORKER_URL` | media | Worker that accepts staff uploads |
 | `R2_UPLOAD_SECRET` | media | Shared secret header for the upload Worker |
 | `R2_ACCOUNT_ID` / `R2_BUCKET_NAME` | media | Account + bucket name (docs / optional S3) |
+| `RESEND_API_KEY` | email | Resend API key for registration mail |
+| `EMAIL_FROM` | email | From header (Resend test domain or verified domain) |
+| `CRON_SECRET` | cron | Bearer secret for `/api/cron/*` (reminders + optional holds) |
 
 Never commit `.env.local` or tokens.
 
@@ -141,6 +144,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, **31 team capacity**, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 - Stripe: Checkout on paid registration + webhook confirms roster; **10-minute hold** then unpaid drafts are released (Stripe session expired + row deleted) and never shown in admin
 - Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
+- Registration email: confirmation on paid confirm (Stripe webhook + admin Mark paid) via Resend; public shareable ticket `/ticket/[code]` with QR; daily cron (`vercel.json` 14:00 UTC) sends a 7-day teammate reminder; roster/check-in can **Resend confirmation**
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
 - Gallery: `/admin/gallery` uploads photos to R2 (optional **event tag**); public `/gallery` filters by event (`?event=slug`)
 - Site palette: fairway green hero/footer + soft gold accent (warm off-white page)
@@ -151,11 +155,18 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 2. Open **Check-in desk** (or Roster → Day-of check-in).
 3. First time / after imports: on the event roster, **Sync players from roster notes**.
 4. **Scan QR** on iPhone (Safari, staff already logged in) or type the team **check-in code** (`OV-……`), or search by team name → Load → check players in; **Save add-ons** separately (Skins / Golf Cannon / Golf Pro per player).
-5. Each registration gets a unique `check_in_code` in the DB at register time (for a later confirmation email). QR links use `/admin/check-in?code=…`.
+5. Each registration gets a unique `check_in_code` at register time. Captains share `/ticket/CODE` (QR encodes that URL). Staff desk still accepts `?code=` or typed codes.
 6. Dashboard for live totals and CSV export.
-7. Local test data: `pnpm db:seed-checkin` seeds 5 paid Oak Valley teams (`*@checkin-seed.test`) with codes + players.
+7. Local test data: `pnpm db:seed-checkin` seeds 5 paid Oak Valley teams (`*@checkin-seed.test`) with codes, players, mixed desk add-ons, and a few already checked in. Mailer skips `*.test` addresses.
 
 Paid registration Mulligans/Skins stay on the registration notes; desk add-ons are separate day-of sales.
+
+## Registration email (ops)
+
+1. Create a Resend API key; set `RESEND_API_KEY` + `EMAIL_FROM` on Vercel (Production). Until the custom domain is verified, use Resend’s onboarding from-address.
+2. Set `CRON_SECRET` and ensure Vercel Cron can hit `/api/cron/registration-reminders` (Authorization: Bearer).
+3. After a paid registration, captains get a confirmation with code + ticket link. ~7 days before the event (America/Chicago), they get a “share with teammates” reminder.
+4. Staff can resend from the event roster or check-in team page.
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 
@@ -173,6 +184,6 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 
 ## Useful paths
 
-- Public: `/` `/story` `/events` `/events/[slug]/register` `/gallery` `/donate` `/privacy`
+- Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/gallery` `/donate` `/privacy`
 - Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]/registrations`
-- API: `POST /api/register` · `POST/PATCH /api/admin/events` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery`
+- API: `POST /api/register` · `POST/PATCH /api/admin/events` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `/api/cron/registration-reminders`

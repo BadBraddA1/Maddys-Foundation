@@ -152,6 +152,8 @@ export type RegistrationRow = {
   status: string
   paid: number
   created_at: string
+  team_name: string
+  check_in_code: string | null
 }
 
 export async function listRegistrations(eventId: number): Promise<RegistrationRow[]> {
@@ -172,6 +174,8 @@ export async function listRegistrations(eventId: number): Promise<RegistrationRo
     status: String(row.status ?? "confirmed"),
     paid: Number(row.paid ?? 0),
     created_at: String(row.created_at ?? ""),
+    team_name: String(row.team_name ?? ""),
+    check_in_code: row.check_in_code ? String(row.check_in_code) : null,
   }))
 }
 

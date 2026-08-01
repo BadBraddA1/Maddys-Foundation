@@ -179,12 +179,74 @@ async function main() {
     }
     if (!registrationId) throw new Error(`Failed to insert ${t.team}`)
 
+    // Varied day-of add-ons for desk testing ($20 skins / $10 cannon / $25 pro).
+    const addonPlans = [
+      // Birdie Bunch — mix + one checked in
+      [
+        { skins: 1, golf_cannon: 0, golf_pro: 0, checked: 1 },
+        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 0, golf_pro: 1, checked: 0 },
+        { skins: 1, golf_cannon: 1, golf_pro: 0, checked: 0 },
+      ],
+      // Fairway Friends — all clear (control team)
+      [
+        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+      ],
+      // Par Then Bar — heavy add-ons + two checked in
+      [
+        { skins: 1, golf_cannon: 1, golf_pro: 1, checked: 1 },
+        { skins: 1, golf_cannon: 0, golf_pro: 0, checked: 1 },
+        { skins: 0, golf_cannon: 1, golf_pro: 1, checked: 0 },
+        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+      ],
+      // Eagle Eye — cannon only
+      [
+        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+      ],
+      // Mulligan Crew — pro + skins
+      [
+        { skins: 1, golf_cannon: 0, golf_pro: 1, checked: 1 },
+        { skins: 0, golf_cannon: 0, golf_pro: 1, checked: 0 },
+        { skins: 1, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+      ],
+    ][i]
+
     for (let p = 0; p < t.players.length; p++) {
+      const plan = addonPlans[p] || {
+        skins: 0,
+        golf_cannon: 0,
+        golf_pro: 0,
+        checked: 0,
+      }
+      const total =
+        plan.skins * 2000 + plan.golf_cannon * 1000 + plan.golf_pro * 2500
+      const checkedInAt = plan.checked
+        ? new Date().toISOString()
+        : null
       await db.execute(
         `INSERT INTO event_players
-          (event_id, registration_id, display_name, sort_order)
-         VALUES (?, ?, ?, ?)`,
-        [eventId, registrationId, t.players[p], p],
+          (event_id, registration_id, display_name, sort_order,
+           checked_in, checked_in_at, skins, golf_cannon, golf_pro, addon_total_cents)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          eventId,
+          registrationId,
+          t.players[p],
+          p,
+          plan.checked,
+          checkedInAt,
+          plan.skins,
+          plan.golf_cannon,
+          plan.golf_pro,
+          total,
+        ],
       )
     }
 
@@ -203,7 +265,7 @@ async function main() {
     )
   }
   console.log(
-    `\nDesk: /admin/check-in?code=${seeded[0].code}\nScan QR or type code on phone.`,
+    `\nDesk: /admin/check-in?code=${seeded[0].code}\nTicket: /ticket/${seeded[0].code}\nScan QR or type code on phone.`,
   )
 }
 

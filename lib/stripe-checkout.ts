@@ -249,6 +249,13 @@ export async function confirmRegistrationFromCheckout(
     console.error("[stripe] check-in roster", err)
   })
 
+  const { sendRegistrationConfirmation } = await import(
+    "@/lib/registration-emails"
+  )
+  await sendRegistrationConfirmation(confirmedId).catch((err) => {
+    console.error("[stripe] confirmation email", err)
+  })
+
   await audit(
     "stripe",
     "confirm_registration",

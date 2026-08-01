@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { ResendConfirmationButton } from "@/components/admin/resend-confirmation-button"
 import { formatAddonMoney, isPlayerCheckedIn, type AddonPrice, type EventPlayer } from "@/lib/check-in-shared"
 
 type Team = {
@@ -195,6 +196,22 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
           </p>
           <p className="mt-1 font-mono text-sm tracking-wide">
             Code {team.checkInCode}
+          </p>
+          <div className="mt-2">
+            <ResendConfirmationButton
+              eventId={team.eventId}
+              registrationId={team.registrationId}
+            />
+          </div>
+          <p className="mt-1 text-sm">
+            <a
+              href={`/ticket/${encodeURIComponent(team.checkInCode)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              Open shareable ticket
+            </a>
           </p>
         </div>
         <button

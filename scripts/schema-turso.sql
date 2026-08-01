@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS registrations (
   team_name TEXT NOT NULL DEFAULT '',
   /** Short code for day-of QR / email (e.g. OV-A3K9Q2). Allocated on register. */
   check_in_code TEXT,
+  confirmation_email_sent_at TEXT,
+  reminder_email_sent_at TEXT,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   UNIQUE (event_id, email)
 );

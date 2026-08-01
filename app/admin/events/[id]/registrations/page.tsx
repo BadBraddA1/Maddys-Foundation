@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ConfirmRegistrationButton } from "@/components/admin/confirm-registration-button"
 import { ReleaseHoldsButton } from "@/components/admin/release-holds-button"
+import { ResendConfirmationButton } from "@/components/admin/resend-confirmation-button"
 import { SyncPlayersButton } from "@/components/admin/sync-players-button"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import {
@@ -105,18 +106,30 @@ export default async function RegistrationsPage({ params }: Props) {
                     <dt className="text-muted">Paid</dt>
                     <dd className="font-medium text-ink">{row.paid ? "Yes" : "No"}</dd>
                   </div>
+                  <div>
+                    <dt className="text-muted">Check-in</dt>
+                    <dd className="font-mono font-medium text-ink">
+                      {row.check_in_code || "—"}
+                    </dd>
+                  </div>
                 </dl>
                 {row.notes ? (
                   <p className="mt-3 whitespace-pre-wrap text-sm text-muted text-pretty">
                     {row.notes}
                   </p>
                 ) : null}
-                <div className="mt-3">
+                <div className="mt-3 flex flex-col gap-1">
                   <ConfirmRegistrationButton
                     eventId={event.id}
                     registrationId={row.id}
                     alreadyConfirmed={row.status === "confirmed" && row.paid === 1}
                   />
+                  {row.status === "confirmed" && row.paid === 1 ? (
+                    <ResendConfirmationButton
+                      eventId={event.id}
+                      registrationId={row.id}
+                    />
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -132,6 +145,7 @@ export default async function RegistrationsPage({ params }: Props) {
                   <th className="py-2 pr-4 font-medium">Guests</th>
                   <th className="py-2 pr-4 font-medium">Status</th>
                   <th className="py-2 pr-4 font-medium">Paid</th>
+                  <th className="py-2 pr-4 font-medium">Code</th>
                   <th className="py-2 pr-4 font-medium">Notes</th>
                   <th className="py-2 font-medium"> </th>
                 </tr>
@@ -147,17 +161,28 @@ export default async function RegistrationsPage({ params }: Props) {
                     <td className="py-3 pr-4">{row.guests}</td>
                     <td className="py-3 pr-4 capitalize">{row.status}</td>
                     <td className="py-3 pr-4">{row.paid ? "Yes" : "No"}</td>
+                    <td className="py-3 pr-4 font-mono text-xs">
+                      {row.check_in_code || "—"}
+                    </td>
                     <td className="max-w-xs whitespace-pre-wrap py-3 pr-4 text-sm">
                       {row.notes || "—"}
                     </td>
                     <td className="py-3">
-                      <ConfirmRegistrationButton
-                        eventId={event.id}
-                        registrationId={row.id}
-                        alreadyConfirmed={
-                          row.status === "confirmed" && row.paid === 1
-                        }
-                      />
+                      <div className="flex flex-col gap-1">
+                        <ConfirmRegistrationButton
+                          eventId={event.id}
+                          registrationId={row.id}
+                          alreadyConfirmed={
+                            row.status === "confirmed" && row.paid === 1
+                          }
+                        />
+                        {row.status === "confirmed" && row.paid === 1 ? (
+                          <ResendConfirmationButton
+                            eventId={event.id}
+                            registrationId={row.id}
+                          />
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth"
-import { sql } from "@/lib/db"
 import { audit, getEventById } from "@/lib/events"
-import { revalidatePublicEvents } from "@/lib/revalidate-public"
+import { sendRegistrationConfirmation } from "@/lib/registration-emails"
 
 export const runtime = "nodejs"
 
 type Ctx = { params: Promise<{ id: string; registrationId: string }> }
 
-/** Mark a registration paid + confirmed (manual override if needed). */
+/** Resend registration confirmation email (force). */
 export async function POST(_req: Request, ctx: Ctx) {
   let admin
   try {
@@ -29,34 +28,23 @@ export async function POST(_req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 })
   }
 
-  const result = await sql.execute(
-    `UPDATE registrations
-     SET paid = 1, status = 'confirmed'
-     WHERE id = ? AND event_id = ?`,
-    [registrationId, eventId],
-  )
-
-  if (!result.rowsAffected) {
-    return NextResponse.json({ error: "Registration not found" }, { status: 404 })
-  }
-
-  const { ensureCheckInRosterForRegistration } = await import("@/lib/check-in")
-  await ensureCheckInRosterForRegistration(registrationId).catch(() => undefined)
-
-  const { sendRegistrationConfirmation } = await import(
-    "@/lib/registration-emails"
-  )
-  await sendRegistrationConfirmation(registrationId).catch((err) => {
-    console.error("[admin] confirmation email", err)
+  const result = await sendRegistrationConfirmation(registrationId, {
+    force: true,
   })
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: result.error || "Failed to send" },
+      { status: result.error === "Registration not found" ? 404 : 502 },
+    )
+  }
 
   await audit(
     admin.email,
-    "confirm_registration",
+    "resend_confirmation_email",
     "registration",
     String(registrationId),
     `event:${eventId}`,
   )
-  revalidatePublicEvents(event.slug)
+
   return NextResponse.json({ ok: true })
 }
