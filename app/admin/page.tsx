@@ -1,7 +1,12 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
-import { formatEventDate, listAllEvents } from "@/lib/events"
+import {
+  capacityUnitLabel,
+  formatEventDate,
+  isTeamEvent,
+  listAllEvents,
+} from "@/lib/events"
 
 export const dynamic = "force-dynamic"
 
@@ -62,9 +67,14 @@ export default async function AdminHomePage() {
                   {formatEventDate(event.starts_at)} ·{" "}
                   {event.is_published ? "Published" : "Draft"} ·{" "}
                   {event.registration_open ? "Reg open" : "Reg closed"} ·{" "}
-                  {event.registration_count ?? 0}
+                  {event.confirmed_count ?? 0}
                   {event.capacity != null ? ` / ${event.capacity}` : ""}{" "}
-                  registered
+                  {capacityUnitLabel(event)} paid
+                  {isTeamEvent(event) &&
+                  (event.registration_count ?? 0) >
+                    (event.confirmed_count ?? 0)
+                    ? ` · ${(event.registration_count ?? 0) - (event.confirmed_count ?? 0)} in checkout`
+                    : ""}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 text-sm font-medium">

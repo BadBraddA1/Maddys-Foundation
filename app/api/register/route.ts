@@ -211,17 +211,22 @@ export async function POST(req: Request) {
       .slice(0, NOTES_MAX)
   }
 
-  // Capacity = confirmed (paid) slots only so unpaid drafts don't block the field.
+  // Capacity = one slot per registration row (a team when team_size > 1).
+  // In-checkout drafts hold a slot; cancel/expire deletes them and frees it.
   if (event.capacity != null) {
     try {
       const countRows = await sql`
         SELECT COUNT(*) AS c FROM registrations
-        WHERE event_id = ${event.id} AND status = 'confirmed'
+        WHERE event_id = ${event.id}
       `
       const count = Number(countRows[0]?.c ?? 0)
       if (count >= event.capacity) {
         return NextResponse.json(
-          { error: "This event is full." },
+          {
+            error: teamSize
+              ? "This event is full — no team spots left."
+              : "This event is full.",
+          },
           { status: 400 },
         )
       }

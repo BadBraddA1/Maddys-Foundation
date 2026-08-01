@@ -225,6 +225,9 @@ export function EventForm({ event }: Props) {
             aria-describedby={`${formId}-capacity-hint`}
           />
           <p id={`${formId}-capacity-hint`} className="mt-1.5 text-sm text-muted">
+            {Number(teamSize) > 1
+              ? "Max teams (one registration = one team). e.g. 31 for a scramble."
+              : "Max registrants. With team size set, this becomes max teams."}{" "}
             Leave blank for unlimited.
           </p>
         </div>
@@ -244,7 +247,7 @@ export function EventForm({ event }: Props) {
             aria-describedby={`${formId}-fee-hint`}
           />
           <p id={`${formId}-fee-hint`} className="mt-1.5 text-sm text-muted">
-            Use 0 or blank for free events. With a fee, registration stays pending until paid.
+            Use 0 or blank for free events. With a fee, the roster only shows teams after Stripe payment.
           </p>
         </div>
         <div>

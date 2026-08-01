@@ -2,7 +2,12 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ConfirmRegistrationButton } from "@/components/admin/confirm-registration-button"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
-import { getEventById, listRegistrations } from "@/lib/events"
+import {
+  capacityUnitLabel,
+  getEventById,
+  isTeamEvent,
+  listRegistrations,
+} from "@/lib/events"
 import { formatPhoneDisplay, phoneTelHref } from "@/lib/phone"
 
 export const dynamic = "force-dynamic"
@@ -30,11 +35,17 @@ export default async function RegistrationsPage({ params }: Props) {
       </Link>
       <h1 className="mt-4 break-words font-display text-3xl">{event.title}</h1>
       <p className="mt-1 text-sm text-muted">
-        {rows.length} registration{rows.length === 1 ? "" : "s"}
+        {rows.length} paid {capacityUnitLabel(event, rows.length)}
+        {event.capacity != null
+          ? ` · capacity ${event.capacity} ${capacityUnitLabel(event)}`
+          : ""}
+        {isTeamEvent(event) ? ` · ${event.team_size}-person teams` : ""}
       </p>
 
       {rows.length === 0 ? (
-        <p className="mt-10 text-muted">No paid registrations yet.</p>
+        <p className="mt-10 text-muted">
+          No paid {capacityUnitLabel(event)} yet.
+        </p>
       ) : (
         <>
           {/* Phone: stacked records — table is awkward under ~640px */}

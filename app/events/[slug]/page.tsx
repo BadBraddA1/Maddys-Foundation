@@ -4,10 +4,12 @@ import { notFound } from "next/navigation"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
+  capacityUnitLabel,
   formatEventDate,
   formatEventFeeLabel,
   getEventBySlug,
   isRegistrationAvailable,
+  isTeamEvent,
   listPublishedEvents,
 } from "@/lib/events"
 import { mapsLinks } from "@/lib/maps"
@@ -65,6 +67,7 @@ export default async function EventDetailPage({ params }: Props) {
       ? Math.max(0, event.capacity - event.registration_count)
       : null
   const teamSize = event.team_size && event.team_size > 1 ? event.team_size : null
+  const unit = capacityUnitLabel(event, spotsLeft === 1 ? 1 : 2)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -124,12 +127,10 @@ export default async function EventDetailPage({ params }: Props) {
         {spotsLeft != null ? (
           <p className="mt-2 text-sm text-muted">
             {spotsLeft === 0
-              ? teamSize
+              ? isTeamEvent(event)
                 ? "No team spots left"
                 : "Event is full"
-              : teamSize
-                ? `${spotsLeft} team spot${spotsLeft === 1 ? "" : "s"} left`
-                : `${spotsLeft} spots left`}
+              : `${spotsLeft} ${unit} left`}
           </p>
         ) : null}
 

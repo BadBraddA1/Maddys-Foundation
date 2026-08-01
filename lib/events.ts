@@ -21,7 +21,23 @@ export type EventRow = {
   cover_image_url: string | null
   created_at: string
   updated_at: string
+  /** Slots held toward capacity (paid + in-checkout). One row = one team when team_size > 1. */
   registration_count?: number
+  /** Paid / confirmed only (admin roster). */
+  confirmed_count?: number
+}
+
+/** Capacity counts registration rows as team slots when team_size > 1. */
+export function isTeamEvent(event: Pick<EventRow, "team_size">): boolean {
+  return Boolean(event.team_size && event.team_size > 1)
+}
+
+export function capacityUnitLabel(
+  event: Pick<EventRow, "team_size">,
+  count = 2,
+): string {
+  if (isTeamEvent(event)) return count === 1 ? "team" : "teams"
+  return count === 1 ? "spot" : "spots"
 }
 
 function mapEvent(row: SqlRow): EventRow {
@@ -50,6 +66,8 @@ function mapEvent(row: SqlRow): EventRow {
       row.registration_count == null
         ? undefined
         : Number(row.registration_count),
+    confirmed_count:
+      row.confirmed_count == null ? undefined : Number(row.confirmed_count),
   }
 }
 
@@ -123,8 +141,9 @@ export function isRegistrationAvailable(event: EventRow): boolean {
 export async function listPublishedEvents(): Promise<EventRow[]> {
   const rows = await sql`
     SELECT e.*,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
-        WHERE r.event_id = e.id AND r.status = 'confirmed') AS registration_count
+        WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
     WHERE e.is_published = 1
     ORDER BY e.starts_at ASC
@@ -136,8 +155,9 @@ export async function listPublishedEvents(): Promise<EventRow[]> {
 export async function getNextUpcomingEvent(): Promise<EventRow | null> {
   const rows = await sql`
     SELECT e.*,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
-        WHERE r.event_id = e.id AND r.status = 'confirmed') AS registration_count
+        WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
     WHERE e.is_published = 1 AND e.starts_at > datetime('now')
     ORDER BY e.starts_at ASC
@@ -149,8 +169,9 @@ export async function getNextUpcomingEvent(): Promise<EventRow | null> {
 export async function listAllEvents(): Promise<EventRow[]> {
   const rows = await sql`
     SELECT e.*,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
-        WHERE r.event_id = e.id AND r.status = 'confirmed') AS registration_count
+        WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
     ORDER BY e.starts_at DESC
   `
@@ -160,8 +181,9 @@ export async function listAllEvents(): Promise<EventRow[]> {
 export async function getEventBySlug(slug: string): Promise<EventRow | null> {
   const rows = await sql`
     SELECT e.*,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
-        WHERE r.event_id = e.id AND r.status = 'confirmed') AS registration_count
+        WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
     WHERE e.slug = ${slug}
     LIMIT 1
@@ -172,8 +194,9 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 export async function getEventById(id: number): Promise<EventRow | null> {
   const rows = await sql`
     SELECT e.*,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
-        WHERE r.event_id = e.id AND r.status = 'confirmed') AS registration_count
+        WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
     WHERE e.id = ${id}
     LIMIT 1
