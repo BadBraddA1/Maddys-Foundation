@@ -10,7 +10,7 @@ import {
   type EventRow,
 } from "@/lib/events"
 
-export type HomeTheme = "default" | "cream" | "fairway"
+export type HomeTheme = "default" | "cream" | "fairway" | "fairway-gold"
 
 type Props = {
   theme?: HomeTheme
@@ -61,6 +61,10 @@ export async function HomePageView({ theme = "default", testLabel }: Props) {
           {" · "}
           <Link href="/home2" className="underline underline-offset-2">
             /home2
+          </Link>
+          {" · "}
+          <Link href="/home3" className="underline underline-offset-2">
+            /home3
           </Link>
           {" · "}
           <Link href="/" className="underline underline-offset-2">
