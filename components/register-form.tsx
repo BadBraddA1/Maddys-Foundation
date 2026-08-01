@@ -458,7 +458,7 @@ export function RegisterForm({
           }}
           aria-invalid={Boolean(fieldErrors.phone)}
           aria-describedby={
-            fieldErrors.phone ? `${formId}-phone-err` : `${formId}-phone-hint`
+            fieldErrors.phone ? `${formId}-phone-err` : undefined
           }
           className={input}
         />
@@ -466,11 +466,7 @@ export function RegisterForm({
           <p id={`${formId}-phone-err`} className="mt-1.5 text-sm text-danger" role="alert">
             {fieldErrors.phone}
           </p>
-        ) : (
-          <p id={`${formId}-phone-hint`} className="mt-1.5 text-sm text-muted">
-            Saved as (XXX) XXX-XXXX
-          </p>
-        )}
+        ) : null}
       </div>
 
       {isTeam
