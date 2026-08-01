@@ -41,7 +41,7 @@ export default async function EventsPage() {
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-5 py-16 md:px-8 md:py-24">
         <h1 className="font-display">Events</h1>
         <p className="prose-measure mt-4 text-lg text-muted">
-          Custom foundation gatherings — register in a minute from your phone.
+          Register in a minute from your phone.
         </p>
 
         {loadFailed ? (
