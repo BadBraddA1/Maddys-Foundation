@@ -10,6 +10,19 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@clerk/nextjs"],
   },
+  async headers() {
+    return [
+      {
+        source: "/brand/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig

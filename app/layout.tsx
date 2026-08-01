@@ -31,7 +31,8 @@ const sourceSans = Source_Sans_3({
   subsets: ["latin"],
   variable: "--font-source-sans",
   display: "swap",
-  weight: ["400", "500", "600"],
+  // UI uses regular + medium; display headlines are Literata 600.
+  weight: ["400", "500"],
 })
 
 export const metadata: Metadata = {

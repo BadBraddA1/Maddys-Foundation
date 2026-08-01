@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 import { MobileNav } from "@/components/mobile-nav"
 
@@ -22,13 +21,15 @@ export function BrandMark({
       href="/"
       className={`flex min-h-11 items-center gap-2.5 sm:gap-3 ${text}`}
     >
-      <Image
+      {/* Plain img: already tiny WebP — skip /_next/image and never priority (LCP is the hero). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src="/brand/logo-96.webp"
         alt="Madalyn Robinson Foundation"
         width={44}
         height={44}
+        decoding="async"
         className={`h-11 w-11 shrink-0 rounded-full bg-surface object-cover ring-1 ${ring}`}
-        priority
       />
       <span className="min-w-0 font-display text-base leading-tight tracking-tight sm:text-lg md:text-xl">
         <span className="sm:hidden">Maddy&apos;s</span>

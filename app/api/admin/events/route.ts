@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth"
 import { sql } from "@/lib/db"
 import { audit, slugify } from "@/lib/events"
+import { revalidatePublicEvents } from "@/lib/revalidate-public"
 
 export const runtime = "nodejs"
 
@@ -93,6 +94,7 @@ export async function POST(req: Request) {
 
     const id = Number(result.lastInsertRowid ?? 0)
     await audit(admin.email, "create_event", "event", String(id), title)
+    revalidatePublicEvents(slug)
     return NextResponse.json({ ok: true, id, slug })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

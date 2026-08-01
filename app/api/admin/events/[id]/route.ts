@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth"
 import { sql } from "@/lib/db"
 import { audit, getEventById, slugify } from "@/lib/events"
+import { revalidatePublicEvents } from "@/lib/revalidate-public"
 
 export const runtime = "nodejs"
 
@@ -92,6 +93,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
       ],
     )
     await audit(admin.email, "update_event", "event", String(id), title)
+    revalidatePublicEvents(slug)
+    if (slug !== existing.slug) revalidatePublicEvents(existing.slug)
     return NextResponse.json({ ok: true, id, slug })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
@@ -120,8 +123,11 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 })
   }
 
+  const existing = await getEventById(id)
+  const slug = existing?.slug
   await sql.execute(`DELETE FROM registrations WHERE event_id = ?`, [id])
   await sql.execute(`DELETE FROM events WHERE id = ?`, [id])
   await audit(admin.email, "delete_event", "event", String(id), "")
+  revalidatePublicEvents(slug)
   return NextResponse.json({ ok: true })
 }

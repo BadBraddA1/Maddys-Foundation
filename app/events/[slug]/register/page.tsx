@@ -9,12 +9,23 @@ import {
   formatFee,
   getEventBySlug,
   isRegistrationAvailable,
+  listPublishedEvents,
 } from "@/lib/events"
 import { siteName } from "@/lib/site-metadata"
 
-export const dynamic = "force-dynamic"
+/** Fresh enough for capacity; registration POST also revalidates. */
+export const revalidate = 30
 
 type Props = { params: Promise<{ slug: string }> }
+
+export async function generateStaticParams() {
+  try {
+    const events = await listPublishedEvents()
+    return events.map((e) => ({ slug: e.slug }))
+  } catch {
+    return []
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params

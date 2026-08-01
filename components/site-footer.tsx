@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 import { contactEmail, siteName, siteUrl } from "@/lib/site-metadata"
 
@@ -21,11 +20,14 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-line bg-deep text-on-deep pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] md:gap-8 md:px-8">
         <div className="flex items-start gap-4">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny static WebP */}
+          <img
             src="/brand/logo-96.webp"
             alt=""
             width={56}
             height={56}
+            loading="lazy"
+            decoding="async"
             className="h-14 w-14 shrink-0 rounded-full bg-surface object-cover"
           />
           <div>

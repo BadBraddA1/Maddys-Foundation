@@ -62,7 +62,8 @@ export default function StoryPage() {
               fill
               className="object-cover object-[center_top]"
               sizes="(max-width: 1024px) 100vw, 40vw"
-              loading="lazy"
+              // Leads the viewport on phones (`order-first`); don't lazy LCP.
+              priority
             />
           </div>
         </div>

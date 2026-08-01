@@ -5,24 +5,27 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import {
   formatEventDate,
-  getNextUpcomingEvent,
   listPublishedEvents,
   toEventIso,
+  type EventRow,
 } from "@/lib/events"
 
-export const dynamic = "force-dynamic"
+/** Public ISR — admin/register writes call revalidatePublicEvents. */
+export const revalidate = 60
 
 export default async function HomePage() {
-  let upcoming: Awaited<ReturnType<typeof listPublishedEvents>> = []
-  let next: Awaited<ReturnType<typeof getNextUpcomingEvent>> = null
+  let upcoming: EventRow[] = []
+  let next: EventRow | null = null
   let loadFailed = false
   try {
-    const [listed, soonest] = await Promise.all([
-      listPublishedEvents(),
-      getNextUpcomingEvent(),
-    ])
-    upcoming = listed.slice(0, 3)
-    next = soonest
+    const listed = await listPublishedEvents()
+    const now = Date.now()
+    next =
+      listed.find((e) => new Date(toEventIso(e.starts_at)).getTime() > now) ??
+      null
+    upcoming = listed
+      .filter((e) => new Date(toEventIso(e.starts_at)).getTime() > now)
+      .slice(0, 3)
   } catch {
     loadFailed = true
   }

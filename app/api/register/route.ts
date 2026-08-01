@@ -5,6 +5,7 @@ import {
   getEventBySlug,
   isRegistrationAvailable,
 } from "@/lib/events"
+import { revalidatePublicEvents } from "@/lib/revalidate-public"
 
 export const runtime = "nodejs"
 
@@ -127,5 +128,6 @@ export async function POST(req: Request) {
     () => undefined,
   )
 
+  revalidatePublicEvents(slug)
   return NextResponse.json({ ok: true })
 }

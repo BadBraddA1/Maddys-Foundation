@@ -54,7 +54,7 @@ CTAs & fields: squared (`.field-control`); no pills.
 - Events as quiet list rows, not card grids; primary CTAs full-width on small screens
 - Admin: utilitarian tables, same tokens, denser spacing
 - Z-index: `--z-dropdown` / `--z-sticky` / `--z-skip`
-- LCP: responsive WebP hero (`maddy-640/960.webp`); chrome uses `logo-96.webp`; fonts limited to used weights
+- LCP: hero WebP preloaded by viewport; logo is never priority (don’t steal the preload slot); chrome uses plain `logo-96.webp`; Source Sans weights 400/500 only; public event pages ISR `revalidate` 60s (register 30s) with write-time `revalidatePublicEvents`; `/brand/*` immutable cache; favicon 48px
 
 ## Resilience
 

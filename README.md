@@ -91,10 +91,11 @@ When the domain is purchased:
 
 - Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` source
 - Maddy photo: responsive WebP (`maddy-640/960.webp` + `maddy.webp`) with JPEG fallback
-- Favicon / apple-touch: logo PNGs (`app/icon.png` **512**, `app/apple-icon.png` **180**) — Camp Ruby / playbook 05
+- Favicon / apple-touch: `app/icon.png` **48** (tiny PNG), `app/apple-icon.png` **180**
 - Open Graph: static `app/opengraph-image.jpg` + `twitter-image.jpg` (~70KB, 1200×630) + `opengraph-image.alt.txt`; per-event ImageResponse at `/events/[slug]/opengraph-image`
 - Footer: Explore + Site columns, Privacy, optional contact, BraddCorp credit (LECYC pattern)
-- Type: Literata (display) + Source Sans 3 (body) — major-third scale; limited weights
+- Type: Literata (display 400/600) + Source Sans 3 (body 400/500) — major-third scale
+- Performance: public home/events ISR (60s; register 30s); admin/register writes call `revalidatePublicEvents`; hero WebP preloaded; logo not priority; `/brand/*` long-cache; shrunk favicon
 - Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
 - A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
@@ -108,7 +109,7 @@ When the domain is purchased:
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 
 - [x] `lib/site-metadata.ts` + `metadataBase`
-- [x] Favicon + apple-icon (512 / 180, matching Camp Ruby)
+- [x] Favicon + apple-icon (48 / 180)
 - [x] Site `opengraph-image.jpg` + `twitter-image.jpg` + alt.txt (static JPEG like LECYC)
 - [x] Per-event `opengraph-image` (ImageResponse)
 - [x] Custom `not-found` (header/footer + Home/Events)

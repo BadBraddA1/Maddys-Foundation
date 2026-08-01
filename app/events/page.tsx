@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: "Upcoming Madalyn Robinson Foundation gatherings and registration.",
 }
 
-export const dynamic = "force-dynamic"
+export const revalidate = 60
 
 export default async function EventsPage() {
   let events: Awaited<ReturnType<typeof listPublishedEvents>> = []
