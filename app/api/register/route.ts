@@ -6,6 +6,7 @@ import {
   isRegistrationAvailable,
 } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
+import { normalizeUsPhone } from "@/lib/phone"
 
 export const runtime = "nodejs"
 
@@ -79,7 +80,15 @@ export async function POST(req: Request) {
 
   const slug = body.eventSlug?.trim().slice(0, 80)
   const email = body.email?.trim().toLowerCase().slice(0, EMAIL_MAX) ?? ""
-  const phone = (body.phone?.trim() || "").slice(0, PHONE_MAX)
+  const phoneRaw = (body.phone?.trim() || "").slice(0, PHONE_MAX)
+  const phoneNormalized = normalizeUsPhone(phoneRaw)
+  if (phoneNormalized === null) {
+    return NextResponse.json(
+      { error: "Enter a valid 10-digit US phone number, or leave it blank." },
+      { status: 400 },
+    )
+  }
+  const phone = phoneNormalized
   const teamName = (body.teamName?.trim() || "").slice(0, TEAM_NAME_MAX)
   const extraNotes = (body.notes?.trim() || "").slice(0, NOTES_MAX)
 
@@ -163,11 +172,20 @@ export async function POST(req: Request) {
     }
 
     guests = teamSize
+    const addOns = [
+      body.mulligans ? "Mulligans: yes" : "Mulligans: no",
+      body.skins ? "Skins: yes" : "Skins: no",
+    ].join(" · ")
     const roster = [
       `Captain: ${name}`,
       ...teammates.map((t, i) => `Player ${i + 2}: ${t.full}`),
     ]
-    notes = [`Team: ${teamName}`, roster.join("\n"), extraNotes || null]
+    notes = [
+      `Team: ${teamName}`,
+      `Add-ons (whole team): ${addOns}`,
+      roster.join("\n"),
+      extraNotes || null,
+    ]
       .filter(Boolean)
       .join("\n\n")
       .slice(0, NOTES_MAX)

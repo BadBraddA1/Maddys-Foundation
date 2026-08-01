@@ -1,7 +1,8 @@
 "use client"
 
-import { useId, useRef, useState } from "react"
 import Link from "next/link"
+import { useId, useRef, useState } from "react"
+import { normalizeUsPhone } from "@/lib/phone"
 
 type Props = {
   eventSlug: string
@@ -92,6 +93,13 @@ export function RegisterForm({
       next.email = "Enter a valid email address."
     }
 
+    if (phone.trim()) {
+      const normalized = normalizeUsPhone(phone)
+      if (normalized === null) {
+        next.phone = "Enter a 10-digit US phone, like (636) 208-0974."
+      }
+    }
+
     if (isTeam) {
       players.forEach((p, i) => {
         validateNameParts(p, `player${i + 2}`, `player ${i + 2}’s`, next)
@@ -117,6 +125,9 @@ export function RegisterForm({
 
     setPending(true)
     try {
+      const normalizedPhone = phone.trim()
+        ? normalizeUsPhone(phone) ?? phone.trim()
+        : ""
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,7 +137,7 @@ export function RegisterForm({
           firstName: captain.firstName.trim(),
           lastName: captain.lastName.trim(),
           email: email.trim(),
-          phone: phone.trim(),
+          phone: normalizedPhone,
           guests: isTeam ? playersNeeded : guests,
           teamName: isTeam ? teamName.trim() : undefined,
           teammates: isTeam
@@ -425,11 +436,30 @@ export function RegisterForm({
           name="phone"
           type="tel"
           autoComplete="tel"
+          inputMode="numeric"
           maxLength={PHONE_MAX}
+          placeholder="(555) 555-5555"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
+          onBlur={() => {
+            const normalized = normalizeUsPhone(phone)
+            if (normalized) setPhone(normalized)
+          }}
+          aria-invalid={Boolean(fieldErrors.phone)}
+          aria-describedby={
+            fieldErrors.phone ? `${formId}-phone-err` : `${formId}-phone-hint`
+          }
           className={input}
         />
+        {fieldErrors.phone ? (
+          <p id={`${formId}-phone-err`} className="mt-1.5 text-sm text-danger" role="alert">
+            {fieldErrors.phone}
+          </p>
+        ) : (
+          <p id={`${formId}-phone-hint`} className="mt-1.5 text-sm text-muted">
+            Saved as (XXX) XXX-XXXX
+          </p>
+        )}
       </div>
 
       {isTeam

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { ConfirmRegistrationButton } from "@/components/admin/confirm-registration-button"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import { getEventById, listRegistrations } from "@/lib/events"
+import { formatPhoneDisplay, phoneTelHref } from "@/lib/phone"
 
 export const dynamic = "force-dynamic"
 
@@ -52,10 +53,10 @@ export default async function RegistrationsPage({ params }: Props) {
                 </a>
                 {row.phone ? (
                   <a
-                    href={`tel:${row.phone}`}
+                    href={phoneTelHref(row.phone) ?? undefined}
                     className="mt-1 flex min-h-11 items-center text-sm text-muted underline underline-offset-4"
                   >
-                    {row.phone}
+                    {formatPhoneDisplay(row.phone)}
                   </a>
                 ) : null}
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -107,7 +108,9 @@ export default async function RegistrationsPage({ params }: Props) {
                   <tr key={row.id}>
                     <td className="py-3 pr-4 font-medium text-ink">{row.name}</td>
                     <td className="py-3 pr-4">{row.email}</td>
-                    <td className="py-3 pr-4">{row.phone || "—"}</td>
+                    <td className="py-3 pr-4">
+                      {row.phone ? formatPhoneDisplay(row.phone) : "—"}
+                    </td>
                     <td className="py-3 pr-4">{row.guests}</td>
                     <td className="py-3 pr-4 capitalize">{row.status}</td>
                     <td className="py-3 pr-4">{row.paid ? "Yes" : "No"}</td>
