@@ -246,7 +246,7 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
       <button
         type="button"
         disabled={saving}
-        className="inline-flex min-h-12 items-center justify-center bg-deep px-6 text-sm font-medium text-on-deep disabled:opacity-60"
+        className="btn-deep inline-flex min-h-12 items-center justify-center px-6 text-sm font-medium disabled:opacity-60"
         onClick={() => void saveAddons()}
       >
         {saving ? "Saving…" : "Save add-ons"}

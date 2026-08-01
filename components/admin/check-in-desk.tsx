@@ -569,7 +569,7 @@ export function CheckInDesk({ eventId, eventTitle, initialTeamId }: Props) {
                 <button
                   type="button"
                   disabled={savingAddons}
-                  className="inline-flex min-h-12 items-center justify-center bg-deep px-6 text-sm font-medium text-on-deep disabled:opacity-60"
+                  className="btn-deep inline-flex min-h-12 items-center justify-center px-6 text-sm font-medium disabled:opacity-60"
                   onClick={() => void onSaveAddons()}
                 >
                   {savingAddons ? "Saving…" : "Save add-ons"}

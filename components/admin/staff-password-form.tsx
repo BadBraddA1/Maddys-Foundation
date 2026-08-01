@@ -59,7 +59,7 @@ export function StaffPasswordForm() {
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="inline-flex min-h-11 items-center bg-deep px-6 text-sm font-medium text-on-deep disabled:opacity-60"
+        className="btn-deep inline-flex min-h-11 items-center px-6 text-sm font-medium disabled:opacity-60"
       >
         {pending ? "Checking…" : "Enter admin"}
       </button>

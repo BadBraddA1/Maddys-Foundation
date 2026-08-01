@@ -47,7 +47,7 @@ export default async function AdminHomePage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/admin/events/new"
-            className="inline-flex min-h-11 items-center bg-deep px-5 text-sm font-medium text-on-deep"
+            className="btn-deep inline-flex min-h-11 items-center px-5 text-sm font-medium"
           >
             New event
           </Link>

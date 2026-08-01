@@ -15,7 +15,7 @@ export default function NotFound() {
         <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row">
           <Link
             href="/"
-            className="motion-press inline-flex min-h-11 flex-1 items-center justify-center bg-deep px-6 text-sm font-medium text-on-deep"
+            className="motion-press btn-deep inline-flex min-h-11 flex-1 items-center justify-center px-6 text-sm font-medium"
           >
             Home
           </Link>

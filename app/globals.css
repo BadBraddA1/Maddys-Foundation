@@ -227,6 +227,18 @@ a {
   color: var(--accent-ink);
 }
 
+/** Solid deep CTA — explicit colors so text never inherits ink on admin pages */
+.btn-deep {
+  background-color: var(--deep);
+  color: var(--on-deep);
+}
+.btn-deep:hover {
+  background-color: var(--deep-mid);
+}
+.btn-deep:disabled {
+  opacity: 0.6;
+}
+
 /*
   Motion system — brand register
   Signature: hero photo settles + copy rises (always readable; never opacity-0 gated).

@@ -327,7 +327,7 @@ export function EventForm({ event }: Props) {
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="inline-flex min-h-11 items-center bg-deep px-6 text-sm font-medium text-on-deep disabled:cursor-not-allowed disabled:opacity-60"
+        className="btn-deep inline-flex min-h-11 items-center px-6 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? "Saving…" : event ? "Update event" : "Create event"}
       </button>
