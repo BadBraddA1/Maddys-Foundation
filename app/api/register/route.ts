@@ -9,22 +9,63 @@ import { revalidatePublicEvents } from "@/lib/revalidate-public"
 
 export const runtime = "nodejs"
 
+type NameParts = {
+  firstName?: string
+  lastName?: string
+}
+
 type Body = {
   eventSlug?: string
+  /** @deprecated prefer firstName + lastName */
   name?: string
+  firstName?: string
+  lastName?: string
   email?: string
   phone?: string
   guests?: number
   notes?: string
   teamName?: string
-  teammates?: string[]
+  teammates?: Array<string | NameParts>
 }
 
+const PART_MAX = 60
 const NAME_MAX = 120
 const PHONE_MAX = 40
 const NOTES_MAX = 2000
 const EMAIL_MAX = 254
 const TEAM_NAME_MAX = 80
+
+function parseNameParts(
+  input: NameParts | string | undefined,
+  fallbackFull?: string,
+): { firstName: string; lastName: string; full: string } | null {
+  if (typeof input === "string") {
+    const full = input.trim().slice(0, NAME_MAX)
+    if (full.length < 2) return null
+    const space = full.indexOf(" ")
+    if (space === -1) return { firstName: full, lastName: "", full }
+    return {
+      firstName: full.slice(0, space),
+      lastName: full.slice(space + 1).trim(),
+      full,
+    }
+  }
+
+  const firstName = (input?.firstName ?? "").trim().slice(0, PART_MAX)
+  const lastName = (input?.lastName ?? "").trim().slice(0, PART_MAX)
+  if (firstName && lastName) {
+    return {
+      firstName,
+      lastName,
+      full: `${firstName} ${lastName}`.slice(0, NAME_MAX),
+    }
+  }
+
+  if (fallbackFull) {
+    return parseNameParts(fallbackFull)
+  }
+  return null
+}
 
 export async function POST(req: Request) {
   let body: Body
@@ -35,26 +76,28 @@ export async function POST(req: Request) {
   }
 
   const slug = body.eventSlug?.trim().slice(0, 80)
-  const name = body.name?.trim().slice(0, NAME_MAX) ?? ""
   const email = body.email?.trim().toLowerCase().slice(0, EMAIL_MAX) ?? ""
   const phone = (body.phone?.trim() || "").slice(0, PHONE_MAX)
   const teamName = (body.teamName?.trim() || "").slice(0, TEAM_NAME_MAX)
   const extraNotes = (body.notes?.trim() || "").slice(0, NOTES_MAX)
-  const teammates = Array.isArray(body.teammates)
-    ? body.teammates
-        .map((t) => String(t).trim().slice(0, NAME_MAX))
-        .filter(Boolean)
-    : []
 
-  if (!slug || !name || !email) {
+  const captain = parseNameParts(
+    { firstName: body.firstName, lastName: body.lastName },
+    body.name,
+  )
+
+  if (!slug || !captain || !email) {
     return NextResponse.json(
-      { error: "Name, email, and event are required." },
+      { error: "First name, last name, email, and event are required." },
       { status: 400 },
     )
   }
 
-  if (name.length < 2) {
-    return NextResponse.json({ error: "Enter your full name." }, { status: 400 })
+  if (!captain.firstName || !captain.lastName) {
+    return NextResponse.json(
+      { error: "Enter a first and last name." },
+      { status: 400 },
+    )
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -89,27 +132,40 @@ export async function POST(req: Request) {
 
   let guests = Math.min(20, Math.max(1, Math.floor(Number(body.guests) || 1)))
   let notes = extraNotes
+  const name = captain.full
 
   if (teamSize) {
+    if (!teamName) {
+      return NextResponse.json(
+        { error: "Team name is required." },
+        { status: 400 },
+      )
+    }
+
+    const rawTeammates = Array.isArray(body.teammates) ? body.teammates : []
+    const teammates = rawTeammates
+      .map((t) => parseNameParts(t))
+      .filter((t): t is NonNullable<typeof t> => Boolean(t))
+
     if (teammates.length !== teamSize - 1) {
       return NextResponse.json(
         { error: `Enter all ${teamSize} players on the team.` },
         { status: 400 },
       )
     }
-    if (teammates.some((t) => t.length < 2)) {
+    if (teammates.some((t) => !t.firstName || !t.lastName)) {
       return NextResponse.json(
-        { error: "Each teammate needs a full name." },
+        { error: "Each player needs a first and last name." },
         { status: 400 },
       )
     }
+
     guests = teamSize
     const roster = [
       `Captain: ${name}`,
-      ...teammates.map((t, i) => `Player ${i + 2}: ${t}`),
+      ...teammates.map((t, i) => `Player ${i + 2}: ${t.full}`),
     ]
-    const teamLine = teamName ? `Team: ${teamName}` : null
-    notes = [teamLine, roster.join("\n"), extraNotes || null]
+    notes = [`Team: ${teamName}`, roster.join("\n"), extraNotes || null]
       .filter(Boolean)
       .join("\n\n")
       .slice(0, NOTES_MAX)

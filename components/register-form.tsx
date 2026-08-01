@@ -13,10 +13,16 @@ type Props = {
   requirePayment: boolean
 }
 
-const NAME_MAX = 120
+type NameParts = { firstName: string; lastName: string }
+
+const PART_MAX = 60
 const PHONE_MAX = 40
 const NOTES_MAX = 2000
 const TEAM_NAME_MAX = 80
+
+function emptyParts(): NameParts {
+  return { firstName: "", lastName: "" }
+}
 
 export function RegisterForm({
   eventSlug,
@@ -30,12 +36,12 @@ export function RegisterForm({
   const playersNeeded = isTeam ? teamSize! : 1
   const formId = useId()
   const abortRef = useRef<AbortController | null>(null)
-  const [name, setName] = useState("")
+  const [captain, setCaptain] = useState<NameParts>(emptyParts)
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [teamName, setTeamName] = useState("")
-  const [playerNames, setPlayerNames] = useState<string[]>(() =>
-    Array.from({ length: Math.max(0, playersNeeded - 1) }, () => ""),
+  const [players, setPlayers] = useState<NameParts[]>(() =>
+    Array.from({ length: Math.max(0, playersNeeded - 1) }, emptyParts),
   )
   const [guests, setGuests] = useState(1)
   const [notes, setNotes] = useState("")
@@ -45,24 +51,48 @@ export function RegisterForm({
   const [pending, setPending] = useState(false)
   const [awaitingPayment, setAwaitingPayment] = useState(false)
 
+  function setPlayer(index: number, patch: Partial<NameParts>) {
+    setPlayers((prev) => {
+      const next = [...prev]
+      next[index] = { ...next[index], ...patch }
+      return next
+    })
+  }
+
+  function validateNameParts(
+    parts: NameParts,
+    prefix: string,
+    label: string,
+    next: Record<string, string>,
+  ) {
+    if (!parts.firstName.trim()) next[`${prefix}First`] = `Enter ${label} first name.`
+    if (!parts.lastName.trim()) next[`${prefix}Last`] = `Enter ${label} last name.`
+  }
+
   function validate(): boolean {
     const next: Record<string, string> = {}
-    const trimmedName = name.trim()
     const trimmedEmail = email.trim()
 
-    if (!trimmedName) next.name = isTeam ? "Enter the team captain’s name." : "Enter your name."
-    else if (trimmedName.length < 2) next.name = "Name looks too short."
+    if (isTeam) {
+      if (!teamName.trim()) next.teamName = "Enter a team name."
+    }
 
-    if (!trimmedEmail) next.email = "Enter your email."
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    validateNameParts(
+      captain,
+      "captain",
+      isTeam ? "the captain’s" : "your",
+      next,
+    )
+
+    if (!trimmedEmail) {
+      next.email = isTeam ? "Enter the captain’s email." : "Enter your email."
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       next.email = "Enter a valid email address."
     }
 
     if (isTeam) {
-      playerNames.forEach((p, i) => {
-        if (!p.trim() || p.trim().length < 2) {
-          next[`player${i + 2}`] = `Enter player ${i + 2}’s full name.`
-        }
+      players.forEach((p, i) => {
+        validateNameParts(p, `player${i + 2}`, `player ${i + 2}’s`, next)
       })
     } else if (guests < 1 || guests > 20) {
       next.guests = "Party size must be between 1 and 20."
@@ -85,19 +115,24 @@ export function RegisterForm({
 
     setPending(true)
     try {
-      const teammateList = playerNames.map((p) => p.trim()).filter(Boolean)
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
         body: JSON.stringify({
           eventSlug,
-          name: name.trim(),
+          firstName: captain.firstName.trim(),
+          lastName: captain.lastName.trim(),
           email: email.trim(),
           phone: phone.trim(),
           guests: isTeam ? playersNeeded : guests,
-          teamName: teamName.trim() || undefined,
-          teammates: isTeam ? teammateList : undefined,
+          teamName: isTeam ? teamName.trim() : undefined,
+          teammates: isTeam
+            ? players.map((p) => ({
+                firstName: p.firstName.trim(),
+                lastName: p.lastName.trim(),
+              }))
+            : undefined,
           notes: notes.trim(),
         }),
       })
@@ -137,7 +172,7 @@ export function RegisterForm({
   }
 
   if (done) {
-    const first = name.trim().split(/\s+/)[0] || "friend"
+    const first = captain.firstName.trim() || "friend"
 
     if (awaitingPayment && feeLabel) {
       return (
@@ -218,6 +253,84 @@ export function RegisterForm({
 
   const input = "field-control"
 
+  function namePairFields(
+    prefix: string,
+    parts: NameParts,
+    onChange: (patch: Partial<NameParts>) => void,
+    opts: { firstLabel: string; lastLabel: string; autoComplete?: boolean },
+  ) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor={`${formId}-${prefix}-first`}
+            className="block text-sm font-medium text-ink"
+          >
+            {opts.firstLabel}
+          </label>
+          <input
+            id={`${formId}-${prefix}-first`}
+            name={`${prefix}FirstName`}
+            required
+            autoComplete={opts.autoComplete ? "given-name" : "off"}
+            maxLength={PART_MAX}
+            value={parts.firstName}
+            onChange={(e) => onChange({ firstName: e.target.value })}
+            aria-invalid={Boolean(fieldErrors[`${prefix}First`])}
+            aria-describedby={
+              fieldErrors[`${prefix}First`]
+                ? `${formId}-${prefix}-first-err`
+                : undefined
+            }
+            className={input}
+          />
+          {fieldErrors[`${prefix}First`] ? (
+            <p
+              id={`${formId}-${prefix}-first-err`}
+              className="mt-1.5 text-sm text-danger"
+              role="alert"
+            >
+              {fieldErrors[`${prefix}First`]}
+            </p>
+          ) : null}
+        </div>
+        <div>
+          <label
+            htmlFor={`${formId}-${prefix}-last`}
+            className="block text-sm font-medium text-ink"
+          >
+            {opts.lastLabel}
+          </label>
+          <input
+            id={`${formId}-${prefix}-last`}
+            name={`${prefix}LastName`}
+            required
+            autoComplete={opts.autoComplete ? "family-name" : "off"}
+            maxLength={PART_MAX}
+            value={parts.lastName}
+            onChange={(e) => onChange({ lastName: e.target.value })}
+            aria-invalid={Boolean(fieldErrors[`${prefix}Last`])}
+            aria-describedby={
+              fieldErrors[`${prefix}Last`]
+                ? `${formId}-${prefix}-last-err`
+                : undefined
+            }
+            className={input}
+          />
+          {fieldErrors[`${prefix}Last`] ? (
+            <p
+              id={`${formId}-${prefix}-last-err`}
+              className="mt-1.5 text-sm text-danger"
+              role="alert"
+            >
+              {fieldErrors[`${prefix}Last`]}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {isTeam ? (
@@ -237,41 +350,44 @@ export function RegisterForm({
       {isTeam ? (
         <div>
           <label htmlFor={`${formId}-team`} className="block text-sm font-medium text-ink">
-            Team name <span className="font-normal text-muted">(optional)</span>
+            Team name
           </label>
           <input
             id={`${formId}-team`}
             name="teamName"
+            required
             maxLength={TEAM_NAME_MAX}
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
+            aria-invalid={Boolean(fieldErrors.teamName)}
+            aria-describedby={
+              fieldErrors.teamName ? `${formId}-team-err` : undefined
+            }
             className={input}
           />
+          {fieldErrors.teamName ? (
+            <p id={`${formId}-team-err`} className="mt-1.5 text-sm text-danger" role="alert">
+              {fieldErrors.teamName}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
-      <div>
-        <label htmlFor={`${formId}-name`} className="block text-sm font-medium text-ink">
-          {isTeam ? "Captain’s full name" : "Full name"}
-        </label>
-        <input
-          id={`${formId}-name`}
-          name="name"
-          required
-          autoComplete="name"
-          maxLength={NAME_MAX}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          aria-invalid={Boolean(fieldErrors.name)}
-          aria-describedby={fieldErrors.name ? `${formId}-name-err` : undefined}
-          className={input}
-        />
-        {fieldErrors.name ? (
-          <p id={`${formId}-name-err`} className="mt-1.5 text-sm text-danger" role="alert">
-            {fieldErrors.name}
-          </p>
-        ) : null}
-      </div>
+      {isTeam ? (
+        <p className="text-sm font-medium text-ink">Captain</p>
+      ) : null}
+
+      {namePairFields(
+        "captain",
+        captain,
+        (patch) => setCaptain((prev) => ({ ...prev, ...patch })),
+        {
+          firstLabel: isTeam ? "Captain’s first name" : "First name",
+          lastLabel: isTeam ? "Captain’s last name" : "Last name",
+          autoComplete: true,
+        },
+      )}
+
       <div>
         <label htmlFor={`${formId}-email`} className="block text-sm font-medium text-ink">
           {isTeam ? "Captain’s email" : "Email"}
@@ -313,45 +429,20 @@ export function RegisterForm({
       </div>
 
       {isTeam
-        ? playerNames.map((player, i) => {
-            const key = `player${i + 2}`
-            return (
-              <div key={key}>
-                <label
-                  htmlFor={`${formId}-${key}`}
-                  className="block text-sm font-medium text-ink"
-                >
-                  Player {i + 2} full name
-                </label>
-                <input
-                  id={`${formId}-${key}`}
-                  name={key}
-                  required
-                  maxLength={NAME_MAX}
-                  value={player}
-                  onChange={(e) => {
-                    const next = [...playerNames]
-                    next[i] = e.target.value
-                    setPlayerNames(next)
-                  }}
-                  aria-invalid={Boolean(fieldErrors[key])}
-                  aria-describedby={
-                    fieldErrors[key] ? `${formId}-${key}-err` : undefined
-                  }
-                  className={input}
-                />
-                {fieldErrors[key] ? (
-                  <p
-                    id={`${formId}-${key}-err`}
-                    className="mt-1.5 text-sm text-danger"
-                    role="alert"
-                  >
-                    {fieldErrors[key]}
-                  </p>
-                ) : null}
-              </div>
-            )
-          })
+        ? players.map((player, i) => (
+            <div key={`player-${i + 2}`} className="space-y-4 border-t border-line pt-5">
+              <p className="text-sm font-medium text-ink">Player {i + 2}</p>
+              {namePairFields(
+                `player${i + 2}`,
+                player,
+                (patch) => setPlayer(i, patch),
+                {
+                  firstLabel: "First name",
+                  lastLabel: "Last name",
+                },
+              )}
+            </div>
+          ))
         : (
           <div>
             <label htmlFor={`${formId}-guests`} className="block text-sm font-medium text-ink">
