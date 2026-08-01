@@ -71,9 +71,10 @@ export default async function StoryPage() {
         <section className="mt-24 max-w-3xl border-t border-line pt-12">
           <h2 className="font-display">Our purpose</h2>
           <p className="prose-measure mt-4 text-lg leading-relaxed text-muted">
-            Dedicated to presenting scholarships to one (1) graduating senior
-            from Herculaneum and DeSoto High Schools, as well as other community
-            service opportunities the Board of Directors deem appropriate.
+            Dedicated to providing scholarships to graduating seniors from
+            Herculaneum and DeSoto High Schools, as well as supporting other
+            community service opportunities deemed appropriate by the Board of
+            Directors.
           </p>
         </section>
       </main>

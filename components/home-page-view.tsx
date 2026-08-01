@@ -89,9 +89,10 @@ export async function HomePageView() {
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-display">Our purpose</h2>
             <p className="mx-auto mt-4 max-w-[40rem] text-pretty text-lg text-muted">
-              Scholarships for one graduating senior from Herculaneum and
-              DeSoto High Schools — and other community service the Board deems
-              appropriate.
+              Dedicated to providing scholarships to graduating seniors from
+              Herculaneum and DeSoto High Schools, as well as supporting other
+              community service opportunities deemed appropriate by the Board of
+              Directors.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-1">
               <Link

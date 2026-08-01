@@ -11,7 +11,7 @@
 
 Primary job: make it easy to gather people around Madalyn’s light — events first, story always nearby.
 
-Mission focus: scholarships for one graduating senior from Herculaneum and DeSoto High Schools, plus other Board-approved community service.
+Mission focus: providing scholarships to graduating seniors from Herculaneum and DeSoto High Schools, plus other Board-approved community service.
 
 Flagship gathering: Oak Valley Golf Scramble (4-person teams, $500/team, payment required to complete registration).
 
