@@ -518,27 +518,20 @@ export function RegisterForm({
           >
             {formatHoldCountdown(remainingSec)}
           </p>
-          <p className="mt-2 text-sm text-muted">
-            {holdExpired ? (
-              <>
+          {holdExpired ? (
+            <>
+              <p className="mt-2 text-sm text-muted">
                 Your hold went back in the pool. Start over for a new{" "}
                 {CHECKOUT_HOLD_MINUTES}-minute reservation.
-              </>
-            ) : (
-              <>
-                Capacity counts this spot as taken while you finish the form and
-                pay. If the timer hits zero, it returns to the pool.
-              </>
-            )}
-          </p>
-          {holdExpired ? (
-            <button
-              type="button"
-              className="motion-press mt-4 inline-flex min-h-11 items-center justify-center bg-accent px-6 text-sm font-medium text-accent-ink"
-              onClick={() => void startServerHold(true)}
-            >
-              Reserve again ({CHECKOUT_HOLD_MINUTES} min)
-            </button>
+              </p>
+              <button
+                type="button"
+                className="motion-press mt-4 inline-flex min-h-11 items-center justify-center bg-accent px-6 text-sm font-medium text-accent-ink"
+                onClick={() => void startServerHold(true)}
+              >
+                Reserve again ({CHECKOUT_HOLD_MINUTES} min)
+              </button>
+            </>
           ) : null}
         </div>
       ) : null}
