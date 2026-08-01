@@ -49,10 +49,10 @@ CTAs & fields: squared (`.field-control`); no pills.
 - Admin rosters: card list under `md`, table from `md` up
 - Form fields: `1rem` text to avoid iOS input zoom
 - Coarse pointers: slightly roomier `.motion-press` padding
-- Skip link → `#main` on every shell (`SkipLink` in headers)
+- Skip link → `#main` on every shell (`SkipLink` in headers); home skips to `#hero-copy` (H1 + CTAs) inside `<main>`
 - Content width ~68ch for story prose
 - Events as quiet list rows, not card grids; primary CTAs full-width on small screens
-- Admin: utilitarian tables, same tokens, denser spacing
+- Admin: utilitarian tables, same tokens, denser spacing; event form fields use `htmlFor` + hints (no low-contrast placeholders)
 - Z-index: `--z-dropdown` / `--z-sticky` / `--z-skip`
 - LCP: hero WebP preloaded by viewport; logo is never priority (don’t steal the preload slot); chrome uses plain `logo-96.webp`; Source Sans weights 400/500 only; public event pages ISR `revalidate` 60s (register 30s) with write-time `revalidatePublicEvents`; `/brand/*` immutable cache; favicon 48px
 
@@ -62,6 +62,8 @@ CTAs & fields: squared (`.field-control`); no pills.
 - Events list distinguishes empty vs load failure
 - Long titles wrap (`break-words` / `overflow-wrap`); form fields have max lengths
 - Errors use `--danger` token; live regions on success
+- Admin event create/edit mirrors public form labeling; mobile nav exposes `aria-expanded`; countdown units are not extra links
+- Staff admin shell includes skip-to-content
 
 ## Motion
 

@@ -20,7 +20,7 @@ type Props = {
   href: string
 }
 
-/** Featured home countdown — days/hours/minutes, quiet 30s tick, client clock only. */
+/** Featured home countdown — days/hours/minutes, quiet 30s tick, one primary link. */
 export function NextEventCountdown({ targetIso, title, href }: Props) {
   const target = new Date(toEventIso(targetIso)).getTime()
   const [parts, setParts] = useState<Parts | null>(null)
@@ -71,8 +71,7 @@ export function NextEventCountdown({ targetIso, title, href }: Props) {
           {title}
         </Link>
       </h2>
-      <Link
-        href={href}
+      <div
         className="countdown-enter mt-8 inline-flex flex-wrap items-end justify-center gap-5 sm:gap-8"
         aria-label={`Countdown to ${title}`}
       >
@@ -90,7 +89,7 @@ export function NextEventCountdown({ targetIso, title, href }: Props) {
             <span className="mt-2 text-xs font-medium text-muted">{u.label}</span>
           </span>
         ))}
-      </Link>
+      </div>
       <p className="mt-8">
         <Link
           href={href}

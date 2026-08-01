@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useId, useState } from "react"
 import type { EventRow } from "@/lib/events"
 
 type Props = {
@@ -17,6 +17,7 @@ function toLocalInput(iso: string | null | undefined): string {
 }
 
 export function EventForm({ event }: Props) {
+  const formId = useId()
   const router = useRouter()
   const [title, setTitle] = useState(event?.title ?? "")
   const [slug, setSlug] = useState(event?.slug ?? "")
@@ -96,10 +97,14 @@ export function EventForm({ event }: Props) {
   const field = "field-control"
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form onSubmit={onSubmit} className="space-y-5" noValidate={false}>
       <div>
-        <label className="text-sm font-medium">Title</label>
+        <label htmlFor={`${formId}-title`} className="block text-sm font-medium text-ink">
+          Title
+        </label>
         <input
+          id={`${formId}-title`}
+          name="title"
           className={field}
           required
           maxLength={160}
@@ -108,20 +113,29 @@ export function EventForm({ event }: Props) {
         />
       </div>
       <div>
-        <label className="text-sm font-medium">
+        <label htmlFor={`${formId}-slug`} className="block text-sm font-medium text-ink">
           Slug <span className="font-normal text-muted">(optional)</span>
         </label>
         <input
+          id={`${formId}-slug`}
+          name="slug"
           className={field}
           maxLength={80}
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          placeholder="auto-from-title"
+          aria-describedby={`${formId}-slug-hint`}
         />
+        <p id={`${formId}-slug-hint`} className="mt-1.5 text-sm text-muted">
+          Leave blank to auto-generate from the title.
+        </p>
       </div>
       <div>
-        <label className="text-sm font-medium">Summary</label>
+        <label htmlFor={`${formId}-summary`} className="block text-sm font-medium text-ink">
+          Summary
+        </label>
         <input
+          id={`${formId}-summary`}
+          name="summary"
           className={field}
           maxLength={280}
           value={summary}
@@ -129,8 +143,15 @@ export function EventForm({ event }: Props) {
         />
       </div>
       <div>
-        <label className="text-sm font-medium">Description</label>
+        <label
+          htmlFor={`${formId}-description`}
+          className="block text-sm font-medium text-ink"
+        >
+          Description
+        </label>
         <textarea
+          id={`${formId}-description`}
+          name="description"
           className={field}
           rows={6}
           maxLength={10000}
@@ -139,8 +160,12 @@ export function EventForm({ event }: Props) {
         />
       </div>
       <div>
-        <label className="text-sm font-medium">Location</label>
+        <label htmlFor={`${formId}-location`} className="block text-sm font-medium text-ink">
+          Location
+        </label>
         <input
+          id={`${formId}-location`}
+          name="location"
           className={field}
           maxLength={200}
           value={location}
@@ -149,8 +174,12 @@ export function EventForm({ event }: Props) {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium">Starts</label>
+          <label htmlFor={`${formId}-starts`} className="block text-sm font-medium text-ink">
+            Starts
+          </label>
           <input
+            id={`${formId}-starts`}
+            name="starts_at"
             type="datetime-local"
             className={field}
             required
@@ -159,8 +188,12 @@ export function EventForm({ event }: Props) {
           />
         </div>
         <div>
-          <label className="text-sm font-medium">Ends</label>
+          <label htmlFor={`${formId}-ends`} className="block text-sm font-medium text-ink">
+            Ends
+          </label>
           <input
+            id={`${formId}-ends`}
+            name="ends_at"
             type="datetime-local"
             className={field}
             value={endsAt}
@@ -170,42 +203,69 @@ export function EventForm({ event }: Props) {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium">Capacity</label>
+          <label htmlFor={`${formId}-capacity`} className="block text-sm font-medium text-ink">
+            Capacity
+          </label>
           <input
+            id={`${formId}-capacity`}
+            name="capacity"
             type="number"
             min={1}
             className={field}
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
-            placeholder="Unlimited"
+            aria-describedby={`${formId}-capacity-hint`}
           />
+          <p id={`${formId}-capacity-hint`} className="mt-1.5 text-sm text-muted">
+            Leave blank for unlimited.
+          </p>
         </div>
         <div>
-          <label className="text-sm font-medium">Fee (USD)</label>
+          <label htmlFor={`${formId}-fee`} className="block text-sm font-medium text-ink">
+            Fee (USD)
+          </label>
           <input
+            id={`${formId}-fee`}
+            name="fee"
             type="number"
             min={0}
             step="0.01"
             className={field}
             value={feeDollars}
             onChange={(e) => setFeeDollars(e.target.value)}
-            placeholder="0"
+            aria-describedby={`${formId}-fee-hint`}
           />
+          <p id={`${formId}-fee-hint`} className="mt-1.5 text-sm text-muted">
+            Use 0 or blank for free events.
+          </p>
         </div>
       </div>
       <div>
-        <label className="text-sm font-medium">PayPal.me link</label>
+        <label htmlFor={`${formId}-paypal`} className="block text-sm font-medium text-ink">
+          PayPal.me link
+        </label>
         <input
+          id={`${formId}-paypal`}
+          name="paypal_link"
+          type="url"
+          inputMode="url"
           className={field}
           value={paypalLink}
           onChange={(e) => setPaypalLink(e.target.value)}
-          placeholder="https://paypal.me/..."
+          aria-describedby={`${formId}-paypal-hint`}
         />
+        <p id={`${formId}-paypal-hint`} className="mt-1.5 text-sm text-muted">
+          Optional. Shown after someone registers when a fee is set.
+        </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium">Reg opens</label>
+          <label htmlFor={`${formId}-open`} className="block text-sm font-medium text-ink">
+            Reg opens
+          </label>
           <input
+            id={`${formId}-open`}
+            name="open_at"
             type="datetime-local"
             className={field}
             value={openAt}
@@ -213,8 +273,12 @@ export function EventForm({ event }: Props) {
           />
         </div>
         <div>
-          <label className="text-sm font-medium">Reg closes</label>
+          <label htmlFor={`${formId}-close`} className="block text-sm font-medium text-ink">
+            Reg closes
+          </label>
           <input
+            id={`${formId}-close`}
+            name="close_at"
             type="datetime-local"
             className={field}
             value={closeAt}
@@ -223,16 +287,20 @@ export function EventForm({ event }: Props) {
         </div>
       </div>
       <div className="flex flex-wrap gap-6 text-sm">
-        <label className="flex items-center gap-2">
+        <label htmlFor={`${formId}-published`} className="flex min-h-11 items-center gap-2">
           <input
+            id={`${formId}-published`}
+            name="is_published"
             type="checkbox"
             checked={isPublished}
             onChange={(e) => setIsPublished(e.target.checked)}
           />
           Published
         </label>
-        <label className="flex items-center gap-2">
+        <label htmlFor={`${formId}-reg-open`} className="flex min-h-11 items-center gap-2">
           <input
+            id={`${formId}-reg-open`}
+            name="registration_open"
             type="checkbox"
             checked={registrationOpen}
             onChange={(e) => setRegistrationOpen(e.target.checked)}
@@ -248,6 +316,7 @@ export function EventForm({ event }: Props) {
       <button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         className="inline-flex min-h-11 items-center bg-deep px-6 text-sm font-medium text-on-deep disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? "Saving…" : event ? "Update event" : "Create event"}

@@ -1,5 +1,6 @@
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
+import { SkipLink } from "@/components/skip-link"
 import {
   adminAvailable,
   adminDevBypassEnabled,
@@ -15,6 +16,7 @@ export default async function AdminLayout({
   if (!adminAvailable()) {
     return (
       <div className="mx-auto max-w-xl px-5 py-24">
+        <SkipLink />
         <main id="main">
           <h1 className="font-display text-3xl">Staff admin</h1>
           <p className="mt-4 text-muted">
@@ -47,6 +49,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-bg">
+      <SkipLink />
       {bypass ? (
         <div
           className="border-b border-accent bg-accent-soft px-5 py-2 text-center text-sm text-accent-ink"
@@ -69,9 +72,9 @@ export default async function AdminLayout({
               View site
             </Link>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             {admin ? (
-              <span className="text-sm text-muted">{admin.email}</span>
+              <span className="truncate text-sm text-muted">{admin.email}</span>
             ) : (
               <span className="text-sm text-danger">
                 Signed in, but role is not admin

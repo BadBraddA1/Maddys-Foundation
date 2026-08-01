@@ -104,6 +104,7 @@ When the domain is purchased:
 - Adapt: story photo first on phones; admin roster cards on small screens; 16px form fields; past-event links ≥44px; landscape hero breathing room
 - Home page: quieter centered countdown (days/hours/minutes only) between purpose and events
 - Polish: nav noun “Her Story” everywhere; Register vs Details CTA hierarchy; dead countdown layouts removed; spacing on purpose scale; selection on deep uses accent
+- Harden: home `<main>` wraps hero; skip lands on `#hero-copy`; admin form labels + hints; mobile `aria-expanded`; admin skip link; countdown units not linked
 - Interior header (`SiteHeaderSolid`): brand + nav only (no countdown widget crowding the bar)
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))

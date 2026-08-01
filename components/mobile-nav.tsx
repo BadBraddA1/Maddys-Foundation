@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useId, useRef } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 
 const links = [
   { href: "/story", label: "Her Story" },
@@ -19,10 +19,14 @@ export function MobileNav({
   const pathname = usePathname()
   const detailsRef = useRef<HTMLDetailsElement>(null)
   const menuId = useId()
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     const el = detailsRef.current
-    if (el) el.open = false
+    if (el) {
+      el.open = false
+      setExpanded(false)
+    }
   }, [pathname])
 
   const panel =
@@ -36,7 +40,13 @@ export function MobileNav({
       : "text-ink hover:bg-bg"
 
   return (
-    <details ref={detailsRef} className="relative md:hidden">
+    <details
+      ref={detailsRef}
+      className="relative md:hidden"
+      onToggle={(e) => {
+        setExpanded((e.currentTarget as HTMLDetailsElement).open)
+      }}
+    >
       <summary
         className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center border text-sm font-medium transition [&::-webkit-details-marker]:hidden ${
           tone === "light"
@@ -44,6 +54,7 @@ export function MobileNav({
             : "border-line bg-surface text-ink"
         }`}
         aria-controls={menuId}
+        aria-expanded={expanded}
       >
         <span className="sr-only">Menu</span>
         <span aria-hidden="true" className="flex flex-col gap-1.5">
@@ -64,6 +75,7 @@ export function MobileNav({
               onClick={() => {
                 const el = detailsRef.current
                 if (el) el.open = false
+                setExpanded(false)
               }}
             >
               {link.label}

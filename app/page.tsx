@@ -32,6 +32,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <main id="main" className="flex flex-1 flex-col">
       <section
         data-home-hero
         className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep [contain:layout_paint]"
@@ -43,7 +44,11 @@ export default async function HomePage() {
           aria-hidden="true"
         />
         <SiteHeader />
-        <div className="hero-stage relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
+        <div
+          id="hero-copy"
+          tabIndex={-1}
+          className="hero-stage relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24 outline-none"
+        >
           <h1
             className="hero-enter on-dark max-w-3xl font-display text-on-deep"
             data-enter="0"
@@ -77,7 +82,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <main id="main">
       <section className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-6 md:px-8 md:py-16">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-display">Our purpose</h2>

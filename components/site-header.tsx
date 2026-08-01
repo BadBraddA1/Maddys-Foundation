@@ -2,11 +2,16 @@ import { BrandMark, PrimaryNav } from "@/components/site-nav"
 import { SkipLink } from "@/components/skip-link"
 import { HeroHeaderChrome } from "@/components/hero-header-chrome"
 
+type HomeHeaderProps = {
+  /** Skip past chrome to the hero headline (inside `<main>`). */
+  skipHref?: string
+}
+
 /** Overlay header for the photo hero — settles in, then solid sticky after scroll. */
-export function SiteHeader() {
+export function SiteHeader({ skipHref = "#hero-copy" }: HomeHeaderProps = {}) {
   return (
     <>
-      <SkipLink />
+      <SkipLink href={skipHref} />
       <header className="absolute inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]">
         <HeroHeaderChrome />
       </header>
