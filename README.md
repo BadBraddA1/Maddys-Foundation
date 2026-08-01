@@ -65,7 +65,7 @@ A yellow banner shows when bypass is active. It only works in **development** or
 | --- | --- | --- |
 | `TURSO_DATABASE_URL` | yes | libSQL URL |
 | `TURSO_AUTH_TOKEN` | yes | Turso token |
-| `NEXT_PUBLIC_SITE_URL` | yes (prod) | Canonical URL / metadata |
+| `NEXT_PUBLIC_SITE_URL` | yes (prod) | Canonical URL / metadata (use Vercel URL until `maddysfoundation.org` DNS is live — OG images 404 on the parked domain) |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | admin | Clerk |
 | `CLERK_SECRET_KEY` | admin | Clerk |
 | `ADMIN_DEV_BYPASS` | no | `1` = local/preview staff access without Clerk |

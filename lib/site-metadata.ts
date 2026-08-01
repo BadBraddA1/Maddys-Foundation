@@ -1,14 +1,35 @@
 export const siteName = "Madalyn Robinson Foundation"
 export const siteShortName = "Maddy's Foundation"
-export const siteTitle = "Madalyn Robinson Foundation"
+/** ~50–60 chars for SERP / social title space. */
+export const siteTitle =
+  "Madalyn Robinson Foundation — Events, Scholarships & Hope"
 /** Keep ≤ ~125 characters for social truncations (playbook 05). */
 export const siteDescription =
   "Spreading joy and light in honor of Madalyn Robinson — events, community, and hope."
 export const ogImageAlt =
   "Madalyn Robinson Foundation — joy that still moves mountains"
-export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://maddysfoundation.org"
+
+function resolveSiteUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "").trim()
+  // Custom domain is pending DNS — don't emit OG URLs that 404 there.
+  if (
+    fromEnv &&
+    !/^https?:\/\/(www\.)?maddysfoundation\.org$/i.test(fromEnv)
+  ) {
+    return fromEnv
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}`
+  }
+  return "https://maddys-foundation.vercel.app"
+}
+
+export const siteUrl = resolveSiteUrl()
+
+/** Absolute OG / Twitter image paths (file lives at app/opengraph-image.jpg). */
+export const ogImagePath = "/opengraph-image.jpg"
+export const twitterImagePath = "/twitter-image.jpg"
+
 /** Venmo profile — override with NEXT_PUBLIC_DONATE_URL if needed. */
 export const donateUrl =
   process.env.NEXT_PUBLIC_DONATE_URL?.trim() ||

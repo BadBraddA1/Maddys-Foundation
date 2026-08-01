@@ -4,10 +4,13 @@ import { Analytics } from "@vercel/analytics/next"
 import { Literata, Source_Sans_3 } from "next/font/google"
 import { clerkConfigured } from "@/lib/auth"
 import {
+  ogImageAlt,
+  ogImagePath,
   siteDescription,
   siteName,
   siteTitle,
   siteUrl,
+  twitterImagePath,
 } from "@/lib/site-metadata"
 import "./globals.css"
 
@@ -49,11 +52,28 @@ export const metadata: Metadata = {
     siteName,
     title: siteTitle,
     description: siteDescription,
+    images: [
+      {
+        url: ogImagePath,
+        width: 1200,
+        height: 630,
+        alt: ogImageAlt,
+        type: "image/jpeg",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
+    images: [
+      {
+        url: twitterImagePath,
+        width: 1200,
+        height: 630,
+        alt: ogImageAlt,
+      },
+    ],
   },
 }
 
