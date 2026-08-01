@@ -2,12 +2,13 @@ import { NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import {
   audit,
+  formatFee,
   getEventBySlug,
   isRegistrationAvailable,
 } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { normalizeUsPhone } from "@/lib/phone"
-import { createEventCheckoutSession } from "@/lib/stripe-checkout"
+import { createEventCheckoutSession, teamAddonTotalCents } from "@/lib/stripe-checkout"
 import { stripeConfigured } from "@/lib/stripe"
 
 export const runtime = "nodejs"
@@ -174,17 +175,26 @@ export async function POST(req: Request) {
     }
 
     guests = teamSize
+    const wantMulligans = Boolean(body.mulligans)
+    const wantSkins = Boolean(body.skins)
+    const addonCents = teamAddonTotalCents({
+      mulligans: wantMulligans,
+      skins: wantSkins,
+    })
+    const totalCents = event.fee_cents + addonCents
     const addOns = [
-      body.mulligans ? "Mulligans: yes" : "Mulligans: no",
-      body.skins ? "Skins: yes" : "Skins: no",
+      wantMulligans ? "Mulligans: yes (+$20)" : "Mulligans: no",
+      wantSkins ? "Skins: yes (+$20)" : "Skins: no",
     ].join(" · ")
     const roster = [
       `Captain: ${name}`,
       ...teammates.map((t, i) => `Player ${i + 2}: ${t.full}`),
     ]
+    const totalLabel = formatFee(totalCents) ?? `$${(totalCents / 100).toFixed(0)}`
     notes = [
       `Team: ${teamName}`,
       `Add-ons (whole team): ${addOns}`,
+      `Total due: ${totalLabel}`,
       roster.join("\n"),
       extraNotes || null,
     ]
@@ -254,6 +264,8 @@ export async function POST(req: Request) {
         registrationId,
         customerEmail: email,
         teamName: teamName || undefined,
+        mulligans: Boolean(body.mulligans),
+        skins: Boolean(body.skins),
       })
       checkoutUrl = session?.url ?? null
     } catch (err) {

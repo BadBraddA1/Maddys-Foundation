@@ -4,6 +4,19 @@ import { audit, getEventById } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
 import { getStripe, publicSiteUrl, stripeConfigured } from "@/lib/stripe"
 
+/** Mulligans / skins — flat fee per team (cents). */
+export const TEAM_ADDON_CENTS = 2000
+
+export function teamAddonTotalCents(opts: {
+  mulligans?: boolean
+  skins?: boolean
+}): number {
+  let total = 0
+  if (opts.mulligans) total += TEAM_ADDON_CENTS
+  if (opts.skins) total += TEAM_ADDON_CENTS
+  return total
+}
+
 export async function createEventCheckoutSession(opts: {
   eventId: number
   eventSlug: string
@@ -12,8 +25,12 @@ export async function createEventCheckoutSession(opts: {
   registrationId: number
   customerEmail: string
   teamName?: string
-}): Promise<{ url: string; sessionId: string } | null> {
-  if (!stripeConfigured() || opts.feeCents <= 0) return null
+  mulligans?: boolean
+  skins?: boolean
+}): Promise<{ url: string; sessionId: string; totalCents: number } | null> {
+  const addonCents = teamAddonTotalCents(opts)
+  const totalCents = opts.feeCents + addonCents
+  if (!stripeConfigured() || totalCents <= 0) return null
 
   const stripe = getStripe()
   const base = publicSiteUrl()
@@ -21,35 +38,70 @@ export async function createEventCheckoutSession(opts: {
     ? `${opts.eventTitle} — ${opts.teamName}`
     : `${opts.eventTitle} registration`
 
+  const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+
+  if (opts.feeCents > 0) {
+    line_items.push({
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: opts.feeCents,
+        product_data: {
+          name: productName,
+          description: "Tournament registration fee",
+        },
+      },
+    })
+  }
+
+  if (opts.mulligans) {
+    line_items.push({
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: TEAM_ADDON_CENTS,
+        product_data: {
+          name: "Mulligans (team)",
+          description: "Team mulligans add-on",
+        },
+      },
+    })
+  }
+
+  if (opts.skins) {
+    line_items.push({
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: TEAM_ADDON_CENTS,
+        product_data: {
+          name: "Skins (team)",
+          description: "Team skins add-on",
+        },
+      },
+    })
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     customer_email: opts.customerEmail,
     client_reference_id: String(opts.registrationId),
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: "usd",
-          unit_amount: opts.feeCents,
-          product_data: {
-            name: productName,
-            description: "Tournament registration fee",
-          },
-        },
-      },
-    ],
+    line_items,
     metadata: {
       registrationId: String(opts.registrationId),
       eventId: String(opts.eventId),
       eventSlug: opts.eventSlug,
       kind: "event_registration",
+      mulligans: opts.mulligans ? "1" : "0",
+      skins: opts.skins ? "1" : "0",
+      totalCents: String(totalCents),
     },
     success_url: `${base}/events/${opts.eventSlug}/register?paid=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${base}/events/${opts.eventSlug}/register?canceled=1`,
   })
 
   if (!session.url) return null
-  return { url: session.url, sessionId: session.id }
+  return { url: session.url, sessionId: session.id, totalCents }
 }
 
 export async function confirmRegistrationFromCheckout(

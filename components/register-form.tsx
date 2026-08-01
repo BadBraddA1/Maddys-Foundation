@@ -1,13 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { useId, useRef, useState } from "react"
+import { useId, useMemo, useRef, useState } from "react"
+import { formatFee } from "@/lib/events"
 import { normalizeUsPhone } from "@/lib/phone"
+import { TEAM_ADDON_CENTS, teamAddonTotalCents } from "@/lib/stripe-checkout"
 
 type Props = {
   eventSlug: string
   eventTitle: string
   feeLabel: string | null
+  /** Base event fee in cents (team entry before add-ons). */
+  feeCents: number
   paypalLink: string | null
   /** When > 1, collect a full team and require payment before confirmation. */
   teamSize: number | null
@@ -29,6 +33,7 @@ export function RegisterForm({
   eventSlug,
   eventTitle,
   feeLabel,
+  feeCents,
   paypalLink,
   teamSize,
   requirePayment,
@@ -53,6 +58,14 @@ export function RegisterForm({
   const [done, setDone] = useState(false)
   const [pending, setPending] = useState(false)
   const [awaitingPayment, setAwaitingPayment] = useState(false)
+
+  const addonCents = useMemo(
+    () => teamAddonTotalCents({ mulligans, skins }),
+    [mulligans, skins],
+  )
+  const totalCents = Math.max(0, feeCents) + (isTeam ? addonCents : 0)
+  const totalLabel = formatFee(totalCents)
+  const addonPriceLabel = formatFee(TEAM_ADDON_CENTS) ?? "$20"
 
   function setPlayer(index: number, patch: Partial<NameParts>) {
     setPlayers((prev) => {
@@ -516,7 +529,7 @@ export function RegisterForm({
             Team add-ons
           </legend>
           <p className="text-sm text-muted">
-            Applies to the whole team.
+            Applies to the whole team · {addonPriceLabel} each
           </p>
           <label
             htmlFor={`${formId}-mulligans`}
@@ -530,7 +543,7 @@ export function RegisterForm({
               onChange={(e) => setMulligans(e.target.checked)}
               className="size-4 shrink-0 accent-[var(--accent)]"
             />
-            Mulligans
+            Mulligans (+{addonPriceLabel})
           </label>
           <label
             htmlFor={`${formId}-skins`}
@@ -544,8 +557,21 @@ export function RegisterForm({
               onChange={(e) => setSkins(e.target.checked)}
               className="size-4 shrink-0 accent-[var(--accent)]"
             />
-            Skins
+            Skins (+{addonPriceLabel})
           </label>
+          {totalLabel ? (
+            <p className="pt-1 text-sm text-muted">
+              Total due: <strong className="text-ink">{totalLabel}</strong>
+              {addonCents > 0 ? (
+                <span>
+                  {" "}
+                  ({feeLabel ?? formatFee(feeCents)}
+                  {mulligans ? ` + mulligans` : ""}
+                  {skins ? ` + skins` : ""})
+                </span>
+              ) : null}
+            </p>
+          ) : null}
         </fieldset>
       ) : null}
 
@@ -595,11 +621,13 @@ export function RegisterForm({
       >
         {pending
           ? "Submitting…"
-          : requirePayment
-            ? "Continue to payment"
-            : isTeam
-              ? "Register team"
-              : "Register"}
+          : requirePayment && totalLabel
+            ? `Continue to pay ${totalLabel}`
+            : requirePayment
+              ? "Continue to payment"
+              : isTeam
+                ? "Register team"
+                : "Register"}
       </button>
     </form>
   )
