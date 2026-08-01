@@ -19,9 +19,9 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col">
       <section className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep [contain:layout_paint]">
         <HeroPhoto />
-        {/* Bottom wash for copy + top is handled by header scrim */}
+        {/* Bottom wash only — keep face (upper third) clear of the fog veil */}
         <div
-          className="absolute inset-0 bg-gradient-to-t from-deep from-15% via-deep/70 via-45% to-deep-mid/40"
+          className="absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-deep from-25% via-deep/75 to-transparent"
           aria-hidden="true"
         />
         <SiteHeader />

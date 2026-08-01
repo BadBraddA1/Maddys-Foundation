@@ -24,7 +24,7 @@ export function HeroPhoto() {
         height={2134}
         fetchPriority="high"
         decoding="async"
-        className="animate-hero-drift absolute inset-0 h-full w-full object-cover object-[center_12%] sm:object-[center_18%] md:object-[center_20%]"
+        className="animate-hero-drift absolute inset-0 h-full w-full object-cover object-[center_top]"
       />
     </picture>
   )

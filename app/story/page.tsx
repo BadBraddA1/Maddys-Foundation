@@ -60,7 +60,7 @@ export default function StoryPage() {
               src="/brand/maddy-960.webp"
               alt="Madalyn Robinson smiling outdoors"
               fill
-              className="object-cover object-[center_15%]"
+              className="object-cover object-[center_top]"
               sizes="(max-width: 1024px) 100vw, 40vw"
               loading="lazy"
             />

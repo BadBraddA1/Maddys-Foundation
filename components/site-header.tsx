@@ -116,12 +116,12 @@ export function SiteHeader() {
     <>
       <SkipLink />
       <header className="absolute inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]">
-        <div className="bg-gradient-to-b from-deep from-40% via-deep/85 to-transparent pb-10">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
-            <BrandMark tone="light" />
-            <PrimaryNav tone="light" />
-          </div>
+      <div className="bg-gradient-to-b from-deep/75 from-30% via-deep/35 to-transparent pb-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
+          <BrandMark tone="light" />
+          <PrimaryNav tone="light" />
         </div>
+      </div>
       </header>
     </>
   )
