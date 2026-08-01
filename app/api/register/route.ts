@@ -26,6 +26,8 @@ type Body = {
   notes?: string
   teamName?: string
   teammates?: Array<string | NameParts>
+  mulligans?: boolean
+  skins?: boolean
 }
 
 const PART_MAX = 60

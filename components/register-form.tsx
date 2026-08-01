@@ -44,6 +44,8 @@ export function RegisterForm({
     Array.from({ length: Math.max(0, playersNeeded - 1) }, emptyParts),
   )
   const [guests, setGuests] = useState(1)
+  const [mulligans, setMulligans] = useState(false)
+  const [skins, setSkins] = useState(false)
   const [notes, setNotes] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -133,6 +135,8 @@ export function RegisterForm({
                 lastName: p.lastName.trim(),
               }))
             : undefined,
+          mulligans: isTeam ? mulligans : undefined,
+          skins: isTeam ? skins : undefined,
           notes: notes.trim(),
         }),
       })
@@ -469,6 +473,47 @@ export function RegisterForm({
           </div>
         )}
 
+        )}
+
+      {isTeam ? (
+        <fieldset className="space-y-3 border-t border-line pt-5">
+          <legend className="text-sm font-medium text-ink">
+            Team add-ons
+          </legend>
+          <p className="text-sm text-muted">
+            Applies to the whole team.
+          </p>
+          <label
+            htmlFor={`${formId}-mulligans`}
+            className="flex min-h-11 items-center gap-3 text-sm text-ink"
+          >
+            <input
+              id={`${formId}-mulligans`}
+              name="mulligans"
+              type="checkbox"
+              checked={mulligans}
+              onChange={(e) => setMulligans(e.target.checked)}
+              className="size-4 shrink-0 accent-[var(--accent)]"
+            />
+            Mulligans
+          </label>
+          <label
+            htmlFor={`${formId}-skins`}
+            className="flex min-h-11 items-center gap-3 text-sm text-ink"
+          >
+            <input
+              id={`${formId}-skins`}
+              name="skins"
+              type="checkbox"
+              checked={skins}
+              onChange={(e) => setSkins(e.target.checked)}
+              className="size-4 shrink-0 accent-[var(--accent)]"
+            />
+            Skins
+          </label>
+        </fieldset>
+      ) : null}
+
       <div>
         <label htmlFor={`${formId}-notes`} className="block text-sm font-medium text-ink">
           Notes <span className="font-normal text-muted">(optional)</span>
@@ -481,7 +526,7 @@ export function RegisterForm({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className={input}
-          placeholder={isTeam ? "Dietary needs, mulligans interest, etc." : undefined}
+          placeholder={isTeam ? "Dietary needs, etc." : undefined}
         />
         <p className="mt-1 text-sm text-muted">
           {notes.length}/{NOTES_MAX}
