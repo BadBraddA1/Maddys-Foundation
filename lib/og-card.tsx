@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { ImageResponse } from "next/og"
 import { formatEventDate, formatFee, type EventRow } from "@/lib/events"
-import { siteName, siteUrl } from "@/lib/site-metadata"
+import { siteName } from "@/lib/site-metadata"
 
 export const ogSize = { width: 1200, height: 630 }
 export const ogContentType = "image/png"
@@ -21,6 +21,11 @@ const ACCENT_INK = "#3d2e12"
  * Satori often ignores div opacity, so the tent is an SVG <img> layer.
  */
 const TENT_OPACITY = 0.55
+
+/** Shift Maddy right so type can sit more centered without covering her face. */
+const PHOTO_POSITION = "68% 18%"
+
+const LOGO_SIZE = 128
 
 function greenTentDataUrl() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="${DEEP}" fill-opacity="${TENT_OPACITY}"/></svg>`
@@ -44,7 +49,6 @@ function PhotoGreenTentCard(props: {
   title: string
   subtitle?: string
   footerLeft?: string
-  host: string
 }) {
   return (
     <div
@@ -57,7 +61,7 @@ function PhotoGreenTentCard(props: {
         backgroundColor: DEEP,
       }}
     >
-      {/* 1) Photo */}
+      {/* 1) Photo — subject nudged right */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={props.photoSrc}
@@ -71,12 +75,11 @@ function PhotoGreenTentCard(props: {
           width: 1200,
           height: 630,
           objectFit: "cover",
-          objectPosition: "center top",
+          objectPosition: PHOTO_POSITION,
         }}
       />
 
-      {/* 2) Even green tent as SVG <img> — above photo, below text.
-          Satori often drops div opacity / rgba overlays; image layers are reliable. */}
+      {/* 2) Even green tent as SVG <img> — above photo, below text */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={greenTentDataUrl()}
@@ -92,87 +95,89 @@ function PhotoGreenTentCard(props: {
         }}
       />
 
-      {/* 3) Text on top of the tent */}
+      {/* 3) Graphics more centered; face stays clear on the right */}
       <div
         style={{
           position: "relative",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
+          alignItems: "center",
           width: 1200,
           height: 630,
-          padding: "64px 72px",
+          padding: "56px 80px",
           color: ON_DEEP,
         }}
       >
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: 20,
-            marginBottom: 28,
+            maxWidth: 820,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={props.logoSrc}
-            alt=""
-            width={76}
-            height={76}
-            style={{
-              width: 76,
-              height: 76,
-              borderRadius: 9999,
-              objectFit: "cover",
-              backgroundColor: ON_DEEP,
-              flexShrink: 0,
-            }}
-          />
-          {props.brandLine ? (
-            <div style={{ fontSize: 28, fontWeight: 600, opacity: 0.95 }}>
-              {props.brandLine}
-            </div>
-          ) : null}
-        </div>
-
-        <div
-          style={{
-            fontSize: props.title.length > 40 ? 46 : 56,
-            fontWeight: 600,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            maxWidth: 980,
-          }}
-        >
-          {props.title}
-        </div>
-
-        {props.subtitle ? (
           <div
             style={{
-              marginTop: 18,
-              fontSize: 26,
-              opacity: 0.9,
-              color: ON_DEEP_MUTED,
-              maxWidth: 900,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 22,
+              marginBottom: 26,
             }}
           >
-            {props.subtitle}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={props.logoSrc}
+              alt=""
+              width={LOGO_SIZE}
+              height={LOGO_SIZE}
+              style={{
+                width: LOGO_SIZE,
+                height: LOGO_SIZE,
+                borderRadius: 9999,
+                objectFit: "cover",
+                backgroundColor: ON_DEEP,
+                flexShrink: 0,
+              }}
+            />
+            {props.brandLine ? (
+              <div style={{ fontSize: 28, fontWeight: 600, opacity: 0.95 }}>
+                {props.brandLine}
+              </div>
+            ) : null}
           </div>
-        ) : null}
 
-        <div
-          style={{
-            display: "flex",
-            marginTop: 40,
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-          }}
-        >
+          <div
+            style={{
+              fontSize: props.title.length > 40 ? 44 : 54,
+              fontWeight: 600,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              textAlign: "center",
+            }}
+          >
+            {props.title}
+          </div>
+
+          {props.subtitle ? (
+            <div
+              style={{
+                marginTop: 16,
+                fontSize: 26,
+                opacity: 0.9,
+                color: ON_DEEP_MUTED,
+                textAlign: "center",
+              }}
+            >
+              {props.subtitle}
+            </div>
+          ) : null}
+
           {props.footerLeft ? (
             <div
               style={{
+                marginTop: 32,
                 padding: "14px 28px",
                 backgroundColor: ACCENT,
                 color: ACCENT_INK,
@@ -182,12 +187,7 @@ function PhotoGreenTentCard(props: {
             >
               {props.footerLeft}
             </div>
-          ) : (
-            <div />
-          )}
-          <div style={{ fontSize: 20, opacity: 0.55, color: ON_DEEP_MUTED }}>
-            {props.host}
-          </div>
+          ) : null}
         </div>
       </div>
     </div>
@@ -200,7 +200,6 @@ export async function renderSiteOgImage() {
     localBrand("maddy.jpg"),
     localBrand("logo.jpg"),
   ])
-  const host = new URL(siteUrl).host
 
   return new ImageResponse(
     (
@@ -209,7 +208,6 @@ export async function renderSiteOgImage() {
         logoSrc={logo}
         title={siteName}
         subtitle="Events · scholarships · hope"
-        host={host}
       />
     ),
     { ...ogSize },
@@ -219,7 +217,6 @@ export async function renderSiteOgImage() {
 /** Event card: same green tent; custom title + details; cover when set. */
 export async function renderEventOgImage(event: EventRow | null) {
   const logo = await localBrand("logo.jpg")
-  const host = new URL(siteUrl).host
 
   let photo = await localBrand("maddy.jpg")
   if (event?.cover_image_url?.trim()) {
@@ -244,7 +241,6 @@ export async function renderEventOgImage(event: EventRow | null) {
         title={title}
         subtitle={subtitle || undefined}
         footerLeft="View event →"
-        host={host}
       />
     ),
     { ...ogSize },
