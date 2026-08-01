@@ -11,8 +11,8 @@ import { normalizeUsPhone } from "@/lib/phone"
 import { createEventCheckoutSession } from "@/lib/stripe-checkout"
 import {
   CHECKOUT_HOLD_MINUTES,
-  holdExpiresAtUnix,
   releaseExpiredHolds,
+  resolveHoldExpiresAt,
 } from "@/lib/registration-hold"
 import { registrationTotalCents } from "@/lib/team-addons"
 import { stripeConfigured } from "@/lib/stripe"
@@ -39,6 +39,8 @@ type Body = {
   mulligans?: boolean
   skins?: boolean
   coverCardFees?: boolean
+  /** Unix seconds — timer started when register page opened. */
+  holdExpiresAt?: number
 }
 
 const PART_MAX = 60
@@ -248,7 +250,15 @@ export async function POST(req: Request) {
 
   const status = requirePayment ? "pending" : "confirmed"
   const paid = requirePayment ? 0 : 1
-  const holdUntil = requirePayment ? holdExpiresAtUnix() : null
+
+  let holdUntil: number | null = null
+  if (requirePayment) {
+    const resolved = resolveHoldExpiresAt(body.holdExpiresAt)
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: 400 })
+    }
+    holdUntil = resolved.holdExpiresAt
+  }
 
   // Replace any abandoned unpaid draft for this email so they can start over.
   if (requirePayment) {
@@ -298,6 +308,7 @@ export async function POST(req: Request) {
         mulligans: Boolean(body.mulligans),
         skins: Boolean(body.skins),
         coverCardFees: Boolean(body.coverCardFees),
+        holdExpiresAt: holdUntil ?? undefined,
       })
       checkoutUrl = session?.url ?? null
       if (session?.holdExpiresAt) holdExpiresAt = session.holdExpiresAt

@@ -1,10 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-  CHECKOUT_HOLD_MINUTES,
-  formatHoldCountdown,
-} from "@/lib/registration-hold-shared"
+import { formatHoldCountdown } from "@/lib/registration-hold-shared"
 
 type Props = {
   checkoutUrl: string
@@ -55,22 +52,21 @@ export function CheckoutHoldScreen({
       <h2 className="font-display text-2xl text-ink">
         {expired ? "Hold expired" : "Your spot is held"}
       </h2>
-      <p className="mt-3 text-ink/75">
-        {expired ? (
-          <>
-            Time ran out for{" "}
-            <span className="font-medium text-ink">{eventTitle}</span>. Refresh
-            and register again if a {spot} is still open.
-          </>
-        ) : (
-          <>
-            Complete payment for{" "}
-            <span className="font-medium text-ink">{eventTitle}</span> before
-            the timer hits zero — or your {spot} goes back in the pool (
-            {CHECKOUT_HOLD_MINUTES} minute hold).
-          </>
-        )}
-      </p>
+          <p className="mt-3 text-ink/75">
+            {expired ? (
+              <>
+                Time ran out for{" "}
+                <span className="font-medium text-ink">{eventTitle}</span>. Refresh
+                and register again if a {spot} is still open.
+              </>
+            ) : (
+              <>
+                Same timer from when you started registering for{" "}
+                <span className="font-medium text-ink">{eventTitle}</span> — finish
+                payment before it hits zero or your {spot} goes back in the pool.
+              </>
+            )}
+          </p>
 
       {!expired ? (
         <p

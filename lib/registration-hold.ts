@@ -9,6 +9,7 @@ export {
   STRIPE_SESSION_EXPIRE_SECONDS,
   holdExpiresAtUnix,
   formatHoldCountdown,
+  resolveHoldExpiresAt,
 } from "@/lib/registration-hold-shared"
 
 /**

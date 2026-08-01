@@ -1,11 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { useId, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { CheckoutHoldScreen } from "@/components/checkout-hold-screen"
 import { formatFee } from "@/lib/event-helpers"
 import { normalizeUsPhone } from "@/lib/phone"
-import { CHECKOUT_HOLD_MINUTES } from "@/lib/registration-hold-shared"
+import {
+  CHECKOUT_HOLD_MINUTES,
+  beginRegistrationHold,
+  clearRegistrationHold,
+  formatHoldCountdown,
+} from "@/lib/registration-hold-shared"
 import { TEAM_ADDON_CENTS, registrationTotalCents } from "@/lib/team-addons"
 
 type Props = {
@@ -17,6 +22,8 @@ type Props = {
   /** When > 1, collect a full team and require payment before confirmation. */
   teamSize: number | null
   requirePayment: boolean
+  /** After cancel, start a fresh 10-minute window. */
+  resetHold?: boolean
 }
 
 type NameParts = { firstName: string; lastName: string }
@@ -37,6 +44,7 @@ export function RegisterForm({
   feeCents,
   teamSize,
   requirePayment,
+  resetHold = false,
 }: Props) {
   const isTeam = Boolean(teamSize && teamSize > 1)
   const playersNeeded = isTeam ? teamSize! : 1
@@ -63,6 +71,26 @@ export function RegisterForm({
     url: string
     holdExpiresAt: number
   } | null>(null)
+  const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null)
+  const [remainingSec, setRemainingSec] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!requirePayment) return
+    const expires = beginRegistrationHold(eventSlug, resetHold)
+    setHoldExpiresAt(expires)
+  }, [eventSlug, requirePayment, resetHold])
+
+  useEffect(() => {
+    if (!requirePayment || holdExpiresAt == null) return
+    const tick = () => {
+      setRemainingSec(Math.max(0, holdExpiresAt - Math.floor(Date.now() / 1000)))
+    }
+    tick()
+    const id = window.setInterval(tick, 250)
+    return () => window.clearInterval(id)
+  }, [requirePayment, holdExpiresAt])
+
+  const holdExpired = requirePayment && remainingSec != null && remainingSec <= 0
 
   const totals = useMemo(
     () =>
@@ -141,6 +169,12 @@ export function RegisterForm({
     setError(null)
     if (!validate()) return
     if (pending) return
+    if (holdExpired) {
+      setError(
+        `Your ${CHECKOUT_HOLD_MINUTES}-minute timer ran out. Refresh the page to start again.`,
+      )
+      return
+    }
 
     abortRef.current?.abort()
     const controller = new AbortController()
@@ -174,6 +208,7 @@ export function RegisterForm({
           skins: isTeam ? skins : undefined,
           coverCardFees: isTeam ? coverCardFees : undefined,
           notes: notes.trim(),
+          holdExpiresAt: holdExpiresAt ?? undefined,
         }),
       })
 
@@ -214,10 +249,12 @@ export function RegisterForm({
       }
 
       if (data.checkoutUrl) {
+        clearRegistrationHold(eventSlug)
         window.location.assign(data.checkoutUrl)
         return
       }
 
+      clearRegistrationHold(eventSlug)
       setAwaitingPayment(data.status === "pending" || requirePayment)
       setDone(true)
     } catch (err) {
@@ -381,6 +418,54 @@ export function RegisterForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
+      {requirePayment && remainingSec != null ? (
+        <div
+          className={`border px-5 py-4 ${
+            holdExpired
+              ? "border-danger/40 bg-danger/5"
+              : "border-line bg-surface"
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          <p className="text-sm font-medium text-muted">
+            {holdExpired ? "Time’s up" : "Complete registration & payment"}
+          </p>
+          <p
+            className="mt-1 font-display text-4xl tabular-nums tracking-tight text-ink"
+            aria-label={`${remainingSec} seconds remaining`}
+          >
+            {formatHoldCountdown(remainingSec)}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            {holdExpired ? (
+              <>
+                Refresh this page to start a new{" "}
+                {CHECKOUT_HOLD_MINUTES}-minute window.
+              </>
+            ) : (
+              <>
+                Timer started when you opened this form. Finish the form and pay
+                before it hits zero — then your {isTeam ? "team spot" : "spot"}{" "}
+                is locked in.
+              </>
+            )}
+          </p>
+          {holdExpired ? (
+            <button
+              type="button"
+              className="motion-press mt-4 inline-flex min-h-11 items-center justify-center bg-accent px-6 text-sm font-medium text-accent-ink"
+              onClick={() => {
+                const expires = beginRegistrationHold(eventSlug, true)
+                setHoldExpiresAt(expires)
+                setError(null)
+              }}
+            >
+              Start over ({CHECKOUT_HOLD_MINUTES} min)
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {isTeam ? (
         <p className="text-sm text-muted">
           Register a {playersNeeded}-person scramble team
@@ -633,9 +718,9 @@ export function RegisterForm({
       ) : null}
       {requirePayment ? (
         <p className="text-sm text-muted">
-          Submitting holds your {isTeam ? "team spot" : "spot"} for{" "}
-          <strong className="text-ink">{CHECKOUT_HOLD_MINUTES} minutes</strong>{" "}
-          while you pay. If the timer runs out, the spot goes back in the pool.
+          The timer above covers filling this form and Stripe checkout. When you
+          submit, that remaining time holds your {isTeam ? "team spot" : "spot"}
+          — if it hits zero, the spot goes back in the pool.
         </p>
       ) : null}
       {error ? (
@@ -652,11 +737,13 @@ export function RegisterForm({
       ) : null}
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || holdExpired}
         aria-busy={pending}
         className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
-        {pending
+        {holdExpired
+          ? "Timer expired"
+          : pending
           ? "Submitting…"
           : requirePayment && totalLabel
             ? `Continue to pay ${totalLabel}`

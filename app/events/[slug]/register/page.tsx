@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { RegisterForm } from "@/components/register-form"
+import { ClearRegistrationHold } from "@/components/clear-registration-hold"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeaderSolid } from "@/components/site-header"
 import {
@@ -86,6 +87,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             className="success-enter mt-10 border border-success/25 bg-success-soft px-6 py-8"
             role="status"
           >
+            <ClearRegistrationHold eventSlug={event.slug} />
             <h2 className="font-display text-2xl text-ink">Payment received</h2>
             <p className="mt-3 text-ink/75">
               Thanks — your team registration for{" "}
@@ -129,6 +131,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               feeCents={event.fee_cents}
               teamSize={teamSize}
               requirePayment={requirePayment}
+              resetHold={canceledReturn}
             />
           </div>
         ) : null}

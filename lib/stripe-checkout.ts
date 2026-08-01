@@ -31,6 +31,8 @@ export async function createEventCheckoutSession(opts: {
   mulligans?: boolean
   skins?: boolean
   coverCardFees?: boolean
+  /** Unix seconds — usually from when the register form opened. */
+  holdExpiresAt?: number
 }): Promise<{
   url: string
   sessionId: string
@@ -130,7 +132,10 @@ export async function createEventCheckoutSession(opts: {
 
   if (!session.url) return null
 
-  const holdUntil = holdExpiresAtUnix()
+  const holdUntil =
+    opts.holdExpiresAt && opts.holdExpiresAt > Math.floor(Date.now() / 1000)
+      ? opts.holdExpiresAt
+      : holdExpiresAtUnix()
   await sql.execute(
     `UPDATE registrations
      SET stripe_checkout_session_id = ?, hold_expires_at = ?
