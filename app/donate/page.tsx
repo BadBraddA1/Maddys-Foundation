@@ -33,7 +33,7 @@ export default function DonatePage() {
             href={donateUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-10 inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-semibold text-accent-ink transition hover:brightness-105 sm:w-auto"
+            className="mt-10 motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-semibold text-accent-ink sm:w-auto"
           >
             Donate now
           </a>

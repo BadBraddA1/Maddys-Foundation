@@ -46,13 +46,13 @@ export default function StoryPage() {
             <div className="mt-10 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row">
               <Link
                 href="/events"
-                className="inline-flex min-h-11 items-center justify-center bg-deep px-6 text-sm font-semibold text-white transition hover:opacity-90"
+                className="motion-press inline-flex min-h-11 items-center justify-center bg-deep px-6 text-sm font-semibold text-white"
               >
                 Join an event
               </Link>
               <Link
                 href="/donate"
-                className="inline-flex min-h-11 items-center justify-center border border-line px-6 text-sm font-semibold text-ink transition hover:bg-surface"
+                className="motion-press inline-flex min-h-11 items-center justify-center border border-line px-6 text-sm font-semibold text-ink hover:bg-surface"
               >
                 Give
               </Link>

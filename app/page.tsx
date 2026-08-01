@@ -35,26 +35,38 @@ export default async function HomePage() {
         />
         <SiteHeader />
         <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
-          <p className="animate-fade-up text-xs font-medium uppercase tracking-[0.22em] text-accent">
+          <p
+            className="hero-enter text-xs font-medium uppercase tracking-[0.22em] text-accent"
+            data-enter="0"
+          >
             Madalyn Robinson Foundation
           </p>
-          <h1 className="animate-fade-up mt-4 max-w-3xl font-display text-[clamp(2.1rem,8vw,4.5rem)] leading-[1.08] text-white [animation-delay:80ms]">
+          <h1
+            className="hero-enter mt-4 max-w-3xl font-display text-[clamp(2.1rem,8vw,4.5rem)] leading-[1.08] text-white"
+            data-enter="1"
+          >
             Joy that still moves mountains
           </h1>
-          <p className="animate-fade-up mt-5 max-w-xl text-base text-white sm:text-lg [animation-delay:140ms]">
+          <p
+            className="hero-enter mt-5 max-w-xl text-base text-white sm:text-lg"
+            data-enter="2"
+          >
             We gather people, host events, and keep spreading the light Maddy
             carried so fiercely.
           </p>
-          <div className="animate-fade-up mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap [animation-delay:200ms]">
+          <div
+            className="hero-enter mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap"
+            data-enter="3"
+          >
             <Link
               href="/events"
-              className="inline-flex min-h-11 items-center justify-center bg-accent px-6 py-3 text-center text-sm font-semibold text-accent-ink transition hover:brightness-105"
+              className="motion-press inline-flex min-h-11 items-center justify-center bg-accent px-6 py-3 text-center text-sm font-semibold text-accent-ink"
             >
               Upcoming events
             </Link>
             <Link
               href="/story"
-              className="inline-flex min-h-11 items-center justify-center border border-white/50 bg-deep/50 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-deep/70"
+              className="motion-press inline-flex min-h-11 items-center justify-center border border-white/50 bg-deep/50 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-deep/70"
             >
               Her story
             </Link>

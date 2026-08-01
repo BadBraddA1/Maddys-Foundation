@@ -57,7 +57,7 @@ export function RegisterForm({
 
   if (done) {
     return (
-      <div className="rounded-sm border border-line bg-surface px-6 py-8">
+      <div className="success-enter rounded-sm border border-line bg-surface px-6 py-8">
         <h2 className="font-display text-2xl">You&apos;re registered</h2>
         <p className="mt-3 text-muted">
           Thanks, {name.split(" ")[0] || "friend"}. We&apos;ve saved your spot
@@ -166,7 +166,7 @@ export function RegisterForm({
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-semibold text-accent-ink transition hover:brightness-105 disabled:opacity-60 sm:w-auto"
+        className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-semibold text-accent-ink disabled:opacity-60 sm:w-auto"
       >
         {pending ? "Submitting…" : "Register"}
       </button>

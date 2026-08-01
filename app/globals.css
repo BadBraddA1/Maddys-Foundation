@@ -101,37 +101,113 @@ a {
   color: var(--accent-ink);
 }
 
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/*
+  Motion system — brand register
+  Signature: hero photo settles + copy rises (always readable; never opacity-0 gated).
+  Feedback: press scale on primary actions; menu panel ease-in.
+*/
 
 @keyframes hero-drift {
   from {
-    transform: scale(1.06);
+    transform: scale(1.05);
   }
   to {
     transform: scale(1);
   }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.8s var(--ease-out-quart) both;
+/* Readable throughout — transform + soft blur only */
+@keyframes hero-rise {
+  from {
+    transform: translateY(0.85rem);
+    filter: blur(5px);
+  }
+  to {
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes menu-in {
+  from {
+    transform: translateY(-0.35rem);
+    filter: blur(3px);
+  }
+  to {
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes success-settle {
+  from {
+    transform: translateY(0.4rem) scale(0.985);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
 }
 
 .animate-hero-drift {
-  animation: hero-drift 1.4s var(--ease-out-quart) both;
+  animation: hero-drift 1.5s var(--ease-out-quart) forwards;
+}
+
+.hero-enter {
+  /* Default = final resting look (visible even if animation never runs) */
+  transform: translateY(0);
+  filter: blur(0);
+  animation: hero-rise 0.7s var(--ease-out-quart) both;
+}
+
+.hero-enter[data-enter="1"] {
+  animation-delay: 70ms;
+}
+
+.hero-enter[data-enter="2"] {
+  animation-delay: 140ms;
+}
+
+.hero-enter[data-enter="3"] {
+  animation-delay: 210ms;
+}
+
+.nav-panel-enter {
+  animation: menu-in 0.22s var(--ease-out-quart) both;
+}
+
+.success-enter {
+  transform: translateY(0) scale(1);
+  animation: success-settle 0.45s var(--ease-out-quart) both;
+}
+
+/* Press feedback — fine pointer only so touch doesn’t feel sticky */
+@media (hover: hover) and (pointer: fine) {
+  .motion-press:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.motion-press:active {
+  transform: scale(0.97);
+  transition: transform 0.12s var(--ease-out-quart);
+}
+
+.motion-press {
+  transition: transform 0.2s var(--ease-out-quart), background-color 0.2s, filter 0.2s;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-up,
-  .animate-hero-drift {
-    animation: none;
+  .animate-hero-drift,
+  .hero-enter,
+  .nav-panel-enter,
+  .success-enter {
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+
+  .motion-press:hover,
+  .motion-press:active {
+    transform: none;
   }
 }

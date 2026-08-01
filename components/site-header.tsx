@@ -96,7 +96,7 @@ function PrimaryNav({
           </span>
         </summary>
         <ul
-          className={`absolute right-0 z-50 mt-2 min-w-[12.5rem] border py-1 ${panel}`}
+          className={`nav-panel-enter absolute right-0 z-50 mt-2 min-w-[12.5rem] border py-1 ${panel}`}
         >
           {links.map((link) => (
             <li key={link.href}>

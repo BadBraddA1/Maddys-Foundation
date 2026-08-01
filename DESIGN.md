@@ -35,6 +35,7 @@ Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink 
 
 ## Motion
 
-- Hero image slow ken-burns-soft scale (subtle)
-- Section fades with ease-out-quart
-- Respect `prefers-reduced-motion`
+- Signature: hero photo soft settle (`hero-drift`) + copy rise with blur clear (`hero-rise`) — never opacity-0 gated
+- Stagger capped (~210ms) via `data-enter`; content readable during delay (transform/blur only)
+- Feedback: `.motion-press` on primary CTAs; mobile menu `.nav-panel-enter`; registration success settle
+- Ease-out-quart throughout; respect `prefers-reduced-motion` (animations off, transforms cleared)
