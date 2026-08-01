@@ -124,7 +124,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` source
 - Maddy photo: responsive WebP (`maddy-640/960.webp` + `maddy.webp`) with JPEG fallback
 - Favicon / apple-touch: `app/favicon.ico` (16/32/48 from brand logo), `app/icon.png` **192**, `app/apple-icon.png` **180**
-- Open Graph: site card is name-forward (logo + foundation name + “Events · scholarships · hope”, green tent over Maddy photo); each event gets a custom `/events/[slug]/opengraph-image` (title, date/location/fee, cover photo when set, else Maddy photo)
+- Open Graph: same stack as the old screenshot card — photo, then even fairway-green tent (replacing the gray fog), then text on top; site card is name-forward; each event has `/events/[slug]/opengraph-image` (title/details, cover photo when set)
 - Footer: Explore + Site columns, Privacy, optional contact, BraddCorp credit (LECYC pattern)
 - Type: Literata (display 400/600) + Source Sans 3 (body 400/500) — major-third scale
 - Performance: public home/events ISR (60s; register 30s); admin/register writes call `revalidatePublicEvents`; hero WebP preloaded; logo not priority; `/brand/*` long-cache

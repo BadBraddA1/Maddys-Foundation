@@ -2,28 +2,39 @@ import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { ImageResponse } from "next/og"
 import { formatEventDate, formatFee, type EventRow } from "@/lib/events"
-import { ogImageAlt, siteName, siteUrl } from "@/lib/site-metadata"
+import { siteName, siteUrl } from "@/lib/site-metadata"
 
 export const ogSize = { width: 1200, height: 630 }
 export const ogContentType = "image/png"
+export const siteOgAlt =
+  "Madalyn Robinson Foundation — events, scholarships, and hope"
 
 const DEEP = "#1c3d32"
 const ON_DEEP = "#f4f1e8"
-const ON_DEEP_MUTED = "#d8e0da"
+const ON_DEEP_MUTED = "#e2e8e4"
 const ACCENT = "#c9a84a"
 const ACCENT_INK = "#3d2e12"
+
+/**
+ * Strength of the green tent — matched to the old cool-gray fog on the
+ * screenshot OG (even wash over the whole photo, text sits on top).
+ */
+const TENT_OPACITY = 0.5
 
 async function localBrand(file: "maddy.jpg" | "logo.jpg") {
   const buf = await readFile(join(process.cwd(), "public/brand", file))
   return `data:image/jpeg;base64,${buf.toString("base64")}`
 }
 
-/** Green tent over a full-bleed photo — same card language as the site OG. */
-function PhotoTentCard(props: {
+/**
+ * Stack (bottom → top): photo → even green tent → text.
+ * Same structure as the gray-tinted screenshot card; tent is fairway green.
+ */
+function PhotoGreenTentCard(props: {
   photoSrc: string
   logoSrc: string
-  /** Small line next to logo; omit when the title is the foundation name. */
-  eyebrow?: string
+  /** Small label beside the logo (events use foundation name). */
+  brandLine?: string
   title: string
   subtitle?: string
   footerLeft?: string
@@ -40,6 +51,7 @@ function PhotoTentCard(props: {
         backgroundColor: DEEP,
       }}
     >
+      {/* 1) Photo */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={props.photoSrc}
@@ -55,24 +67,18 @@ function PhotoTentCard(props: {
           objectPosition: "center top",
         }}
       />
-      {/* Fairway green tent */}
+
+      {/* 2) Even green tent — above photo, below text (like the old gray fog) */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           backgroundColor: DEEP,
-          opacity: 0.52,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(180deg, rgba(28,61,50,0.35) 0%, rgba(28,61,50,0.15) 40%, rgba(28,61,50,0.62) 100%)",
+          opacity: TENT_OPACITY,
         }}
       />
 
+      {/* 3) Text on top of the tent */}
       <div
         style={{
           position: "relative",
@@ -81,80 +87,56 @@ function PhotoTentCard(props: {
           justifyContent: "center",
           width: "100%",
           height: "100%",
-          padding: "56px 64px",
+          padding: "64px 72px",
           color: ON_DEEP,
         }}
       >
-        {props.eyebrow ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 18,
-              marginBottom: 22,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={props.logoSrc}
-              alt=""
-              width={72}
-              height={72}
-              style={{
-                width: 72,
-                height: 72,
-                borderRadius: 9999,
-                objectFit: "cover",
-                backgroundColor: ON_DEEP,
-              }}
-            />
-            <div style={{ fontSize: 26, fontWeight: 600, opacity: 0.92 }}>
-              {props.eyebrow}
-            </div>
-          </div>
-        ) : null}
-
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 22,
-            maxWidth: 1040,
+            gap: 20,
+            marginBottom: 28,
           }}
         >
-          {!props.eyebrow ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={props.logoSrc}
-              alt=""
-              width={88}
-              height={88}
-              style={{
-                width: 88,
-                height: 88,
-                borderRadius: 9999,
-                objectFit: "cover",
-                backgroundColor: ON_DEEP,
-                flexShrink: 0,
-              }}
-            />
-          ) : null}
-          <div
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={props.logoSrc}
+            alt=""
+            width={76}
+            height={76}
             style={{
-              fontSize: props.title.length > 42 ? 48 : 56,
-              fontWeight: 600,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.08,
+              width: 76,
+              height: 76,
+              borderRadius: 9999,
+              objectFit: "cover",
+              backgroundColor: ON_DEEP,
+              flexShrink: 0,
             }}
-          >
-            {props.title}
-          </div>
+          />
+          {props.brandLine ? (
+            <div style={{ fontSize: 28, fontWeight: 600, opacity: 0.95 }}>
+              {props.brandLine}
+            </div>
+          ) : null}
+        </div>
+
+        <div
+          style={{
+            fontSize: props.title.length > 40 ? 46 : 56,
+            fontWeight: 600,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.1,
+            maxWidth: 980,
+          }}
+        >
+          {props.title}
         </div>
 
         {props.subtitle ? (
           <div
             style={{
-              marginTop: 16,
+              marginTop: 18,
               fontSize: 26,
               opacity: 0.9,
               color: ON_DEEP_MUTED,
@@ -168,7 +150,7 @@ function PhotoTentCard(props: {
         <div
           style={{
             display: "flex",
-            marginTop: 36,
+            marginTop: 40,
             alignItems: "center",
             justifyContent: "space-between",
             width: "100%",
@@ -198,7 +180,7 @@ function PhotoTentCard(props: {
   )
 }
 
-/** Site-wide share card — name-forward (no mountains tagline). */
+/** Site card: name-forward, green tent over Maddy (no mountains line). */
 export async function renderSiteOgImage() {
   const [photo, logo] = await Promise.all([
     localBrand("maddy.jpg"),
@@ -208,7 +190,7 @@ export async function renderSiteOgImage() {
 
   return new ImageResponse(
     (
-      <PhotoTentCard
+      <PhotoGreenTentCard
         photoSrc={photo}
         logoSrc={logo}
         title={siteName}
@@ -220,10 +202,7 @@ export async function renderSiteOgImage() {
   )
 }
 
-export const siteOgAlt =
-  "Madalyn Robinson Foundation — events, scholarships, and hope"
-
-/** Per-event share card — custom title/meta; cover photo when set. */
+/** Event card: same green tent; custom title + details; cover when set. */
 export async function renderEventOgImage(event: EventRow | null) {
   const logo = await localBrand("logo.jpg")
   const host = new URL(siteUrl).host
@@ -231,15 +210,12 @@ export async function renderEventOgImage(event: EventRow | null) {
   let photo = await localBrand("maddy.jpg")
   if (event?.cover_image_url?.trim()) {
     const url = event.cover_image_url.trim()
-    if (/^https?:\/\//i.test(url)) {
-      photo = url
-    }
+    if (/^https?:\/\//i.test(url)) photo = url
   }
 
   const title = event?.title || "Foundation gathering"
   const when = event ? formatEventDate(event.starts_at) : ""
   const where = event?.location?.trim() || ""
-  // Keep location short for the card
   const whereShort =
     where.length > 56 ? `${where.slice(0, 53).trimEnd()}…` : where
   const fee = event ? formatFee(event.fee_cents) : null
@@ -247,10 +223,10 @@ export async function renderEventOgImage(event: EventRow | null) {
 
   return new ImageResponse(
     (
-      <PhotoTentCard
+      <PhotoGreenTentCard
         photoSrc={photo}
         logoSrc={logo}
-        eyebrow={siteName}
+        brandLine={siteName}
         title={title}
         subtitle={subtitle || undefined}
         footerLeft="View event →"
