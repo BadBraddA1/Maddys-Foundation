@@ -2,26 +2,24 @@
 
 :root {
   /*
-    Strategy: Restrained — neutrals carry the page; sunflower accent ≤10%.
-    Neutrals tint toward accent hue (~85). Deep stays cool fog for photo overlays.
+    Strategy: Restrained — neutrals + soft gold accent ≤10%.
+    Deep chrome is fairway green (hero/footer); page stays warm off-white.
   */
-  --bg: oklch(0.975 0.008 95);
-  --surface: oklch(0.99 0.005 95);
-  --ink: oklch(0.23 0.025 85);
-  /* Darker muted for ≥4.5:1 on tinted bg / soft washes */
-  --muted: oklch(0.38 0.028 85);
-  --line: oklch(0.88 0.012 95);
-  --accent: oklch(0.68 0.11 85);
-  /* Darkened for ≥4.5:1 on accent CTAs / skip-link (~5.2:1) */
-  --accent-ink: oklch(0.25 0.06 70);
-  --accent-soft: oklch(0.94 0.04 90);
-  --deep: oklch(0.27 0.035 250);
-  --deep-mid: oklch(0.34 0.03 245);
-  --on-deep: oklch(0.98 0.01 95);
-  --on-deep-muted: oklch(0.90 0.015 95);
-  --on-deep-faint: oklch(0.78 0.02 95);
-  --on-deep-border: oklch(0.98 0.01 95 / 0.35);
-  --on-deep-hover: oklch(0.98 0.01 95 / 0.12);
+  --bg: oklch(0.975 0.01 95);
+  --surface: oklch(0.99 0.006 95);
+  --ink: oklch(0.24 0.03 85);
+  --muted: oklch(0.4 0.03 90);
+  --line: oklch(0.88 0.015 100);
+  --accent: oklch(0.72 0.12 80);
+  --accent-ink: oklch(0.28 0.05 70);
+  --accent-soft: oklch(0.94 0.04 88);
+  --deep: oklch(0.28 0.06 150);
+  --deep-mid: oklch(0.36 0.055 148);
+  --on-deep: oklch(0.97 0.015 95);
+  --on-deep-muted: oklch(0.9 0.02 90);
+  --on-deep-faint: oklch(0.78 0.025 100);
+  --on-deep-border: oklch(0.97 0.015 95 / 0.35);
+  --on-deep-hover: oklch(0.97 0.015 95 / 0.12);
   --danger: oklch(0.48 0.16 25);
   --danger-soft: oklch(0.95 0.03 25);
   --success: oklch(0.45 0.09 145);
@@ -48,71 +46,6 @@
   --leading-body: 1.6;
   --leading-on-dark: 1.68;
   --measure: 65ch;
-}
-
-/*
-  Color tests — /home1 cream white, /home2 fairway green.
-  Scoped under [data-theme] so live / stays on the default tokens above.
-*/
-[data-theme="cream"] {
-  --bg: oklch(0.965 0.018 88);
-  --surface: oklch(0.985 0.01 90);
-  --ink: oklch(0.28 0.03 70);
-  --muted: oklch(0.42 0.03 75);
-  --line: oklch(0.88 0.02 88);
-  --accent: oklch(0.72 0.12 80);
-  --accent-ink: oklch(0.28 0.05 70);
-  --accent-soft: oklch(0.94 0.035 88);
-  --deep: oklch(0.32 0.03 75);
-  --deep-mid: oklch(0.4 0.03 72);
-  --on-deep: oklch(0.97 0.015 90);
-  --on-deep-muted: oklch(0.9 0.02 88);
-  --on-deep-faint: oklch(0.78 0.02 85);
-  --on-deep-border: oklch(0.97 0.015 90 / 0.35);
-  --on-deep-hover: oklch(0.97 0.015 90 / 0.12);
-  --success: oklch(0.45 0.08 145);
-  --success-soft: oklch(0.94 0.03 140);
-}
-
-[data-theme="fairway"] {
-  --bg: oklch(0.96 0.02 145);
-  --surface: oklch(0.985 0.012 145);
-  --ink: oklch(0.24 0.04 150);
-  --muted: oklch(0.4 0.035 150);
-  --line: oklch(0.86 0.025 145);
-  --accent: oklch(0.72 0.13 140);
-  --accent-ink: oklch(0.22 0.05 150);
-  --accent-soft: oklch(0.93 0.04 145);
-  --deep: oklch(0.28 0.06 150);
-  --deep-mid: oklch(0.36 0.055 148);
-  --on-deep: oklch(0.97 0.015 145);
-  --on-deep-muted: oklch(0.88 0.03 145);
-  --on-deep-faint: oklch(0.75 0.03 145);
-  --on-deep-border: oklch(0.97 0.015 145 / 0.35);
-  --on-deep-hover: oklch(0.97 0.015 145 / 0.12);
-  --success: oklch(0.48 0.1 145);
-  --success-soft: oklch(0.94 0.04 145);
-}
-
-/* /home3 — fairway green chrome + soft gold accent */
-[data-theme="fairway-gold"] {
-  --bg: oklch(0.975 0.01 95);
-  --surface: oklch(0.99 0.006 95);
-  --ink: oklch(0.24 0.03 85);
-  --muted: oklch(0.4 0.03 90);
-  --line: oklch(0.88 0.015 100);
-  --accent: oklch(0.72 0.12 80);
-  --accent-ink: oklch(0.28 0.05 70);
-  --accent-soft: oklch(0.94 0.04 88);
-  --deep: oklch(0.28 0.06 150);
-  --deep-mid: oklch(0.36 0.055 148);
-  --on-deep: oklch(0.97 0.015 95);
-  --on-deep-muted: oklch(0.9 0.02 90);
-  --on-deep-faint: oklch(0.78 0.025 100);
-  --on-deep-border: oklch(0.97 0.015 95 / 0.35);
-  --on-deep-hover: oklch(0.97 0.015 95 / 0.12);
-  --success: oklch(0.45 0.09 145);
-  --success-soft: oklch(0.95 0.03 145);
 }
 
 @theme inline {

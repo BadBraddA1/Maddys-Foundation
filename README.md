@@ -143,7 +143,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
 - Sponsors: `/admin/sponsors` uploads logos to R2; published logos scroll in the footer
 - Gallery: `/admin/gallery` uploads photos to R2; public page `/gallery`
-- Color tests (noindex): `/home1` cream white · `/home2` golf-course / fairway green — live `/` unchanged
+- Site palette: fairway green hero/footer + soft gold accent (warm off-white page)
 
 ## Day-of check-in (ops)
 

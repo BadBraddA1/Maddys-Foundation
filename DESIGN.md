@@ -2,25 +2,23 @@
 
 ## Visual theme
 
-Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink from the circular logo line-art, a single golden-sunflower accent. Light, airy, memorial without gloom. **Restrained** color strategy — neutrals do the work; accent ≤10%.
+Fairway green chrome with soft gold warmth: hero/footer in golf-course green, page neutrals as warm off-white, a single soft-gold accent. Light memorial voice without gloom. **Restrained** color strategy — neutrals do the work; accent ≤10%.
 
 ## Color strategy: Restrained
 
 | Role | Token | Value | Use |
 | --- | --- | --- | --- |
-| Page | `--bg` | `oklch(0.975 0.008 95)` | Body — sunflower-tinted off-white |
-| Surface | `--surface` | `oklch(0.99 0.005 95)` | Panels / header |
-| Ink / muted / line | `--ink` `--muted` `--line` | hue ~85–95 | Text & rules; muted darkened for AA on tinted washes |
-| Accent | `--accent` | `oklch(0.68 0.11 85)` | Primary CTAs, focus, selection |
-| Accent ink | `--accent-ink` | `oklch(0.25 0.06 70)` | Text on accent (≥4.5:1) |
-| Accent soft | `--accent-soft` | `oklch(0.94 0.04 90)` | Quiet section wash |
-| Deep (fog) | `--deep` `--deep-mid` | hue ~245–250 | Hero/footer — cool for photo |
+| Page | `--bg` | `oklch(0.975 0.01 95)` | Body — warm off-white |
+| Surface | `--surface` | `oklch(0.99 0.006 95)` | Panels / solid header |
+| Ink / muted / line | `--ink` `--muted` `--line` | hue ~85–100 | Text & rules |
+| Accent | `--accent` | `oklch(0.72 0.12 80)` | Soft gold CTAs, focus, selection |
+| Accent ink | `--accent-ink` | `oklch(0.28 0.05 70)` | Text on accent (≥4.5:1) |
+| Accent soft | `--accent-soft` | `oklch(0.94 0.04 88)` | Quiet section wash |
+| Deep (fairway) | `--deep` `--deep-mid` | hue ~148–150 | Hero/footer — golf green |
 | On-deep ramp | `--on-deep` … `--on-deep-faint` | warm off-white | Text/borders on deep (no raw `white/*`) |
 | Danger / success | `--danger` `--success` (+ soft) | semantic | Errors & registration success |
 
 On soft-tinted panels (success/danger), secondary copy uses `text-ink/75` — not gray `muted` on a colored wash.
-
-No cream/sand paper stack — chroma leans brand gold, not generic warm beige.
 
 ## Typography
 
