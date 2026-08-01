@@ -6,7 +6,7 @@ Public foundation site + custom event registration for **maddysfoundation.org** 
 
 - Marketing site (home, Maddy’s story, donate, privacy)
 - Published events list + detail pages (Google / Apple Maps links from location)
-- Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set (one registration = one team); paid events only appear on the roster after Stripe confirms payment; the **10-minute timer starts when the register form opens** (form + pay); unpaid holds then release back to the pool
+- Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set; opening the register form **reserves a capacity slot** for **10 minutes** (assumes they’ll pay); unpaid / expired holds return to the pool; roster only shows paid teams
 - Staff admin (`/admin`) to create/edit events, view rosters, and confirm payment
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.

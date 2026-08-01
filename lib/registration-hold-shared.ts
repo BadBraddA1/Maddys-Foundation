@@ -25,30 +25,45 @@ export function registrationHoldStorageKey(eventSlug: string): string {
   return `mf-reg-hold:${eventSlug}`
 }
 
-/** Start (or resume) the 10-minute window when "Register your team" opens. */
-export function beginRegistrationHold(eventSlug: string, reset = false): number {
-  const key = registrationHoldStorageKey(eventSlug)
-  if (typeof window === "undefined") return holdExpiresAtUnix()
+export type StoredRegistrationHold = {
+  token: string
+  holdExpiresAt: number
+}
 
-  if (!reset) {
-    try {
-      const raw = sessionStorage.getItem(key)
-      const existing = raw ? Number(raw) : NaN
-      if (Number.isFinite(existing) && existing > Math.floor(Date.now() / 1000)) {
-        return existing
-      }
-    } catch {
-      // private mode / blocked storage
-    }
-  }
-
-  const expires = holdExpiresAtUnix()
+export function readStoredRegistrationHold(
+  eventSlug: string,
+): StoredRegistrationHold | null {
+  if (typeof window === "undefined") return null
   try {
-    sessionStorage.setItem(key, String(expires))
+    const raw = sessionStorage.getItem(registrationHoldStorageKey(eventSlug))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as StoredRegistrationHold
+    if (
+      !parsed?.token ||
+      !Number.isFinite(parsed.holdExpiresAt) ||
+      parsed.holdExpiresAt <= Math.floor(Date.now() / 1000)
+    ) {
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+export function writeStoredRegistrationHold(
+  eventSlug: string,
+  hold: StoredRegistrationHold,
+): void {
+  if (typeof window === "undefined") return
+  try {
+    sessionStorage.setItem(
+      registrationHoldStorageKey(eventSlug),
+      JSON.stringify(hold),
+    )
   } catch {
     // ignore
   }
-  return expires
 }
 
 export function clearRegistrationHold(eventSlug: string): void {

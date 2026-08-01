@@ -57,9 +57,12 @@ function mapEvent(row: SqlRow): EventRow {
 
 export async function listPublishedEvents(): Promise<EventRow[]> {
   await releaseExpiredHolds().catch(() => undefined)
+  const now = Math.floor(Date.now() / 1000)
   const rows = await sql`
     SELECT e.*,
-      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id)
+      + (SELECT COUNT(*) FROM capacity_holds h
+          WHERE h.event_id = e.id AND h.hold_expires_at > ${now}) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
         WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
@@ -72,9 +75,12 @@ export async function listPublishedEvents(): Promise<EventRow[]> {
 /** Soonest published event that hasn’t started yet (header countdown). */
 export async function getNextUpcomingEvent(): Promise<EventRow | null> {
   await releaseExpiredHolds().catch(() => undefined)
+  const now = Math.floor(Date.now() / 1000)
   const rows = await sql`
     SELECT e.*,
-      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id)
+      + (SELECT COUNT(*) FROM capacity_holds h
+          WHERE h.event_id = e.id AND h.hold_expires_at > ${now}) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
         WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
@@ -87,9 +93,12 @@ export async function getNextUpcomingEvent(): Promise<EventRow | null> {
 
 export async function listAllEvents(): Promise<EventRow[]> {
   await releaseExpiredHolds().catch(() => undefined)
+  const now = Math.floor(Date.now() / 1000)
   const rows = await sql`
     SELECT e.*,
-      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id)
+      + (SELECT COUNT(*) FROM capacity_holds h
+          WHERE h.event_id = e.id AND h.hold_expires_at > ${now}) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
         WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
@@ -100,9 +109,12 @@ export async function listAllEvents(): Promise<EventRow[]> {
 
 export async function getEventBySlug(slug: string): Promise<EventRow | null> {
   await releaseExpiredHolds().catch(() => undefined)
+  const now = Math.floor(Date.now() / 1000)
   const rows = await sql`
     SELECT e.*,
-      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id)
+      + (SELECT COUNT(*) FROM capacity_holds h
+          WHERE h.event_id = e.id AND h.hold_expires_at > ${now}) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
         WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e
@@ -114,9 +126,12 @@ export async function getEventBySlug(slug: string): Promise<EventRow | null> {
 
 export async function getEventById(id: number): Promise<EventRow | null> {
   await releaseExpiredHolds(id).catch(() => undefined)
+  const now = Math.floor(Date.now() / 1000)
   const rows = await sql`
     SELECT e.*,
-      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id)
+      + (SELECT COUNT(*) FROM capacity_holds h
+          WHERE h.event_id = e.id AND h.hold_expires_at > ${now}) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
         WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e

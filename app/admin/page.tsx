@@ -73,7 +73,7 @@ export default async function AdminHomePage() {
                   {isTeamEvent(event) &&
                   (event.registration_count ?? 0) >
                     (event.confirmed_count ?? 0)
-                    ? ` · ${(event.registration_count ?? 0) - (event.confirmed_count ?? 0)} in checkout`
+                    ? ` · ${(event.registration_count ?? 0) - (event.confirmed_count ?? 0)} held`
                     : ""}
                 </p>
               </div>

@@ -50,6 +50,18 @@ CREATE INDEX IF NOT EXISTS idx_registrations_stripe_session
 CREATE INDEX IF NOT EXISTS idx_registrations_hold_expires
   ON registrations (status, hold_expires_at);
 
+-- Soft capacity holds while the register form timer is running (before submit).
+CREATE TABLE IF NOT EXISTS capacity_holds (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  hold_expires_at INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE INDEX IF NOT EXISTS idx_capacity_holds_event_expires
+  ON capacity_holds (event_id, hold_expires_at);
+
 CREATE TABLE IF NOT EXISTS audit_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   actor TEXT NOT NULL DEFAULT 'system',

@@ -32,7 +32,9 @@ export async function GET() {
 
   const rows = await sql`
     SELECT e.*,
-      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS registration_count,
+      (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id)
+      + (SELECT COUNT(*) FROM capacity_holds h
+          WHERE h.event_id = e.id AND h.hold_expires_at > unixepoch()) AS registration_count,
       (SELECT COUNT(*) FROM registrations r
         WHERE r.event_id = e.id AND r.status = 'confirmed' AND r.paid = 1) AS confirmed_count
     FROM events e

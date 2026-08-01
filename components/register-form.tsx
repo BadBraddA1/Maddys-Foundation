@@ -7,9 +7,10 @@ import { formatFee } from "@/lib/event-helpers"
 import { normalizeUsPhone } from "@/lib/phone"
 import {
   CHECKOUT_HOLD_MINUTES,
-  beginRegistrationHold,
   clearRegistrationHold,
   formatHoldCountdown,
+  readStoredRegistrationHold,
+  writeStoredRegistrationHold,
 } from "@/lib/registration-hold-shared"
 import { TEAM_ADDON_CENTS, registrationTotalCents } from "@/lib/team-addons"
 
@@ -72,12 +73,64 @@ export function RegisterForm({
     holdExpiresAt: number
   } | null>(null)
   const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null)
+  const [holdToken, setHoldToken] = useState<string | null>(null)
   const [remainingSec, setRemainingSec] = useState<number | null>(null)
+  const [holdError, setHoldError] = useState<string | null>(null)
+  const [holdLoading, setHoldLoading] = useState(requirePayment)
+
+  async function startServerHold(reset: boolean) {
+    setHoldLoading(true)
+    setHoldError(null)
+    try {
+      if (reset) {
+        const prev = readStoredRegistrationHold(eventSlug)
+        if (prev?.token) {
+          await fetch(
+            `/api/register/hold?token=${encodeURIComponent(prev.token)}&eventSlug=${encodeURIComponent(eventSlug)}`,
+            { method: "DELETE" },
+          ).catch(() => undefined)
+        }
+        clearRegistrationHold(eventSlug)
+      }
+
+      const existing = reset ? null : readStoredRegistrationHold(eventSlug)
+      const res = await fetch("/api/register/hold", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventSlug,
+          token: existing?.token,
+        }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string
+        token?: string
+        holdExpiresAt?: number
+      }
+      if (!res.ok || !data.token || !data.holdExpiresAt) {
+        setHoldError(data.error || "Could not reserve a spot. Try again.")
+        setHoldToken(null)
+        setHoldExpiresAt(null)
+        clearRegistrationHold(eventSlug)
+        return
+      }
+      writeStoredRegistrationHold(eventSlug, {
+        token: data.token,
+        holdExpiresAt: data.holdExpiresAt,
+      })
+      setHoldToken(data.token)
+      setHoldExpiresAt(data.holdExpiresAt)
+    } catch {
+      setHoldError("Could not reserve a spot. Check your connection and try again.")
+    } finally {
+      setHoldLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!requirePayment) return
-    const expires = beginRegistrationHold(eventSlug, resetHold)
-    setHoldExpiresAt(expires)
+    void startServerHold(resetHold)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per open/reset
   }, [eventSlug, requirePayment, resetHold])
 
   useEffect(() => {
@@ -89,6 +142,17 @@ export function RegisterForm({
     const id = window.setInterval(tick, 250)
     return () => window.clearInterval(id)
   }, [requirePayment, holdExpiresAt])
+
+  useEffect(() => {
+    if (!requirePayment || remainingSec == null || remainingSec > 0) return
+    if (!holdToken) return
+    void fetch(
+      `/api/register/hold?token=${encodeURIComponent(holdToken)}&eventSlug=${encodeURIComponent(eventSlug)}`,
+      { method: "DELETE" },
+    ).catch(() => undefined)
+    clearRegistrationHold(eventSlug)
+    setHoldToken(null)
+  }, [requirePayment, remainingSec, holdToken, eventSlug])
 
   const holdExpired = requirePayment && remainingSec != null && remainingSec <= 0
 
@@ -209,6 +273,7 @@ export function RegisterForm({
           coverCardFees: isTeam ? coverCardFees : undefined,
           notes: notes.trim(),
           holdExpiresAt: holdExpiresAt ?? undefined,
+          holdToken: holdToken ?? undefined,
         }),
       })
 
@@ -241,6 +306,7 @@ export function RegisterForm({
       }
 
       if (data.checkoutUrl && data.holdExpiresAt) {
+        clearRegistrationHold(eventSlug)
         setHoldCheckout({
           url: data.checkoutUrl,
           holdExpiresAt: data.holdExpiresAt,
@@ -418,7 +484,22 @@ export function RegisterForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
-      {requirePayment && remainingSec != null ? (
+      {requirePayment && holdLoading ? (
+        <p className="text-sm text-muted">Reserving your team spot…</p>
+      ) : null}
+      {requirePayment && holdError ? (
+        <div className="border border-danger/40 bg-danger/5 px-5 py-4" role="alert">
+          <p className="text-sm font-medium text-danger">{holdError}</p>
+          <button
+            type="button"
+            className="motion-press mt-3 inline-flex min-h-11 items-center justify-center bg-accent px-6 text-sm font-medium text-accent-ink"
+            onClick={() => void startServerHold(true)}
+          >
+            Try again
+          </button>
+        </div>
+      ) : null}
+      {requirePayment && remainingSec != null && !holdError ? (
         <div
           className={`border px-5 py-4 ${
             holdExpired
@@ -429,7 +510,7 @@ export function RegisterForm({
           aria-live="polite"
         >
           <p className="text-sm font-medium text-muted">
-            {holdExpired ? "Time’s up" : "Complete registration & payment"}
+            {holdExpired ? "Time’s up — spot released" : "Spot reserved for you"}
           </p>
           <p
             className="mt-1 font-display text-4xl tabular-nums tracking-tight text-ink"
@@ -440,14 +521,13 @@ export function RegisterForm({
           <p className="mt-2 text-sm text-muted">
             {holdExpired ? (
               <>
-                Refresh this page to start a new{" "}
-                {CHECKOUT_HOLD_MINUTES}-minute window.
+                Your hold went back in the pool. Start over for a new{" "}
+                {CHECKOUT_HOLD_MINUTES}-minute reservation.
               </>
             ) : (
               <>
-                Timer started when you opened this form. Finish the form and pay
-                before it hits zero — then your {isTeam ? "team spot" : "spot"}{" "}
-                is locked in.
+                Capacity counts this spot as taken while you finish the form and
+                pay. If the timer hits zero, it returns to the pool.
               </>
             )}
           </p>
@@ -455,13 +535,9 @@ export function RegisterForm({
             <button
               type="button"
               className="motion-press mt-4 inline-flex min-h-11 items-center justify-center bg-accent px-6 text-sm font-medium text-accent-ink"
-              onClick={() => {
-                const expires = beginRegistrationHold(eventSlug, true)
-                setHoldExpiresAt(expires)
-                setError(null)
-              }}
+              onClick={() => void startServerHold(true)}
             >
-              Start over ({CHECKOUT_HOLD_MINUTES} min)
+              Reserve again ({CHECKOUT_HOLD_MINUTES} min)
             </button>
           ) : null}
         </div>
@@ -718,9 +794,9 @@ export function RegisterForm({
       ) : null}
       {requirePayment ? (
         <p className="text-sm text-muted">
-          The timer above covers filling this form and Stripe checkout. When you
-          submit, that remaining time holds your {isTeam ? "team spot" : "spot"}
-          — if it hits zero, the spot goes back in the pool.
+          Opening this form reserves a {isTeam ? "team spot" : "spot"} in
+          capacity for {CHECKOUT_HOLD_MINUTES} minutes. Submit and pay before
+          the timer ends, or it goes back in the pool.
         </p>
       ) : null}
       {error ? (
@@ -737,7 +813,7 @@ export function RegisterForm({
       ) : null}
       <button
         type="submit"
-        disabled={pending || holdExpired}
+        disabled={pending || holdExpired || holdLoading || Boolean(holdError)}
         aria-busy={pending}
         className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >

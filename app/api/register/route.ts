@@ -11,6 +11,9 @@ import { normalizeUsPhone } from "@/lib/phone"
 import { createEventCheckoutSession } from "@/lib/stripe-checkout"
 import {
   CHECKOUT_HOLD_MINUTES,
+  capacitySlotsUsed,
+  consumeCapacityHold,
+  getActiveCapacityHold,
   releaseExpiredHolds,
   resolveHoldExpiresAt,
 } from "@/lib/registration-hold"
@@ -41,6 +44,8 @@ type Body = {
   coverCardFees?: boolean
   /** Unix seconds — timer started when register page opened. */
   holdExpiresAt?: number
+  /** Token from POST /api/register/hold (reserves capacity while form is open). */
+  holdToken?: string
 }
 
 const PART_MAX = 60
@@ -218,18 +223,20 @@ export async function POST(req: Request) {
       .slice(0, NOTES_MAX)
   }
 
-  // Capacity = one slot per registration row (a team when team_size > 1).
-  // Expired unpaid holds are released first so slots return to the pool.
+  // Capacity = registrations + open form holds (one slot each).
+  // Expired holds are released first so slots return to the pool.
   await releaseExpiredHolds(event.id).catch(() => undefined)
+
+  const holdToken = body.holdToken?.trim() || ""
+  const ownHold = holdToken
+    ? await getActiveCapacityHold(holdToken, event.id)
+    : null
 
   if (event.capacity != null) {
     try {
-      const countRows = await sql`
-        SELECT COUNT(*) AS c FROM registrations
-        WHERE event_id = ${event.id}
-      `
-      const count = Number(countRows[0]?.c ?? 0)
-      if (count >= event.capacity) {
+      const count = await capacitySlotsUsed(event.id)
+      const hasOwnSlot = Boolean(ownHold)
+      if (count > event.capacity || (count >= event.capacity && !hasOwnSlot)) {
         return NextResponse.json(
           {
             error: teamSize
@@ -253,11 +260,24 @@ export async function POST(req: Request) {
 
   let holdUntil: number | null = null
   if (requirePayment) {
-    const resolved = resolveHoldExpiresAt(body.holdExpiresAt)
-    if (!resolved.ok) {
-      return NextResponse.json({ error: resolved.error }, { status: 400 })
+    // Prefer server hold deadline from capacity_holds when present.
+    if (ownHold) {
+      holdUntil = ownHold.hold_expires_at
+      if (holdUntil <= Math.floor(Date.now() / 1000)) {
+        return NextResponse.json(
+          {
+            error: `Your ${CHECKOUT_HOLD_MINUTES}-minute registration timer ran out. Refresh the page and start again.`,
+          },
+          { status: 400 },
+        )
+      }
+    } else {
+      const resolved = resolveHoldExpiresAt(body.holdExpiresAt)
+      if (!resolved.ok) {
+        return NextResponse.json({ error: resolved.error }, { status: 400 })
+      }
+      holdUntil = resolved.holdExpiresAt
     }
-    holdUntil = resolved.holdExpiresAt
   }
 
   // Replace any abandoned unpaid draft for this email so they can start over.
@@ -287,6 +307,11 @@ export async function POST(req: Request) {
     }
     console.error("[register]", err)
     return NextResponse.json({ error: "Could not save registration." }, { status: 500 })
+  }
+
+  // Registration row now owns the slot — drop the form-timer hold.
+  if (holdToken) {
+    await consumeCapacityHold(holdToken).catch(() => undefined)
   }
 
   await audit("public", "register", "event", String(event.id), `${email}:${status}`).catch(

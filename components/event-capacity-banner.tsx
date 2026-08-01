@@ -57,8 +57,8 @@ export function EventCapacityBanner({ event }: Props) {
                   <>
                     {" "}
                     ·{" "}
-                    <span className="tabular-nums">{held - paid}</span> held in
-                    checkout
+                    <span className="tabular-nums">{held - paid}</span> held
+                    (registering / checkout)
                   </>
                 ) : null}
               </>
@@ -83,9 +83,10 @@ export function EventCapacityBanner({ event }: Props) {
         <p className="mt-4 text-sm font-medium text-ink">
           {team ? "Teams are filling up fast." : "Spots are filling up fast."}{" "}
           <span className="font-normal text-muted">
-            After you register, you have{" "}
-            <strong className="text-ink">{CHECKOUT_HOLD_MINUTES} minutes</strong>{" "}
-            to pay and keep your {unitOne} — otherwise it goes back in the pool.
+          Complete payment for{" "}
+          <strong className="text-ink">{CHECKOUT_HOLD_MINUTES} minutes</strong>{" "}
+          to keep your {unitOne} — otherwise it goes back in the pool. Opening
+          register reserves a spot immediately.
           </span>
         </p>
       ) : left > 0 ? (
