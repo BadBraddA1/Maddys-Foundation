@@ -61,13 +61,13 @@ export default async function HomePage() {
 
       <main id="main">
       <section className="mx-auto w-full max-w-6xl px-5 py-[3.7rem] sm:px-6 md:px-8">
-        <div className="prose-measure max-w-2xl">
+        <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-display">Our purpose</h2>
-          <p className="mt-4 text-lg text-muted">
+          <p className="mx-auto mt-4 max-w-[40rem] text-lg text-muted text-pretty">
             Continue to spread joy and light to others in their darkest moments —
             the same heart Maddy showed while fighting her own battles.
           </p>
-          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-1">
+          <div className="mt-[1.65rem] flex flex-wrap justify-center gap-x-6 gap-y-1">
             <Link
               href="/donate"
               className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
