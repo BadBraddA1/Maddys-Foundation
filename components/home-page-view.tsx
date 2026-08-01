@@ -10,14 +10,6 @@ import {
   type EventRow,
 } from "@/lib/events"
 
-export type HomeTheme = "default" | "cream" | "fairway" | "fairway-gold"
-
-type Props = {
-  theme?: HomeTheme
-  /** Shown on color-test routes only. */
-  testLabel?: string
-}
-
 async function loadHomeEvents(): Promise<{
   upcoming: EventRow[]
   next: EventRow | null
@@ -38,41 +30,12 @@ async function loadHomeEvents(): Promise<{
   }
 }
 
-/** Shared home composition — theme via `data-theme` CSS variable overrides. */
-export async function HomePageView({ theme = "default", testLabel }: Props) {
+/** Home page composition (hero → purpose → countdown → events). */
+export async function HomePageView() {
   const { upcoming, next, loadFailed } = await loadHomeEvents()
-  const themeAttr = theme === "default" ? undefined : theme
 
   return (
-    <div
-      className="flex min-h-screen flex-col bg-bg text-ink"
-      data-theme={themeAttr}
-    >
-      {testLabel ? (
-        <div
-          className="sticky top-0 z-[var(--z-skip)] border-b border-line bg-surface px-4 py-2 text-center text-sm text-muted"
-          role="status"
-        >
-          Color test: <span className="font-medium text-ink">{testLabel}</span>
-          {" · "}
-          <Link href="/home1" className="underline underline-offset-2">
-            /home1
-          </Link>
-          {" · "}
-          <Link href="/home2" className="underline underline-offset-2">
-            /home2
-          </Link>
-          {" · "}
-          <Link href="/home3" className="underline underline-offset-2">
-            /home3
-          </Link>
-          {" · "}
-          <Link href="/" className="underline underline-offset-2">
-            live /
-          </Link>
-        </div>
-      ) : null}
-
+    <div className="flex min-h-screen flex-col bg-bg text-ink">
       <main id="main" className="flex flex-1 flex-col">
         <section
           data-home-hero
