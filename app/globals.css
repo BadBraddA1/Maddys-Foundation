@@ -50,6 +50,50 @@
   --measure: 65ch;
 }
 
+/*
+  Color tests — /home1 cream white, /home2 fairway green.
+  Scoped under [data-theme] so live / stays on the default tokens above.
+*/
+[data-theme="cream"] {
+  --bg: oklch(0.965 0.018 88);
+  --surface: oklch(0.985 0.01 90);
+  --ink: oklch(0.28 0.03 70);
+  --muted: oklch(0.42 0.03 75);
+  --line: oklch(0.88 0.02 88);
+  --accent: oklch(0.72 0.12 80);
+  --accent-ink: oklch(0.28 0.05 70);
+  --accent-soft: oklch(0.94 0.035 88);
+  --deep: oklch(0.32 0.03 75);
+  --deep-mid: oklch(0.4 0.03 72);
+  --on-deep: oklch(0.97 0.015 90);
+  --on-deep-muted: oklch(0.9 0.02 88);
+  --on-deep-faint: oklch(0.78 0.02 85);
+  --on-deep-border: oklch(0.97 0.015 90 / 0.35);
+  --on-deep-hover: oklch(0.97 0.015 90 / 0.12);
+  --success: oklch(0.45 0.08 145);
+  --success-soft: oklch(0.94 0.03 140);
+}
+
+[data-theme="fairway"] {
+  --bg: oklch(0.96 0.02 145);
+  --surface: oklch(0.985 0.012 145);
+  --ink: oklch(0.24 0.04 150);
+  --muted: oklch(0.4 0.035 150);
+  --line: oklch(0.86 0.025 145);
+  --accent: oklch(0.72 0.13 140);
+  --accent-ink: oklch(0.22 0.05 150);
+  --accent-soft: oklch(0.93 0.04 145);
+  --deep: oklch(0.28 0.06 150);
+  --deep-mid: oklch(0.36 0.055 148);
+  --on-deep: oklch(0.97 0.015 145);
+  --on-deep-muted: oklch(0.88 0.03 145);
+  --on-deep-faint: oklch(0.75 0.03 145);
+  --on-deep-border: oklch(0.97 0.015 145 / 0.35);
+  --on-deep-hover: oklch(0.97 0.015 145 / 0.12);
+  --success: oklch(0.48 0.1 145);
+  --success-soft: oklch(0.94 0.04 145);
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
