@@ -49,6 +49,16 @@ turso db shell maddys-foundation < scripts/schema-turso.sql
 
 Without Clerk keys the public site still runs; `/admin` shows setup instructions.
 
+### Local admin without Clerk
+
+For testing events/rosters before Clerk is wired:
+
+1. In `.env.local` set `ADMIN_DEV_BYPASS=1`
+2. Restart `pnpm dev`
+3. Open [http://localhost:3000/admin](http://localhost:3000/admin)
+
+A yellow banner shows when bypass is active. It only works in **development** or **Vercel Preview** — never on Vercel Production, even if the env var is set.
+
 ## Environment
 
 | Var | Required | Purpose |
@@ -58,6 +68,7 @@ Without Clerk keys the public site still runs; `/admin` shows setup instructions
 | `NEXT_PUBLIC_SITE_URL` | yes (prod) | Canonical URL / metadata |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | admin | Clerk |
 | `CLERK_SECRET_KEY` | admin | Clerk |
+| `ADMIN_DEV_BYPASS` | no | `1` = local/preview staff access without Clerk |
 | `NEXT_PUBLIC_DONATE_URL` | no | External donate link (until Stripe Checkout ships) |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | no | Shown in footer when set |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Publishable key (`pk_test_` / `pk_live_`) |

@@ -1,12 +1,12 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { clerkConfigured, getAdminOrNull } from "@/lib/auth"
+import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import { formatEventDate, listAllEvents } from "@/lib/events"
 
 export const dynamic = "force-dynamic"
 
 export default async function AdminHomePage() {
-  if (!clerkConfigured()) {
+  if (!adminAvailable()) {
     return null
   }
 

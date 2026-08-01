@@ -1,13 +1,18 @@
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { clerkConfigured, getAdminOrNull } from "@/lib/auth"
+import {
+  adminAvailable,
+  adminDevBypassEnabled,
+  clerkConfigured,
+  getAdminOrNull,
+} from "@/lib/auth"
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  if (!clerkConfigured()) {
+  if (!adminAvailable()) {
     return (
       <div className="mx-auto max-w-xl px-5 py-24">
         <main id="main">
@@ -20,6 +25,12 @@ export default async function AdminLayout({
             <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
             on your user.
           </p>
+          <p className="mt-4 text-sm text-muted">
+            For local testing without Clerk, set{" "}
+            <code className="text-ink">ADMIN_DEV_BYPASS=1</code> in{" "}
+            <code className="text-ink">.env.local</code> and restart{" "}
+            <code className="text-ink">pnpm dev</code>.
+          </p>
           <Link
             href="/"
             className="mt-8 inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline underline-offset-4"
@@ -31,10 +42,20 @@ export default async function AdminLayout({
     )
   }
 
+  const bypass = adminDevBypassEnabled()
   const admin = await getAdminOrNull()
 
   return (
     <div className="min-h-screen bg-bg">
+      {bypass ? (
+        <div
+          className="border-b border-accent bg-accent-soft px-5 py-2 text-center text-sm text-accent-ink"
+          role="status"
+        >
+          Admin dev bypass is on — not for production. Remove{" "}
+          <code className="font-medium">ADMIN_DEV_BYPASS</code> when done testing.
+        </div>
+      ) : null}
       <header className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
           <div className="flex items-center gap-4">
@@ -56,7 +77,7 @@ export default async function AdminLayout({
                 Signed in, but role is not admin
               </span>
             )}
-            <UserButton />
+            {clerkConfigured() && !bypass ? <UserButton /> : null}
           </div>
         </div>
       </header>

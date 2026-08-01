@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { EventForm } from "@/components/admin/event-form"
-import { clerkConfigured, getAdminOrNull } from "@/lib/auth"
+import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 
 export default async function NewEventPage() {
-  if (!clerkConfigured()) return null
+  if (!adminAvailable()) return null
   const admin = await getAdminOrNull()
   if (!admin) redirect("/admin")
 

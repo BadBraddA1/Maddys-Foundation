@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { clerkConfigured, getAdminOrNull } from "@/lib/auth"
+import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import { getEventById, listRegistrations } from "@/lib/events"
 
 export const dynamic = "force-dynamic"
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 type Props = { params: Promise<{ id: string }> }
 
 export default async function RegistrationsPage({ params }: Props) {
-  if (!clerkConfigured()) return null
+  if (!adminAvailable()) return null
   const admin = await getAdminOrNull()
   if (!admin) redirect("/admin")
 

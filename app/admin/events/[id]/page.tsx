@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { EventForm } from "@/components/admin/event-form"
-import { clerkConfigured, getAdminOrNull } from "@/lib/auth"
+import { adminAvailable, getAdminOrNull } from "@/lib/auth"
 import { getEventById } from "@/lib/events"
 
 export const dynamic = "force-dynamic"
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 type Props = { params: Promise<{ id: string }> }
 
 export default async function EditEventPage({ params }: Props) {
-  if (!clerkConfigured()) return null
+  if (!adminAvailable()) return null
   const admin = await getAdminOrNull()
   if (!admin) redirect("/admin")
 
