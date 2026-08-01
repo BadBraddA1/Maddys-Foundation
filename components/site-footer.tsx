@@ -1,20 +1,25 @@
 import Link from "next/link"
+import { SponsorMarquee } from "@/components/sponsor-marquee"
 import { contactEmail, siteName, siteUrl } from "@/lib/site-metadata"
+import { listSponsors } from "@/lib/sponsors"
 
 const exploreLinks = [
   { href: "/story", label: "Her Story" },
   { href: "/events", label: "Events" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/donate", label: "Donate" },
 ]
 
 const utilityLinks = [{ href: "/privacy", label: "Privacy" }]
 
 /** Site footer — playbook 05 / LECYC-style columns + BraddCorp credit. */
-export function SiteFooter() {
+export async function SiteFooter() {
   const host = new URL(siteUrl).host
+  const sponsors = await listSponsors({ publishedOnly: true }).catch(() => [])
 
   return (
     <footer className="mt-auto border-t border-line bg-deep text-on-deep pb-[env(safe-area-inset-bottom)]">
+      <SponsorMarquee sponsors={sponsors} />
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] md:gap-8 md:px-8">
         <div className="flex items-start gap-4">
           <span

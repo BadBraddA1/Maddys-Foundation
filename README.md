@@ -4,10 +4,11 @@ Public foundation site + custom event registration for **maddysfoundation.org** 
 
 ## What this is
 
-- Marketing site (home, Maddy’s story, donate, privacy)
+- Marketing site (home, Maddy’s story, donate, privacy, **gallery**)
 - Published events list + detail pages (Google / Apple Maps links from location)
 - Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set; opening the register form **reserves a capacity slot** for **10 minutes** (assumes they’ll pay); unpaid / expired holds return to the pool; roster only shows paid teams
-- Staff admin (`/admin`) to create/edit events, view rosters, confirm payment, **release unpaid holds**, and **day-of player check-in** (desk + dashboard)
+- Staff admin (`/admin`) to create/edit events, view rosters, confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), and **gallery** photos
+- Footer sponsor logo strip (scrolling) fed from Turso + R2
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.
 
@@ -19,6 +20,7 @@ Inspired in tone by Mighty Maddy — original brand, copy, and design.
 | DB | Turso `maddys-foundation` (group `braddcorp`) |
 | Auth | Clerk — staff only (`publicMetadata.role = "admin"`) |
 | Host | Vercel project `maddys-foundation` → [maddys-foundation.vercel.app](https://maddys-foundation.vercel.app) |
+| Media | Cloudflare R2 bucket `maddys-foundation-media` + Worker `maddys-foundation-media` |
 | Repo | [`BadBraddA1/Maddys-Foundation`](https://github.com/BadBraddA1/Maddys-Foundation) |
 | Turso | `maddys-foundation` in group `braddcorp` |
 
@@ -86,8 +88,19 @@ A yellow banner shows when bypass is active. It only works in **development** or
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Publishable key (`pk_test_` / `pk_live_`) |
 | `STRIPE_SECRET_KEY` | Stripe | Secret key — server only |
 | `STRIPE_WEBHOOK_SECRET` | Stripe | Webhook signing secret (`whsec_`) |
+| `R2_PUBLIC_URL` | media | Public r2.dev base for logos/photos |
+| `R2_UPLOAD_WORKER_URL` | media | Worker that accepts staff uploads |
+| `R2_UPLOAD_SECRET` | media | Shared secret header for the upload Worker |
+| `R2_ACCOUNT_ID` / `R2_BUCKET_NAME` | media | Account + bucket name (docs / optional S3) |
 
 Never commit `.env.local` or tokens.
+
+### Sponsors + gallery (R2)
+
+1. Bucket: `maddys-foundation-media` (public r2.dev URL in `R2_PUBLIC_URL`).
+2. Worker: `npx wrangler deploy` from repo root (uses `wrangler.toml` + `worker/media-upload.ts`); set secret with `npx wrangler secret put UPLOAD_SECRET`.
+3. Staff: `/admin/sponsors` (name + logo → footer marquee) and `/admin/gallery` (photos → `/gallery`).
+4. Tables: `sponsors`, `gallery_images` in Turso (see `scripts/schema-turso.sql`).
 
 **Stripe plan (keys + how to get them):** [`docs/STRIPE.md`](docs/STRIPE.md)
 
@@ -128,6 +141,8 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, **31 team capacity**, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 - Stripe: Checkout on paid registration + webhook confirms roster; **10-minute hold** then unpaid drafts are released (Stripe session expired + row deleted) and never shown in admin
 - Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
+- Sponsors: `/admin/sponsors` uploads logos to R2; published logos scroll in the footer
+- Gallery: `/admin/gallery` uploads photos to R2; public page `/gallery`
 
 ## Day-of check-in (ops)
 
@@ -157,6 +172,6 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 
 ## Useful paths
 
-- Public: `/` `/story` `/events` `/events/[slug]/register` `/donate` `/privacy`
-- Staff: `/admin` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]/registrations`
-- API: `POST /api/register` · `POST/PATCH /api/admin/events` · `/api/admin/check-in/*`
+- Public: `/` `/story` `/events` `/events/[slug]/register` `/gallery` `/donate` `/privacy`
+- Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]/registrations`
+- API: `POST /api/register` · `POST/PATCH /api/admin/events` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery`

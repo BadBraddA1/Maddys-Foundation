@@ -399,3 +399,33 @@ a {
     transform: none;
   }
 }
+
+/* Footer sponsor strip */
+@keyframes sponsor-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.sponsor-marquee-track {
+  animation: sponsor-marquee 40s linear infinite;
+}
+
+.sponsor-marquee:hover .sponsor-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sponsor-marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    justify-content: center;
+    row-gap: 0.75rem;
+  }
+}

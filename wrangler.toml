@@ -1,0 +1,10 @@
+name = "maddys-foundation-media"
+main = "worker/media-upload.ts"
+compatibility_date = "2024-09-01"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "maddys-foundation-media"
+
+[vars]
+R2_PUBLIC_URL = "https://pub-6261cb51fc8e4996907690f225f2e296.r2.dev"

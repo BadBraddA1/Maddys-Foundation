@@ -100,6 +100,18 @@ export default async function AdminLayout({
             >
               Check-in
             </Link>
+            <Link
+              href="/admin/sponsors"
+              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+            >
+              Sponsors
+            </Link>
+            <Link
+              href="/admin/gallery"
+              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+            >
+              Gallery
+            </Link>
           </div>
           <div className="flex min-w-0 items-center gap-3">
             <span className="truncate text-sm text-muted">{admin.email}</span>

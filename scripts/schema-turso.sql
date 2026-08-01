@@ -122,6 +122,38 @@ CREATE INDEX IF NOT EXISTS idx_check_in_history_event
 CREATE INDEX IF NOT EXISTS idx_check_in_history_registration
   ON check_in_history (registration_id, created_at DESC);
 
+-- Sponsor logos (footer marquee) — files in R2 bucket maddys-foundation-media.
+CREATE TABLE IF NOT EXISTS sponsors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  logo_url TEXT NOT NULL,
+  logo_key TEXT NOT NULL,
+  website_url TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_published INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sponsors_published_sort
+  ON sponsors (is_published, sort_order, id);
+
+-- Public photo gallery — files in R2 bucket maddys-foundation-media.
+CREATE TABLE IF NOT EXISTS gallery_images (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL DEFAULT '',
+  caption TEXT NOT NULL DEFAULT '',
+  image_url TEXT NOT NULL,
+  image_key TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  is_published INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE INDEX IF NOT EXISTS idx_gallery_published_sort
+  ON gallery_images (is_published, sort_order, id);
+
 CREATE TABLE IF NOT EXISTS audit_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   actor TEXT NOT NULL DEFAULT 'system',

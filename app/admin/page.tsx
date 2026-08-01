@@ -52,6 +52,18 @@ export default async function AdminHomePage() {
             New event
           </Link>
           <Link
+            href="/admin/sponsors"
+            className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
+          >
+            Sponsors
+          </Link>
+          <Link
+            href="/admin/gallery"
+            className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
+          >
+            Gallery
+          </Link>
+          <Link
             href="/admin/check-in"
             className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
           >

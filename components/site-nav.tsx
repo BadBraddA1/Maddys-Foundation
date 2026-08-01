@@ -4,6 +4,7 @@ import { MobileNav } from "@/components/mobile-nav"
 const links = [
   { href: "/story", label: "Her Story" },
   { href: "/events", label: "Events" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/donate", label: "Donate" },
 ]
 
