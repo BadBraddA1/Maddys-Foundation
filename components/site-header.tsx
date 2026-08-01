@@ -12,9 +12,9 @@ function BrandMark({
 }: {
   tone: "light" | "dark"
 }) {
-  const text = tone === "light" ? "text-white" : "text-ink"
-  const sub = tone === "light" ? "text-white/75" : "text-muted"
-  const ring = tone === "light" ? "ring-white/70" : "ring-line/80"
+  const text = tone === "light" ? "text-on-deep" : "text-ink"
+  const sub = tone === "light" ? "text-on-deep-muted" : "text-muted"
+  const ring = tone === "light" ? "ring-on-deep-border" : "ring-line"
 
   return (
     <Link
@@ -26,7 +26,7 @@ function BrandMark({
         alt="Madalyn Robinson Foundation"
         width={44}
         height={44}
-        className={`h-11 w-11 shrink-0 rounded-full bg-white object-cover ring-1 ${ring}`}
+        className={`h-11 w-11 shrink-0 rounded-full bg-surface object-cover ring-1 ${ring}`}
         priority
       />
       <span className="min-w-0 font-display text-base leading-tight tracking-tight sm:text-lg md:text-xl">
@@ -47,22 +47,21 @@ function PrimaryNav({
 }) {
   const desktopLink =
     tone === "light"
-      ? "text-white hover:bg-white/15"
+      ? "text-on-deep hover:bg-on-deep-hover"
       : "text-ink hover:bg-bg"
 
   const panel =
     tone === "light"
-      ? "border-white/15 bg-deep text-white"
+      ? "border-on-deep-border bg-deep text-on-deep"
       : "border-line bg-surface text-ink"
 
   const mobileLink =
     tone === "light"
-      ? "text-white hover:bg-white/10"
+      ? "text-on-deep hover:bg-on-deep-hover"
       : "text-ink hover:bg-bg"
 
   return (
     <nav aria-label="Primary">
-      {/* Desktop / tablet horizontal */}
       <ul className="hidden items-center gap-1 md:flex">
         {links.map((link) => (
           <li key={link.href}>
@@ -76,12 +75,11 @@ function PrimaryNav({
         ))}
       </ul>
 
-      {/* Phone: disclosure menu — no hover dependency */}
       <details className="relative md:hidden">
         <summary
           className={`flex h-11 w-11 cursor-pointer list-none items-center justify-center border text-sm font-semibold transition [&::-webkit-details-marker]:hidden ${
             tone === "light"
-              ? "border-white/40 bg-deep/80 text-white"
+              ? "border-on-deep-border bg-deep/80 text-on-deep"
               : "border-line bg-surface text-ink"
           }`}
         >

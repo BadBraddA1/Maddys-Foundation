@@ -1,15 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --bg: oklch(0.97 0.008 240);
-  --surface: oklch(0.99 0.004 240);
-  --ink: oklch(0.22 0.02 250);
-  --muted: oklch(0.42 0.02 250);
-  --line: oklch(0.88 0.01 240);
-  --accent: oklch(0.68 0.10 85);
-  --accent-ink: oklch(0.30 0.05 70);
-  --deep: oklch(0.28 0.04 250);
+  /*
+    Strategy: Restrained — neutrals carry the page; sunflower accent ≤10%.
+    Neutrals tint toward accent hue (~85). Deep stays cool fog for photo overlays.
+  */
+  --bg: oklch(0.975 0.008 95);
+  --surface: oklch(0.99 0.005 95);
+  --ink: oklch(0.23 0.025 85);
+  --muted: oklch(0.42 0.025 85);
+  --line: oklch(0.88 0.012 95);
+  --accent: oklch(0.68 0.11 85);
+  --accent-ink: oklch(0.30 0.055 70);
+  --accent-soft: oklch(0.94 0.04 90);
+  --deep: oklch(0.27 0.035 250);
+  --deep-mid: oklch(0.34 0.03 245);
+  --on-deep: oklch(0.98 0.01 95);
+  --on-deep-muted: oklch(0.90 0.015 95);
+  --on-deep-faint: oklch(0.78 0.02 95);
+  --on-deep-border: oklch(0.98 0.01 95 / 0.35);
+  --on-deep-hover: oklch(0.98 0.01 95 / 0.12);
   --danger: oklch(0.48 0.16 25);
+  --danger-soft: oklch(0.95 0.03 25);
+  --success: oklch(0.45 0.09 145);
+  --success-soft: oklch(0.95 0.03 145);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 
   /* Modular scale — major third (1.25) */
@@ -37,8 +51,18 @@
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
   --color-deep: var(--deep);
+  --color-deep-mid: var(--deep-mid);
+  --color-on-deep: var(--on-deep);
+  --color-on-deep-muted: var(--on-deep-muted);
+  --color-on-deep-faint: var(--on-deep-faint);
+  --color-on-deep-border: var(--on-deep-border);
+  --color-on-deep-hover: var(--on-deep-hover);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --font-sans: var(--font-source-sans), "Segoe UI", system-ui, sans-serif;
   --font-display: var(--font-literata), "Iowan Old Style", "Palatino Linotype", Palatino, serif;
 }
@@ -162,7 +186,7 @@ a {
 }
 
 ::selection {
-  background: color-mix(in oklch, var(--accent) 45%, white);
+  background: var(--accent-soft);
   color: var(--accent-ink);
 }
 

@@ -15,7 +15,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#1c2a3c",
+  themeColor: "#1f2d3f",
 }
 
 /* Display: Literata — literary warmth for memorial voice; not Fraunces soft-AI default.

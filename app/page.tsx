@@ -20,23 +20,23 @@ export default async function HomePage() {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <section className="relative min-h-[100svh] overflow-hidden bg-deep text-white [contain:layout_paint]">
+      <section className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep [contain:layout_paint]">
         <HeroPhoto />
         {/* Bottom wash for copy + top is handled by header scrim */}
         <div
-          className="absolute inset-0 bg-gradient-to-t from-deep from-15% via-deep/70 via-45% to-deep/30"
+          className="absolute inset-0 bg-gradient-to-t from-deep from-15% via-deep/70 via-45% to-deep-mid/40"
           aria-hidden="true"
         />
         <SiteHeader />
         <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-5 pb-[max(4rem,env(safe-area-inset-bottom))] pt-36 sm:px-6 md:px-8 md:pb-24">
           <h1
-            className="hero-enter max-w-3xl font-display text-white"
+            className="hero-enter max-w-3xl font-display text-on-deep"
             data-enter="0"
           >
             Joy that still moves mountains
           </h1>
           <p
-            className="hero-enter on-dark mt-5 max-w-xl text-base text-white/90 sm:text-lg"
+            className="hero-enter on-dark mt-5 max-w-xl text-base text-on-deep-muted sm:text-lg"
             data-enter="1"
           >
             We gather people, host events, and keep spreading the light Maddy
@@ -54,7 +54,7 @@ export default async function HomePage() {
             </Link>
             <Link
               href="/story"
-              className="motion-press inline-flex min-h-11 items-center justify-center border border-white/35 px-6 py-3 text-center text-sm font-medium text-white hover:bg-white/10"
+              className="motion-press inline-flex min-h-11 items-center justify-center border border-on-deep-border px-6 py-3 text-center text-sm font-medium text-on-deep hover:bg-on-deep-hover"
             >
               Her story
             </Link>
@@ -96,7 +96,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-surface">
+      <section className="border-y border-line bg-accent-soft/40">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
           <div className="flex items-end justify-between gap-4">
             <h2 className="font-display">Events</h2>

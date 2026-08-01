@@ -2,20 +2,22 @@
 
 ## Visual theme
 
-Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink from the circular logo line-art, a single golden-sunflower accent. Light, airy, memorial without gloom. Committed accent on CTAs and key marks; body stays clear off-white tinted toward cool fog (not cream paper).
+Soft coastal fog and sunflower warmth: misty neutrals from Maddy’s photo, ink from the circular logo line-art, a single golden-sunflower accent. Light, airy, memorial without gloom. **Restrained** color strategy — neutrals do the work; accent ≤10%.
 
-## Color (OKLCH)
+## Color strategy: Restrained
 
-| Token | Value | Role |
-| --- | --- | --- |
-| `--bg` | `oklch(0.97 0.008 240)` | Page background |
-| `--surface` | `oklch(0.99 0.004 240)` | Elevated panels |
-| `--ink` | `oklch(0.22 0.02 250)` | Primary text |
-| `--muted` | `oklch(0.45 0.02 250)` | Secondary text |
-| `--line` | `oklch(0.88 0.01 240)` | Hairlines |
-| `--accent` | `oklch(0.68 0.10 85)` | Sunflower gold (restrained) |
-| `--accent-ink` | `oklch(0.30 0.05 70)` | Text on accent |
-| `--deep` | `oklch(0.28 0.04 250)` | Hero overlays / footer |
+| Role | Token | Value | Use |
+| --- | --- | --- | --- |
+| Page | `--bg` | `oklch(0.975 0.008 95)` | Body — sunflower-tinted off-white |
+| Surface | `--surface` | `oklch(0.99 0.005 95)` | Panels / header |
+| Ink / muted / line | `--ink` `--muted` `--line` | hue ~85–95 | Text & rules |
+| Accent | `--accent` | `oklch(0.68 0.11 85)` | Primary CTAs, focus, selection |
+| Accent soft | `--accent-soft` | `oklch(0.94 0.04 90)` | Quiet section wash |
+| Deep (fog) | `--deep` `--deep-mid` | hue ~245–250 | Hero/footer — cool for photo |
+| On-deep ramp | `--on-deep` … `--on-deep-faint` | warm off-white | Text/borders on deep (no raw `white/*`) |
+| Danger / success | `--danger` `--success` (+ soft) | semantic | Errors & registration success |
+
+No cream/sand paper stack — chroma leans brand gold, not generic warm beige.
 
 ## Typography
 

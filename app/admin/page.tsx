@@ -41,7 +41,7 @@ export default async function AdminHomePage() {
         </div>
         <Link
           href="/admin/events/new"
-          className="inline-flex min-h-11 items-center bg-deep px-5 text-sm font-medium text-white"
+          className="inline-flex min-h-11 items-center bg-deep px-5 text-sm font-medium text-on-deep"
         >
           New event
         </Link>

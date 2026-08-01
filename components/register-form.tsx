@@ -117,11 +117,11 @@ export function RegisterForm({
     const first = name.trim().split(/\s+/)[0] || "friend"
     return (
       <div
-        className="success-enter rounded-sm border border-line bg-surface px-6 py-8"
+        className="success-enter border border-success/25 bg-success-soft px-6 py-8"
         role="status"
         aria-live="polite"
       >
-        <h2 className="font-display text-2xl">You&apos;re registered</h2>
+        <h2 className="font-display text-2xl text-ink">You&apos;re registered</h2>
         <p className="mt-3 break-words text-muted">
           Thanks, {first}. We&apos;ve saved your spot for{" "}
           <span className="text-ink">{eventTitle}</span>.

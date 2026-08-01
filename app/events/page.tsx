@@ -79,7 +79,7 @@ export default async function EventsPage() {
                           ? `/events/${event.slug}/register`
                           : `/events/${event.slug}`
                       }
-                      className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-deep px-5 text-center text-sm font-medium text-white sm:w-auto"
+                      className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-deep px-5 text-center text-sm font-medium text-on-deep sm:w-auto"
                     >
                       {open ? "Register" : "Details"}
                     </Link>

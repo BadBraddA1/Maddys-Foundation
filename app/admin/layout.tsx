@@ -44,7 +44,7 @@ export default async function AdminLayout({
             {admin ? (
               <span className="text-xs text-muted">{admin.email}</span>
             ) : (
-              <span className="text-xs text-red-700">
+              <span className="text-xs text-danger">
                 Signed in, but role is not admin
               </span>
             )}

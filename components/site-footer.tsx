@@ -14,7 +14,7 @@ export function SiteFooter() {
   const host = new URL(siteUrl).host
 
   return (
-    <footer className="mt-auto border-t border-line bg-deep text-white pb-[env(safe-area-inset-bottom)]">
+    <footer className="mt-auto border-t border-line bg-deep text-on-deep pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 sm:px-6 md:flex-row md:items-end md:justify-between md:px-8">
         <div className="flex items-start gap-4">
           <Image
@@ -22,11 +22,11 @@ export function SiteFooter() {
             alt=""
             width={56}
             height={56}
-            className="h-14 w-14 shrink-0 rounded-full bg-white object-cover"
+            className="h-14 w-14 shrink-0 rounded-full bg-surface object-cover"
           />
           <div>
             <p className="font-display text-xl">{siteName}</p>
-            <p className="mt-2 max-w-sm text-sm text-white/80">
+            <p className="mt-2 max-w-sm text-sm text-on-deep-muted">
               Continuing to spread joy and light — in Maddy&apos;s spirit.
             </p>
           </div>
@@ -37,7 +37,7 @@ export function SiteFooter() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="inline-flex min-h-11 items-center text-sm text-white/85 hover:text-white sm:px-2"
+                  className="inline-flex min-h-11 items-center text-sm text-on-deep-muted hover:text-on-deep sm:px-2"
                 >
                   {link.label}
                 </Link>
@@ -46,7 +46,7 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <div className="border-t border-white/15 px-5 py-4 text-center text-xs text-white/70 sm:px-6 md:px-8">
+      <div className="border-t border-on-deep-border px-5 py-4 text-center text-xs text-on-deep-faint sm:px-6 md:px-8">
         © {new Date().getFullYear()} {siteName} · {host}
       </div>
     </footer>

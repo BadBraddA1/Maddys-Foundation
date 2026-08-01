@@ -9,7 +9,7 @@ export function LoadError({
 }) {
   return (
     <div
-      className="mt-10 border border-danger/30 bg-danger/5 px-5 py-5"
+      className="mt-10 border border-danger/30 bg-danger-soft px-5 py-5"
       role="alert"
     >
       <p className="font-medium text-ink">{title}</p>
