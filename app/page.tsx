@@ -35,7 +35,7 @@ export default async function HomePage() {
       <main id="main" className="flex flex-1 flex-col">
       <section
         data-home-hero
-        className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep [contain:layout_paint]"
+        className="relative min-h-[100svh] overflow-hidden bg-deep text-on-deep"
       >
         <HeroPhoto />
         {/* Bottom wash only — keep face (upper third) clear of the fog veil */}
@@ -95,12 +95,6 @@ export default async function HomePage() {
               className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
             >
               Give in her honor →
-            </Link>
-            <Link
-              href="/story"
-              className="inline-flex min-h-11 items-center text-sm font-medium text-muted underline decoration-line underline-offset-4 hover:text-ink"
-            >
-              Her Story →
             </Link>
           </div>
         </div>

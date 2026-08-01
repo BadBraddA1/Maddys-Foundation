@@ -305,40 +305,20 @@ a {
   animation: hdr-countdown-rise 0.45s var(--ease-out-quart) both;
 }
 
-/* Home hero header — soft scrim entrance; sticky portals to body */
-.hero-header-chrome .hero-header-overlay {
+/* Home hero header — one fixed bar; scrim over photo, solid after scroll */
+.hero-header-bar .hero-header-bar-inner {
   transform: translateY(-0.35rem);
   transition:
     transform 0.5s var(--ease-out-quart),
-    opacity 0.35s var(--ease-out-quart);
+    background-color 0.35s var(--ease-out-quart),
+    border-color 0.35s var(--ease-out-quart);
 }
 
-.hero-header-chrome[data-ready="true"] .hero-header-overlay {
+.hero-header-bar[data-ready="true"] .hero-header-bar-inner {
   transform: translateY(0);
 }
 
-.hero-header-chrome[data-past="true"] .hero-header-overlay {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.hero-header-sticky {
-  pointer-events: none;
-  visibility: hidden;
-}
-
-.hero-header-sticky[data-past="true"] {
-  pointer-events: auto;
-  visibility: visible;
-}
-
-.hero-header-sticky .hero-header-sticky-inner {
-  background: var(--surface);
-  transform: translateY(-110%);
-  transition: transform 0.45s var(--ease-out-quart);
-}
-
-.hero-header-sticky[data-past="true"] .hero-header-sticky-inner {
+.hero-header-bar[data-past="true"] .hero-header-bar-inner {
   transform: translateY(0);
 }
 
@@ -381,8 +361,7 @@ a {
   .nav-panel-enter,
   .success-enter,
   .countdown-featured .countdown-enter,
-  .hero-header-chrome .hero-header-overlay,
-  .hero-header-sticky .hero-header-sticky-inner {
+  .hero-header-bar .hero-header-bar-inner {
     animation: none !important;
     filter: none !important;
     transform: none !important;
@@ -390,12 +369,9 @@ a {
     transition: none !important;
   }
 
-  .hero-header-sticky:not([data-past="true"]) .hero-header-sticky-inner {
-    transform: translateY(-110%);
-  }
-
-  .hero-header-sticky[data-past="true"] .hero-header-sticky-inner {
-    transform: translateY(0);
+  .hero-header-bar[data-ready="true"] .hero-header-bar-inner,
+  .hero-header-bar[data-past="true"] .hero-header-bar-inner {
+    transform: none;
   }
 
   .motion-press:hover,

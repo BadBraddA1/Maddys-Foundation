@@ -21,7 +21,7 @@ export function BrandMark({
       href="/"
       className={`flex min-h-11 items-center gap-2.5 sm:gap-3 ${text}`}
     >
-      {/* Plain img: already tiny WebP — skip /_next/image and never priority (LCP is the hero). */}
+      {/* Plain img: tiny WebP; low priority so it never steals the hero LCP slot. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/brand/logo-96.webp"
@@ -29,6 +29,7 @@ export function BrandMark({
         width={44}
         height={44}
         decoding="async"
+        fetchPriority="low"
         className={`h-11 w-11 shrink-0 rounded-full bg-surface object-cover ring-1 ${ring}`}
       />
       <span className="min-w-0 font-display text-base leading-tight tracking-tight sm:text-lg md:text-xl">

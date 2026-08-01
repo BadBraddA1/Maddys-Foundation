@@ -1,21 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createPortal } from "react-dom"
 import { BrandMark, PrimaryNav } from "@/components/site-nav"
 
 /**
- * Home hero chrome: overlay scrolls away with the photo; after the hero
- * leaves the viewport a solid sticky bar portals to the document (so
- * `contain` on the hero can’t trap `position: fixed` over the image).
+ * Single fixed home chrome — scrim over the photo, solid after the hero leaves.
+ * One nav tree (no portal / duplicate BrandMark). Requires no CSS `contain` on the hero.
  */
 export function HeroHeaderChrome() {
   const [ready, setReady] = useState(false)
   const [pastHero, setPastHero] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const enter = window.requestAnimationFrame(() => setReady(true))
     const hero = document.querySelector("[data-home-hero]")
     if (!hero) {
@@ -36,39 +32,26 @@ export function HeroHeaderChrome() {
     }
   }, [])
 
-  const sticky = (
-    <div
-      className="hero-header-sticky fixed inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]"
-      data-past={pastHero ? "true" : "false"}
-      aria-hidden={!pastHero}
-      inert={!pastHero ? true : undefined}
-    >
-      <div className="hero-header-sticky-inner border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8">
-          <BrandMark tone="dark" />
-          <PrimaryNav tone="dark" />
-        </div>
-      </div>
-    </div>
-  )
+  const tone = pastHero ? "dark" : "light"
 
   return (
     <div
-      className="hero-header-chrome"
+      className="hero-header-bar fixed inset-x-0 top-0 z-[var(--z-sticky)] pt-[env(safe-area-inset-top)]"
       data-ready={ready ? "true" : "false"}
       data-past={pastHero ? "true" : "false"}
     >
       <div
-        className="hero-header-overlay bg-gradient-to-b from-deep/75 from-30% via-deep/35 to-transparent pb-8"
-        aria-hidden={pastHero}
+        className={
+          pastHero
+            ? "hero-header-bar-inner border-b border-line bg-surface"
+            : "hero-header-bar-inner bg-gradient-to-b from-deep/75 from-30% via-deep/35 to-transparent pb-8"
+        }
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8 md:py-4">
-          <BrandMark tone="light" />
-          <PrimaryNav tone="light" />
+          <BrandMark tone={tone} />
+          <PrimaryNav tone={tone} />
         </div>
       </div>
-
-      {mounted ? createPortal(sticky, document.body) : null}
     </div>
   )
 }

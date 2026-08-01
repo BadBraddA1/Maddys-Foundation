@@ -7,7 +7,7 @@ type HomeHeaderProps = {
   skipHref?: string
 }
 
-/** Overlay header for the photo hero — settles in, then solid sticky after scroll. */
+/** Overlay header for the photo hero — one fixed bar (scrim → solid after scroll). */
 export function SiteHeader({ skipHref = "#hero-copy" }: HomeHeaderProps = {}) {
   return (
     <>
