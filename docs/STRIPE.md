@@ -100,3 +100,12 @@ Add the same three for Preview + Production (test keys first; swap to `pk_live_`
 
 - Current placeholder: `NEXT_PUBLIC_DONATE_URL` (Venmo / external link until Stripe donate ships)
 - Event fees: Stripe Checkout only (`STRIPE_SECRET_KEY` required for paid registration)
+
+## Testing the 10-minute capacity hold
+
+1. Open the scramble event page — capacity bar should show counts (e.g. `0 / 31 teams`) and the hold note.
+2. Submit a team registration — countdown screen, then Stripe Checkout.
+3. In another browser, capacity should show a spot **held in checkout**.
+4. Wait 10+ minutes (or `GET /api/cron/release-holds` with `Authorization: Bearer $CRON_SECRET`) — hold clears, Stripe session expires, spot returns.
+5. Cancel checkout early — spot releases immediately; form must be filled again.
+6. Pay within 10 minutes — team appears on the admin roster as paid.
