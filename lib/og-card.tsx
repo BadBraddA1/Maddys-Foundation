@@ -15,40 +15,33 @@ const ON_DEEP_MUTED = "#e2e8e4"
 const ACCENT = "#c9a84a"
 const ACCENT_INK = "#3d2e12"
 
-/**
- * Strength of the green tent — matched to the old cool-gray fog on the
- * screenshot OG (even wash over the whole photo, text sits on top).
- * Satori often ignores div opacity, so the tent is an SVG <img> layer.
- */
-const TENT_OPACITY = 0.55
-
-/** Shift Maddy right so type can sit more centered without covering her face. */
-const PHOTO_POSITION = "68% 18%"
-
-const LOGO_SIZE = 128
+/** Green tent over white + cutout (Satori-safe SVG layer). */
+const TENT_OPACITY = 0.48
+const LOGO_SIZE = 120
 
 function greenTentDataUrl() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="${DEEP}" fill-opacity="${TENT_OPACITY}"/></svg>`
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`
 }
 
-async function localBrand(file: "maddy.jpg" | "logo.jpg") {
+async function brandDataUrl(file: string, mime: "image/jpeg" | "image/png") {
   const buf = await readFile(join(process.cwd(), "public/brand", file))
-  return `data:image/jpeg;base64,${buf.toString("base64")}`
+  return `data:${mime};base64,${buf.toString("base64")}`
 }
 
 /**
- * Stack (bottom → top): photo → even green tent → text.
- * Same structure as the gray-tinted screenshot card; tent is fairway green.
+ * Stack: white (or photo) → subject cutout on the right → green tent → text on the left.
+ * Avoids text colliding with Maddy’s body.
  */
 function PhotoGreenTentCard(props: {
   photoSrc: string
   logoSrc: string
-  /** Small label beside the logo (events use foundation name). */
   brandLine?: string
   title: string
   subtitle?: string
   footerLeft?: string
+  /** When true, photo is a cutout already placed on white (site card). */
+  cutoutOnWhite?: boolean
 }) {
   return (
     <div
@@ -58,10 +51,10 @@ function PhotoGreenTentCard(props: {
         display: "flex",
         position: "relative",
         overflow: "hidden",
-        backgroundColor: DEEP,
+        backgroundColor: "#ffffff",
       }}
     >
-      {/* 1) Photo — subject nudged right */}
+      {/* Subject — cutout sits on the right; full-bleed cover uses right-biased crop */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={props.photoSrc}
@@ -75,11 +68,11 @@ function PhotoGreenTentCard(props: {
           width: 1200,
           height: 630,
           objectFit: "cover",
-          objectPosition: PHOTO_POSITION,
+          objectPosition: props.cutoutOnWhite ? "center center" : "70% 20%",
         }}
       />
 
-      {/* 2) Even green tent as SVG <img> — above photo, below text */}
+      {/* Green tent above photo/cutout, below text */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={greenTentDataUrl()}
@@ -95,17 +88,17 @@ function PhotoGreenTentCard(props: {
         }}
       />
 
-      {/* 3) Graphics more centered; face stays clear on the right */}
+      {/* Type in the open left area — stays off her face/torso */}
       <div
         style={{
           position: "relative",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          alignItems: "center",
+          alignItems: "flex-start",
           width: 1200,
           height: 630,
-          padding: "56px 80px",
+          padding: "56px 56px 56px 64px",
           color: ON_DEEP,
         }}
       >
@@ -113,17 +106,16 @@ function PhotoGreenTentCard(props: {
           style={{
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            maxWidth: 820,
+            alignItems: "flex-start",
+            maxWidth: 560,
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              gap: 22,
-              marginBottom: 26,
+              gap: 20,
+              marginBottom: 24,
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -142,7 +134,7 @@ function PhotoGreenTentCard(props: {
               }}
             />
             {props.brandLine ? (
-              <div style={{ fontSize: 28, fontWeight: 600, opacity: 0.95 }}>
+              <div style={{ fontSize: 26, fontWeight: 600, opacity: 0.95 }}>
                 {props.brandLine}
               </div>
             ) : null}
@@ -150,11 +142,10 @@ function PhotoGreenTentCard(props: {
 
           <div
             style={{
-              fontSize: props.title.length > 40 ? 44 : 54,
+              fontSize: props.title.length > 36 ? 42 : 50,
               fontWeight: 600,
               letterSpacing: "-0.03em",
               lineHeight: 1.1,
-              textAlign: "center",
             }}
           >
             {props.title}
@@ -164,10 +155,9 @@ function PhotoGreenTentCard(props: {
             <div
               style={{
                 marginTop: 16,
-                fontSize: 26,
-                opacity: 0.9,
+                fontSize: 24,
+                opacity: 0.92,
                 color: ON_DEEP_MUTED,
-                textAlign: "center",
               }}
             >
               {props.subtitle}
@@ -177,7 +167,7 @@ function PhotoGreenTentCard(props: {
           {props.footerLeft ? (
             <div
               style={{
-                marginTop: 32,
+                marginTop: 28,
                 padding: "14px 28px",
                 backgroundColor: ACCENT,
                 color: ACCENT_INK,
@@ -194,11 +184,11 @@ function PhotoGreenTentCard(props: {
   )
 }
 
-/** Site card: name-forward, green tent over Maddy (no mountains line). */
+/** Site card: cutout on white, green tent, name-forward type on the left. */
 export async function renderSiteOgImage() {
   const [photo, logo] = await Promise.all([
-    localBrand("maddy.jpg"),
-    localBrand("logo.jpg"),
+    brandDataUrl("maddy-og-cutout.png", "image/png"),
+    brandDataUrl("logo.jpg", "image/jpeg"),
   ])
 
   return new ImageResponse(
@@ -208,27 +198,32 @@ export async function renderSiteOgImage() {
         logoSrc={logo}
         title={siteName}
         subtitle="Events · scholarships · hope"
+        cutoutOnWhite
       />
     ),
     { ...ogSize },
   )
 }
 
-/** Event card: same green tent; custom title + details; cover when set. */
+/** Event card: cover when set, else same cutout treatment. */
 export async function renderEventOgImage(event: EventRow | null) {
-  const logo = await localBrand("logo.jpg")
+  const logo = await brandDataUrl("logo.jpg", "image/jpeg")
 
-  let photo = await localBrand("maddy.jpg")
+  let photo = await brandDataUrl("maddy-og-cutout.png", "image/png")
+  let cutoutOnWhite = true
   if (event?.cover_image_url?.trim()) {
     const url = event.cover_image_url.trim()
-    if (/^https?:\/\//i.test(url)) photo = url
+    if (/^https?:\/\//i.test(url)) {
+      photo = url
+      cutoutOnWhite = false
+    }
   }
 
   const title = event?.title || "Foundation gathering"
   const when = event ? formatEventDate(event.starts_at) : ""
   const where = event?.location?.trim() || ""
   const whereShort =
-    where.length > 56 ? `${where.slice(0, 53).trimEnd()}…` : where
+    where.length > 48 ? `${where.slice(0, 45).trimEnd()}…` : where
   const fee = event ? formatFee(event.fee_cents) : null
   const subtitle = [when, whereShort, fee].filter(Boolean).join(" · ")
 
@@ -241,6 +236,7 @@ export async function renderEventOgImage(event: EventRow | null) {
         title={title}
         subtitle={subtitle || undefined}
         footerLeft="View event →"
+        cutoutOnWhite={cutoutOnWhite}
       />
     ),
     { ...ogSize },
