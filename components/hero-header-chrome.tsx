@@ -44,7 +44,7 @@ export function HeroHeaderChrome() {
     }
   }, [])
 
-  const tone = pastHero ? "dark" : "light"
+  const tone = "light"
 
   return (
     <div
@@ -55,7 +55,7 @@ export function HeroHeaderChrome() {
       <div
         className={
           pastHero
-            ? "hero-header-bar-inner relative border-b border-line bg-surface"
+            ? "hero-header-bar-inner relative border-b border-on-deep-border bg-deep"
             : "hero-header-bar-inner relative border-b border-transparent bg-transparent"
         }
       >

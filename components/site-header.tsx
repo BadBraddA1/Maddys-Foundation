@@ -19,15 +19,15 @@ export function SiteHeader({ skipHref = "#hero-copy" }: HomeHeaderProps = {}) {
   )
 }
 
-/** Solid header for interior pages — brand + nav only (countdown lives on the home page). */
+/** Solid header for interior pages — fairway green bar, light type. */
 export function SiteHeaderSolid() {
   return (
     <>
       <SkipLink />
-      <header className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-surface pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-[var(--z-sticky)] border-b border-on-deep-border bg-deep pt-[env(safe-area-inset-top)] text-on-deep">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-6 md:px-8">
-          <BrandMark tone="dark" />
-          <PrimaryNav tone="dark" />
+          <BrandMark tone="light" />
+          <PrimaryNav tone="light" />
         </div>
       </header>
     </>
