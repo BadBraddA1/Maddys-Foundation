@@ -21,12 +21,12 @@ export async function GET() {
       : "unknown"
 
   try {
-    const account = await getStripe().accounts.retrieve()
+    const balance = await getStripe().balance.retrieve()
     return NextResponse.json({
       ok: true,
       configured: true,
       mode,
-      accountId: account.id,
+      livemode: balance.livemode,
       webhookSecret: Boolean(process.env.STRIPE_WEBHOOK_SECRET?.trim()),
       publishable: Boolean(
         process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim(),
