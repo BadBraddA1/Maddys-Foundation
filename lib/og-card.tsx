@@ -41,8 +41,8 @@ async function brandDataUrl(file: string, mime: "image/jpeg" | "image/png") {
 }
 
 /**
- * Stack: white (or photo) → subject cutout on the right → green tent → text on the left.
- * Avoids text colliding with Maddy’s body.
+ * Cutout stack: white → green tent → Maddy above the tint → text.
+ * Cover-photo stack: photo → green tent → text (tint still over the photo).
  */
 function PhotoGreenTentCard(props: {
   photoSrc: string
@@ -54,6 +54,16 @@ function PhotoGreenTentCard(props: {
   /** When true, photo is a cutout already placed on white (site card). */
   cutoutOnWhite?: boolean
 }) {
+  const photoStyle = {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    width: 1200,
+    height: 630,
+    objectFit: (props.cutoutOnWhite ? "fill" : "cover") as "fill" | "cover",
+    objectPosition: props.cutoutOnWhite ? "center center" : "70% 20%",
+  }
+
   return (
     <div
       style={{
@@ -65,26 +75,19 @@ function PhotoGreenTentCard(props: {
         backgroundColor: "#ffffff",
       }}
     >
-      {/* Subject — cutout asset is already composed 1200×630 (use fill, don’t re-crop).
-          Full-bleed covers still bias right so faces stay clear of left type. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={props.photoSrc}
-        alt=""
-        width={1200}
-        height={630}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: 1200,
-          height: 630,
-          objectFit: props.cutoutOnWhite ? "fill" : "cover",
-          objectPosition: props.cutoutOnWhite ? "center center" : "70% 20%",
-        }}
-      />
+      {/* Full-bleed covers stay under the tent */}
+      {!props.cutoutOnWhite ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={props.photoSrc}
+          alt=""
+          width={1200}
+          height={630}
+          style={photoStyle}
+        />
+      ) : null}
 
-      {/* Green tent above photo/cutout, below text */}
+      {/* Fairway green tent */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={greenTentDataUrl()}
@@ -99,6 +102,18 @@ function PhotoGreenTentCard(props: {
           height: 630,
         }}
       />
+
+      {/* Cutout sits above the tint so she stays natural color */}
+      {props.cutoutOnWhite ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={props.photoSrc}
+          alt=""
+          width={1200}
+          height={630}
+          style={photoStyle}
+        />
+      ) : null}
 
       {/* Type in the open left area — stays off her face/torso */}
       <div
