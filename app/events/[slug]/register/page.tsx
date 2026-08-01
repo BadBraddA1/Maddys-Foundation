@@ -12,13 +12,18 @@ import {
   listPublishedEvents,
 } from "@/lib/events"
 import { siteName } from "@/lib/site-metadata"
+import { dropPendingRegistration } from "@/lib/stripe-checkout"
 
 /** Fresh enough for capacity; registration POST also revalidates. */
 export const revalidate = 30
 
 type Props = {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ paid?: string; canceled?: string }>
+  searchParams: Promise<{
+    paid?: string
+    canceled?: string
+    session_id?: string
+  }>
 }
 
 export async function generateStaticParams() {
@@ -52,6 +57,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const requirePayment = event.fee_cents > 0
   const paidReturn = query.paid === "1"
   const canceledReturn = query.canceled === "1"
+  const sessionId = query.session_id?.trim()
+
+  if (canceledReturn && sessionId) {
+    await dropPendingRegistration({ checkoutSessionId: sessionId }).catch(
+      () => undefined,
+    )
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -94,9 +106,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             role="status"
           >
             <p className="text-ink">
-              Checkout was canceled. Your team details may still be saved as
-              pending — finish payment below when you&apos;re ready, or contact
-              the foundation.
+              Checkout was canceled and your draft was cleared. Fill out the form
+              again when you&apos;re ready to pay and complete registration.
             </p>
           </div>
         ) : null}

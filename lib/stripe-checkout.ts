@@ -112,14 +112,76 @@ export async function createEventCheckoutSession(opts: {
       totalCents: String(totals.totalCents),
     },
     success_url: `${base}/events/${opts.eventSlug}/register?paid=1&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${base}/events/${opts.eventSlug}/register?canceled=1`,
+    cancel_url: `${base}/events/${opts.eventSlug}/register?canceled=1&session_id={CHECKOUT_SESSION_ID}`,
+    expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes
   })
 
   if (!session.url) return null
+
+  await sql.execute(
+    `UPDATE registrations
+     SET stripe_checkout_session_id = ?
+     WHERE id = ?`,
+    [session.id, opts.registrationId],
+  )
+
   return {
     url: session.url,
     sessionId: session.id,
     totalCents: totals.totalCents,
+  }
+}
+
+/** Remove an unpaid draft so the email can register again with a fresh form. */
+export async function dropPendingRegistration(opts: {
+  registrationId?: number
+  checkoutSessionId?: string
+}): Promise<boolean> {
+  let dropped = false
+  if (opts.checkoutSessionId) {
+    const result = await sql.execute(
+      `DELETE FROM registrations
+       WHERE stripe_checkout_session_id = ?
+         AND status = 'pending'
+         AND paid = 0`,
+      [opts.checkoutSessionId],
+    )
+    dropped = result.rowsAffected > 0
+  }
+  if (!dropped && opts.registrationId && opts.registrationId > 0) {
+    const result = await sql.execute(
+      `DELETE FROM registrations
+       WHERE id = ?
+         AND status = 'pending'
+         AND paid = 0`,
+      [opts.registrationId],
+    )
+    dropped = result.rowsAffected > 0
+  }
+  return dropped
+}
+
+export async function dropPendingRegistrationFromSession(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const registrationId = Number(
+    session.metadata?.registrationId || session.client_reference_id || 0,
+  )
+  const dropped = await dropPendingRegistration({
+    checkoutSessionId: session.id,
+    registrationId: Number.isFinite(registrationId) ? registrationId : undefined,
+  })
+  if (dropped) {
+    await audit(
+      "stripe",
+      "drop_pending_registration",
+      "registration",
+      String(registrationId || session.id),
+      session.id,
+    ).catch(() => undefined)
+    if (session.metadata?.eventSlug) {
+      revalidatePublicEvents(session.metadata.eventSlug)
+    }
   }
 }
 
@@ -141,9 +203,9 @@ export async function confirmRegistrationFromCheckout(
 
   await sql.execute(
     `UPDATE registrations
-     SET paid = 1, status = 'confirmed'
+     SET paid = 1, status = 'confirmed', stripe_checkout_session_id = ?
      WHERE id = ? AND (status = 'pending' OR paid = 0)`,
-    [registrationId],
+    [session.id, registrationId],
   )
 
   await audit(

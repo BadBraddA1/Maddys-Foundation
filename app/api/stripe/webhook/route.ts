@@ -43,6 +43,17 @@ export async function POST(req: Request) {
       )
       await confirmRegistrationFromCheckout(session)
     }
+
+    if (
+      event.type === "checkout.session.expired" ||
+      event.type === "checkout.session.async_payment_failed"
+    ) {
+      const session = event.data.object
+      const { dropPendingRegistrationFromSession } = await import(
+        "@/lib/stripe-checkout"
+      )
+      await dropPendingRegistrationFromSession(session)
+    }
   } catch (err) {
     console.error("[stripe webhook] handler", err)
     return NextResponse.json({ error: "Handler failed" }, { status: 500 })

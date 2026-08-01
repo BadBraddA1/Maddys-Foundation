@@ -237,6 +237,15 @@ export async function POST(req: Request) {
   const status = requirePayment ? "pending" : "confirmed"
   const paid = requirePayment ? 0 : 1
 
+  // Replace any abandoned unpaid draft for this email so they can start over.
+  if (requirePayment) {
+    await sql.execute(
+      `DELETE FROM registrations
+       WHERE event_id = ? AND email = ? AND status = 'pending' AND paid = 0`,
+      [event.id, email],
+    )
+  }
+
   let registrationId = 0
   try {
     const result = await sql.execute(
@@ -277,9 +286,22 @@ export async function POST(req: Request) {
         coverCardFees: Boolean(body.coverCardFees),
       })
       checkoutUrl = session?.url ?? null
+      if (!checkoutUrl) {
+        const { dropPendingRegistration } = await import("@/lib/stripe-checkout")
+        await dropPendingRegistration({ registrationId })
+        return NextResponse.json(
+          { error: "Checkout could not be started. Please try again." },
+          { status: 502 },
+        )
+      }
     } catch (err) {
       console.error("[register] stripe checkout", err)
-      // Registration is saved pending — staff can still confirm after manual pay.
+      const { dropPendingRegistration } = await import("@/lib/stripe-checkout")
+      await dropPendingRegistration({ registrationId })
+      return NextResponse.json(
+        { error: "Checkout could not be started. Please try again." },
+        { status: 502 },
+      )
     }
   }
 

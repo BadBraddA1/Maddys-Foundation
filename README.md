@@ -6,7 +6,7 @@ Public foundation site + custom event registration for **maddysfoundation.org** 
 
 - Marketing site (home, Maddy’s story, donate, privacy)
 - Published events list + detail pages (Google / Apple Maps links from location)
-- Public registration — individual RSVP or team events (e.g. 4-person scramble); paid events stay **pending** until staff marks paid
+- Public registration — individual RSVP or team events (e.g. 4-person scramble); paid events only appear on the roster after Stripe confirms payment (abandoned checkouts are dropped)
 - Staff admin (`/admin`) to create/edit events, view rosters, and confirm payment
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.
@@ -126,7 +126,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Event dates format in `America/Chicago`
 - Her Story: Maddy’s bio (Herculaneum High, sports, sister Lydia) + day-on-the-green invite; purpose = scholarships (Herculaneum & DeSoto)
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
-- Stripe: Checkout on paid registration + `/api/stripe/webhook` confirms roster (needs real `pk_`/`sk_`/`whsec_` in Vercel — empty placeholders won’t work)
+- Stripe: Checkout on paid registration + `/api/stripe/webhook` confirms roster; unpaid drafts are deleted on cancel/expire and never shown in admin
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 

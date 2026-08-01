@@ -230,10 +230,11 @@ export function RegisterForm({
         >
           <h2 className="font-display text-2xl text-ink">One more step</h2>
           <p className="mt-3 break-words text-ink/75">
-            Thanks, {first}. Your team details for{" "}
-            <span className="font-medium text-ink">{eventTitle}</span> are saved,
-            but registration isn&apos;t complete until we receive{" "}
-            <strong className="text-ink">{feeLabel}</strong>.
+            Thanks, {first}. Complete payment of{" "}
+            <strong className="text-ink">{feeLabel}</strong> for{" "}
+            <span className="font-medium text-ink">{eventTitle}</span> to finish
+            registration. If you leave without paying, your details are not kept
+            — you&apos;ll need to fill the form again.
           </p>
           {paypalLink ? (
             <a
@@ -246,13 +247,12 @@ export function RegisterForm({
             </a>
           ) : (
             <p className="mt-6 text-sm text-muted">
-              Online payment is being set up. We&apos;ll follow up by email with
-              how to pay {feeLabel} and confirm your spot.
+              Online checkout couldn&apos;t be started. Try submitting the form
+              again, or email us if this keeps happening.
             </p>
           )}
           <p className="mt-4 text-sm text-muted">
-            After you pay, staff will mark your team confirmed. Keep this email
-            handy: {email.trim()}.
+            Keep this email handy once you&apos;ve paid: {email.trim()}.
           </p>
           <Link
             href={`/events/${eventSlug}`}

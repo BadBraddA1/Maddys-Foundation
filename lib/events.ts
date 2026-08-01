@@ -195,9 +195,10 @@ export type RegistrationRow = {
 }
 
 export async function listRegistrations(eventId: number): Promise<RegistrationRow[]> {
+  // Only paid / confirmed rows — abandoned checkouts are deleted, not listed.
   const rows = await sql`
     SELECT * FROM registrations
-    WHERE event_id = ${eventId}
+    WHERE event_id = ${eventId} AND status = 'confirmed' AND paid = 1
     ORDER BY created_at DESC
   `
   return rows.map((row) => ({

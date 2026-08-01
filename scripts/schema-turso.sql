@@ -35,12 +35,16 @@ CREATE TABLE IF NOT EXISTS registrations (
   notes TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'confirmed',
   paid INTEGER NOT NULL DEFAULT 0,
+  stripe_checkout_session_id TEXT,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   UNIQUE (event_id, email)
 );
 
 CREATE INDEX IF NOT EXISTS idx_registrations_event
   ON registrations (event_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_registrations_stripe_session
+  ON registrations (stripe_checkout_session_id);
 
 CREATE TABLE IF NOT EXISTS audit_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

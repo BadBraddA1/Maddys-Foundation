@@ -54,7 +54,8 @@ Optional later:
    - Canonical later: `https://maddysfoundation.org/api/stripe/webhook`
 3. Subscribe at least to:
    - `checkout.session.completed`
-   - `payment_intent.succeeded` (if we use Payment Intents)
+   - `checkout.session.expired` (drops unpaid registration drafts)
+   - `checkout.session.async_payment_failed` (optional)
    - `charge.refunded` (optional)
 4. After create → **Reveal** signing secret → `STRIPE_WEBHOOK_SECRET`
 

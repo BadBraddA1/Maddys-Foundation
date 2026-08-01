@@ -34,7 +34,7 @@ export default async function RegistrationsPage({ params }: Props) {
       </p>
 
       {rows.length === 0 ? (
-        <p className="mt-10 text-muted">No registrations yet.</p>
+        <p className="mt-10 text-muted">No paid registrations yet.</p>
       ) : (
         <>
           {/* Phone: stacked records — table is awkward under ~640px */}
