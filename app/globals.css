@@ -15,6 +15,9 @@
   --accent-soft: oklch(0.94 0.04 88);
   --deep: oklch(0.28 0.06 150);
   --deep-mid: oklch(0.36 0.055 148);
+  /* Cool fog for photo hero chrome (header scrim / bottom wash) — not fairway green. */
+  --hero-veil: oklch(0.27 0.035 250);
+  --hero-veil-mid: oklch(0.34 0.03 245);
   --on-deep: oklch(0.97 0.015 95);
   --on-deep-muted: oklch(0.9 0.02 90);
   --on-deep-faint: oklch(0.78 0.025 100);
@@ -59,6 +62,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-deep: var(--deep);
   --color-deep-mid: var(--deep-mid);
+  --color-hero-veil: var(--hero-veil);
+  --color-hero-veil-mid: var(--hero-veil-mid);
   --color-on-deep: var(--on-deep);
   --color-on-deep-muted: var(--on-deep-muted);
   --color-on-deep-faint: var(--on-deep-faint);

@@ -14,8 +14,9 @@ Fairway green chrome with soft gold warmth: hero/footer in golf-course green, pa
 | Accent | `--accent` | `oklch(0.72 0.12 80)` | Soft gold CTAs, focus, selection |
 | Accent ink | `--accent-ink` | `oklch(0.28 0.05 70)` | Text on accent (≥4.5:1) |
 | Accent soft | `--accent-soft` | `oklch(0.94 0.04 88)` | Quiet section wash |
-| Deep (fairway) | `--deep` `--deep-mid` | hue ~148–150 | Hero/footer — golf green |
-| On-deep ramp | `--on-deep` … `--on-deep-faint` | warm off-white | Text/borders on deep (no raw `white/*`) |
+| Deep (fairway) | `--deep` `--deep-mid` | hue ~148–150 | Footer chrome — golf green |
+| Hero veil | `--hero-veil` | hue ~250 | Cool fog over the home photo (header scrim / bottom wash) — keeps the scroll header readable |
+| On-deep ramp | `--on-deep` … `--on-deep-faint` | warm off-white | Text/borders on deep & hero veil |
 | Danger / success | `--danger` `--success` (+ soft) | semantic | Errors & registration success |
 
 On soft-tinted panels (success/danger), secondary copy uses `text-ink/75` — not gray `muted` on a colored wash.

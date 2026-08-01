@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { BrandMark, PrimaryNav } from "@/components/site-nav"
 
 /**
- * Single fixed home chrome — scrim over the photo, solid after the hero leaves.
+ * Single fixed home chrome — cool scrim over the photo, solid after the hero leaves.
  * One nav tree; padding stays stable so the bar doesn’t jump when it solidifies.
  */
 export function HeroHeaderChrome() {
@@ -18,17 +18,29 @@ export function HeroHeaderChrome() {
       return () => window.cancelAnimationFrame(enter)
     }
 
+    const update = () => {
+      const bottom = hero.getBoundingClientRect().bottom
+      setPastHero(bottom <= 0)
+    }
+
+    update()
+
     const io = new IntersectionObserver(
-      ([entry]) => {
-        setPastHero(entry.boundingClientRect.bottom <= 0)
+      () => {
+        update()
       },
-      { threshold: [0, 1] },
+      { threshold: [0, 0.01, 1] },
     )
     io.observe(hero)
+
+    window.addEventListener("scroll", update, { passive: true })
+    window.addEventListener("resize", update)
 
     return () => {
       window.cancelAnimationFrame(enter)
       io.disconnect()
+      window.removeEventListener("scroll", update)
+      window.removeEventListener("resize", update)
     }
   }, [])
 
@@ -44,12 +56,12 @@ export function HeroHeaderChrome() {
         className={
           pastHero
             ? "hero-header-bar-inner relative border-b border-line bg-surface"
-            : "hero-header-bar-inner relative border-b border-transparent"
+            : "hero-header-bar-inner relative border-b border-transparent bg-transparent"
         }
       >
         {!pastHero ? (
           <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-deep/75 from-30% via-deep/35 to-transparent"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-hero-veil/80 from-25% via-hero-veil/40 to-transparent"
             aria-hidden="true"
           />
         ) : null}
