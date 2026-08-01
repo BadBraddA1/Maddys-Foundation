@@ -1,6 +1,6 @@
 "use client"
 
-import { useLayoutEffect, useRef } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { PublicSponsor } from "@/lib/sponsors"
 
 /** Must match `.sponsor-marquee-track` animation duration in globals.css */
@@ -45,21 +45,77 @@ function SponsorMark({ sponsor }: { sponsor: PublicSponsor }) {
   )
 }
 
-/** Infinite horizontal sponsor strip for the footer. */
+/**
+ * Infinite horizontal sponsor strip.
+ * Duplicates the logo set until each animation half fills the viewport
+ * (so few sponsors don’t leave a blank right half of the screen).
+ */
 export function SponsorMarquee({ sponsors }: Props) {
+  const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
+  /** How many copies of the full sponsor list are in the track (always even ≥ 2). */
+  const [copies, setCopies] = useState(4)
 
-  // Wall-clock phase so remounts (nav / refresh) land mid-loop, not at 0.
+  const loop = useMemo(() => {
+    if (sponsors.length === 0) return []
+    const out: PublicSponsor[] = []
+    for (let c = 0; c < copies; c++) out.push(...sponsors)
+    return out
+  }, [sponsors, copies])
+
   useLayoutEffect(() => {
-    const el = trackRef.current
-    if (!el) return
-    const offsetMs = Date.now() % SPONSOR_MARQUEE_DURATION_MS
-    el.style.animationDelay = `-${offsetMs}ms`
-  }, [])
+    if (sponsors.length === 0) return
+    const viewport = viewportRef.current
+    const track = trackRef.current
+    if (!viewport || !track) return
+
+    let cancelled = false
+
+    const measureAndFill = () => {
+      if (cancelled) return
+      const kids = track.children
+      if (kids.length < sponsors.length) return
+
+      let setWidth = 0
+      for (let i = 0; i < sponsors.length; i++) {
+        setWidth += (kids[i] as HTMLElement).offsetWidth
+      }
+      if (setWidth <= 0) return
+
+      // One animation half must cover the viewport; track = 2 halves (−50% keyframes).
+      const setsPerHalf = Math.max(1, Math.ceil(viewport.clientWidth / setWidth))
+      const nextCopies = setsPerHalf * 2
+      setCopies((prev) => (prev === nextCopies ? prev : nextCopies))
+    }
+
+    const syncClock = () => {
+      if (cancelled || !trackRef.current) return
+      const offsetMs = Date.now() % SPONSOR_MARQUEE_DURATION_MS
+      trackRef.current.style.animationDelay = `-${offsetMs}ms`
+    }
+
+    measureAndFill()
+    syncClock()
+
+    const onResize = () => {
+      measureAndFill()
+      syncClock()
+    }
+    window.addEventListener("resize", onResize)
+
+    // Logos loading can change widths.
+    const imgs = track.querySelectorAll("img")
+    imgs.forEach((img) => {
+      if (!img.complete) img.addEventListener("load", measureAndFill, { once: true })
+    })
+
+    return () => {
+      cancelled = true
+      window.removeEventListener("resize", onResize)
+    }
+  }, [sponsors, copies])
 
   if (sponsors.length === 0) return null
-
-  const loop = [...sponsors, ...sponsors]
 
   return (
     <div className="border-b border-on-deep-border">
@@ -68,7 +124,10 @@ export function SponsorMarquee({ sponsors }: Props) {
           Sponsors
         </p>
       </div>
-      <div className="sponsor-marquee relative mt-3 overflow-hidden pb-5">
+      <div
+        ref={viewportRef}
+        className="sponsor-marquee relative mt-3 overflow-hidden pb-5"
+      >
         <div
           ref={trackRef}
           className="sponsor-marquee-track flex w-max items-center"
