@@ -60,23 +60,14 @@ export default async function HomePage() {
       </section>
 
       <main id="main">
-      <section className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-6 md:px-8 md:py-20">
+      <section className="mx-auto w-full max-w-6xl px-5 py-[3.7rem] sm:px-6 md:px-8">
         <div className="prose-measure max-w-2xl">
           <h2 className="font-display">Our purpose</h2>
-          <p className="mt-4 text-muted text-lg">
+          <p className="mt-4 text-lg text-muted">
             Continue to spread joy and light to others in their darkest moments —
             the same heart Maddy showed while fighting her own battles.
           </p>
-        </div>
-        <div className="mt-12 grid gap-10 md:grid-cols-2">
-          <blockquote className="border-t border-line pt-6 font-display text-2xl leading-snug text-ink md:text-3xl">
-            And we know that in all things God works for the good of those who
-            love Him…
-            <cite className="mt-4 block font-sans text-sm font-medium not-italic text-muted">
-              Romans 8:28
-            </cite>
-          </blockquote>
-          <div className="flex flex-col justify-end gap-1">
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-1">
             <Link
               href="/donate"
               className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline decoration-accent/70 underline-offset-4"
@@ -90,6 +81,15 @@ export default async function HomePage() {
               Read Maddy&apos;s story →
             </Link>
           </div>
+        </div>
+        <div className="mt-12 -mx-5 bg-accent-soft/40 px-5 py-10 sm:-mx-6 sm:px-6 md:mx-0 md:px-8">
+          <blockquote className="prose-measure mx-auto max-w-3xl text-center font-display text-2xl leading-snug text-ink">
+            And we know that in all things God works for the good of those who
+            love Him…
+            <cite className="mt-4 block font-sans text-sm font-medium not-italic text-muted">
+              Romans 8:28
+            </cite>
+          </blockquote>
         </div>
       </section>
 
