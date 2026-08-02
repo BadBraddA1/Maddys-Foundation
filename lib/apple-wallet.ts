@@ -43,6 +43,9 @@ const PASS_IMAGE_NAMES = [
   "logo.png",
   "logo@2x.png",
   "logo@3x.png",
+  "strip.png",
+  "strip@2x.png",
+  "strip@3x.png",
 ] as const
 
 /** Prebuilt under public/brand/wallet/ so Vercel never needs the sharp native binary. */
@@ -57,6 +60,40 @@ async function passImages(): Promise<Record<string, Buffer>> {
   return Object.fromEntries(entries)
 }
 
+/** Compact front-face copy — Wallet truncates long secondary values with “…”. */
+export function walletFrontWhen(iso: string, fallbackLabel: string): string {
+  const d = new Date(toEventIso(iso))
+  if (Number.isNaN(d.getTime())) {
+    return clipPassText(fallbackLabel, 22)
+  }
+  return d.toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
+
+/** Venue name only (drop street) so WHERE stays readable on the face. */
+export function walletFrontWhere(location: string): string {
+  const raw = location.trim()
+  if (!raw) return "See back"
+  const venue = raw.split(",")[0]?.trim() || raw
+  return clipPassText(venue, 24)
+}
+
+function clipPassText(value: string, max: number): string {
+  const t = value.trim()
+  if (t.length <= max) return t
+  return `${t.slice(0, Math.max(1, max - 1)).trimEnd()}…`
+}
+
+function walletFrontTitle(title: string): string {
+  return clipPassText(title, 28)
+}
+
 function venueFor(input: WalletPassInput) {
   const lat =
     input.venueLatitude != null && Number.isFinite(input.venueLatitude)
@@ -67,7 +104,7 @@ function venueFor(input: WalletPassInput) {
       ? input.venueLongitude
       : DEFAULT_VENUE.longitude
   const relevantText = input.eventLocation.trim()
-    ? `${input.eventLocation.trim()} nearby`
+    ? `${walletFrontWhere(input.eventLocation)} nearby`
     : DEFAULT_VENUE.relevantText
   return { latitude: lat, longitude: lng, relevantText }
 }
@@ -135,19 +172,19 @@ export async function buildTicketPkpass(
   pass.primaryFields.push({
     key: "event",
     label: "EVENT",
-    value: input.eventTitle,
+    value: walletFrontTitle(input.eventTitle),
   })
 
   pass.secondaryFields.push(
     {
       key: "when",
       label: "WHEN",
-      value: input.eventWhenLabel,
+      value: walletFrontWhen(input.eventStartsAt, input.eventWhenLabel),
     },
     {
       key: "where",
       label: "WHERE",
-      value: input.eventLocation || "See event page",
+      value: walletFrontWhere(input.eventLocation),
     },
   )
 
@@ -155,16 +192,26 @@ export async function buildTicketPkpass(
     {
       key: "team",
       label: "TEAM",
-      value: input.teamName,
+      value: clipPassText(input.teamName, 18),
     },
     {
       key: "holder",
       label: input.holderLabel,
-      value: input.holderName,
+      value: clipPassText(input.holderName, 18),
     },
   )
 
   pass.backFields.push(
+    {
+      key: "when_full",
+      label: "When",
+      value: input.eventWhenLabel,
+    },
+    {
+      key: "where_full",
+      label: "Where",
+      value: input.eventLocation || "See event page",
+    },
     {
       key: "instructions",
       label: "Check-in",
