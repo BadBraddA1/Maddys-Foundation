@@ -3,7 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AddToAppleWallet } from "@/components/add-to-apple-wallet"
 import { TicketCaptainShare } from "@/components/ticket-captain-share"
-import { appleWalletConfigured } from "@/lib/apple-wallet"
+import { appleWalletConfigured } from "@/lib/apple-wallet-config"
 import { siteName } from "@/lib/site-metadata"
 import { getPublicTicketByCode } from "@/lib/ticket"
 

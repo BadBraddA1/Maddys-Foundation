@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AddToAppleWallet } from "@/components/add-to-apple-wallet"
-import { appleWalletConfigured } from "@/lib/apple-wallet"
+import { appleWalletConfigured } from "@/lib/apple-wallet-config"
 import { siteName } from "@/lib/site-metadata"
 import { getPublicPlayerTicketByCode } from "@/lib/ticket"
 

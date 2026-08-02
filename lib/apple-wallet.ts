@@ -1,12 +1,17 @@
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { PKPass } from "passkit-generator"
-import sharp from "sharp"
+import {
+  appleWalletConfigured,
+  appleWalletEnvPems,
+} from "@/lib/apple-wallet-config"
 import { ticketUrlForCode } from "@/lib/registration-emails"
 import { siteName } from "@/lib/site-metadata"
 import { publicSiteUrl } from "@/lib/stripe"
 import { playerTicketUrlForCode } from "@/lib/ticket"
 import { toEventIso } from "@/lib/event-helpers"
+
+export { appleWalletConfigured } from "@/lib/apple-wallet-config"
 
 /** Oak Valley Golf Course & Resort, Pevely MO — default relevance pin. */
 export const DEFAULT_VENUE = {
@@ -31,66 +36,25 @@ export type WalletPassInput = {
   venueLongitude?: number | null
 }
 
-function envPem(name: string): string | null {
-  const raw = process.env[name]?.trim()
-  if (!raw) return null
-  // Support base64-encoded PEMs (handy for Vercel) or literal PEM with \n escapes.
-  if (!raw.includes("BEGIN")) {
-    try {
-      return Buffer.from(raw, "base64").toString("utf8")
-    } catch {
-      return null
-    }
-  }
-  return raw.replace(/\\n/g, "\n")
-}
+const PASS_IMAGE_NAMES = [
+  "icon.png",
+  "icon@2x.png",
+  "icon@3x.png",
+  "logo.png",
+  "logo@2x.png",
+  "logo@3x.png",
+] as const
 
-export function appleWalletConfigured(): boolean {
-  return Boolean(
-    process.env.APPLE_WALLET_PASS_TYPE_ID?.trim() &&
-      process.env.APPLE_WALLET_TEAM_ID?.trim() &&
-      envPem("APPLE_WALLET_WWDR") &&
-      envPem("APPLE_WALLET_SIGNER_CERT") &&
-      envPem("APPLE_WALLET_SIGNER_KEY"),
-  )
-}
-
+/** Prebuilt under public/brand/wallet/ so Vercel never needs the sharp native binary. */
 async function passImages(): Promise<Record<string, Buffer>> {
-  const logoPath = join(process.cwd(), "public/brand/logo.jpg")
-  const src = await readFile(logoPath)
-  const square = await sharp(src)
-    .rotate()
-    .resize(512, 512, { fit: "cover" })
-    .png()
-    .toBuffer()
-
-  const mk = (size: number) =>
-    sharp(square).resize(size, size, { fit: "cover" }).png().toBuffer()
-
-  const logoW = async (w: number, h: number) =>
-    sharp(src)
-      .rotate()
-      .resize(w, h, { fit: "contain", background: { r: 28, g: 61, b: 50, alpha: 1 } })
-      .png()
-      .toBuffer()
-
-  const [icon, icon2x, icon3x, logo, logo2x, logo3x] = await Promise.all([
-    mk(29),
-    mk(58),
-    mk(87),
-    logoW(160, 50),
-    logoW(320, 100),
-    logoW(480, 150),
-  ])
-
-  return {
-    "icon.png": icon,
-    "icon@2x.png": icon2x,
-    "icon@3x.png": icon3x,
-    "logo.png": logo,
-    "logo@2x.png": logo2x,
-    "logo@3x.png": logo3x,
-  }
+  const dir = join(process.cwd(), "public/brand/wallet")
+  const entries = await Promise.all(
+    PASS_IMAGE_NAMES.map(async (name) => {
+      const buf = await readFile(join(dir, name))
+      return [name, buf] as const
+    }),
+  )
+  return Object.fromEntries(entries)
 }
 
 function venueFor(input: WalletPassInput) {
@@ -115,13 +79,14 @@ export async function buildTicketPkpass(
     throw new Error("Apple Wallet is not configured")
   }
 
-  const passTypeIdentifier = process.env.APPLE_WALLET_PASS_TYPE_ID!.trim()
-  const teamIdentifier = process.env.APPLE_WALLET_TEAM_ID!.trim()
-  const wwdr = envPem("APPLE_WALLET_WWDR")!
-  const signerCert = envPem("APPLE_WALLET_SIGNER_CERT")!
-  const signerKey = envPem("APPLE_WALLET_SIGNER_KEY")!
-  const signerKeyPassphrase =
-    process.env.APPLE_WALLET_SIGNER_KEY_PASSPHRASE?.trim() || undefined
+  const {
+    passTypeIdentifier,
+    teamIdentifier,
+    wwdr,
+    signerCert,
+    signerKey,
+    signerKeyPassphrase,
+  } = appleWalletEnvPems()
 
   const ticketUrl =
     input.kind === "player"

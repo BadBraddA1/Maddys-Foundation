@@ -203,6 +203,8 @@ openssl x509 -inform DER -in AppleWWDRCAG4.cer -out wwdr.pem
 
 Without these env vars the button shows a “not configured yet” note and `/ticket/…/wallet` returns 503.
 
+Pass icons/logos are prebuilt in `public/brand/wallet/` (regenerate locally with sharp if the brand mark changes). Ticket pages must not import `sharp` — it breaks Vercel’s linux runtime and turns the ticket URL into a blank 500 (custom `app/not-found.tsx` only covers real 404s).
+
 ## Registration email (ops)
 
 1. Create a Resend API key; set `RESEND_API_KEY` + `EMAIL_FROM` on Vercel (Production). Until the custom domain is verified, use Resend’s onboarding from-address.
