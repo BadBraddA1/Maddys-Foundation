@@ -36,6 +36,8 @@ export type WalletPassInput = {
   venueLongitude?: number | null
 }
 
+// No strip.png — gradient strips band on OLED and look “chunky.” Solid
+// backgroundColor is the smoothest face Apple allows for third-party passes.
 const PASS_IMAGE_NAMES = [
   "icon.png",
   "icon@2x.png",
@@ -43,9 +45,6 @@ const PASS_IMAGE_NAMES = [
   "logo.png",
   "logo@2x.png",
   "logo@3x.png",
-  "strip.png",
-  "strip@2x.png",
-  "strip@3x.png",
 ] as const
 
 /** Prebuilt under public/brand/wallet/ so Vercel never needs the sharp native binary. */

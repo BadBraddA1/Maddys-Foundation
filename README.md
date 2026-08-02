@@ -203,9 +203,9 @@ openssl x509 -inform DER -in AppleWWDRCAG4.cer -out wwdr.pem
 
 Without these env vars the button shows a “not configured yet” note and `/ticket/…/wallet` returns 503.
 
-Pass icons/logos/strip are prebuilt in `public/brand/wallet/` from `public/brand/maddy-wallet-logo-color.png` (regenerate locally with sharp if the brand mark changes). Ticket pages must not import `sharp` — it breaks Vercel’s linux runtime and turns the ticket URL into a blank 500 (custom `app/not-found.tsx` only covers real 404s).
+Pass icons/logos are prebuilt in `public/brand/wallet/` from `public/brand/maddy-wallet-logo-color.png` (regenerate locally with sharp if the brand mark changes). Ticket pages must not import `sharp` — it breaks Vercel’s linux runtime and turns the ticket URL into a blank 500 (custom `app/not-found.tsx` only covers real 404s).
 
-Front-face WHEN/WHERE/title are shortened on purpose (Wallet truncates long fields); full date and address stay on the pass back. Apple does **not** allow third-party passes to have a motion/holographic sheen that tracks the phone — that effect is Apple-only. The strip uses a soft, low-contrast glow (not a hard diagonal band).
+Front-face WHEN/WHERE/title are shortened on purpose (Wallet truncates long fields); full date and address stay on the pass back. Apple does **not** allow third-party passes to have a motion/holographic sheen that tracks the phone — that effect is Apple-only. We skip strip images entirely so the face stays a smooth solid green (gradient strips band on phone screens).
 
 ## Registration email (ops)
 
