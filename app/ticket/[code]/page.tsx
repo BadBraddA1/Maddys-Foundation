@@ -2,8 +2,10 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AddToAppleWallet } from "@/components/add-to-apple-wallet"
+import { AddToGoogleWallet } from "@/components/add-to-google-wallet"
 import { TicketCaptainShare } from "@/components/ticket-captain-share"
 import { appleWalletConfigured } from "@/lib/apple-wallet-config"
+import { googleWalletConfigured } from "@/lib/google-wallet-config"
 import { siteName } from "@/lib/site-metadata"
 import { getPublicTicketByCode } from "@/lib/ticket"
 
@@ -66,6 +68,10 @@ export default async function TicketPage({ params }: Props) {
         <AddToAppleWallet
           enabled={appleWalletConfigured()}
           href={`/ticket/${encodeURIComponent(ticket.code)}/wallet`}
+        />
+        <AddToGoogleWallet
+          enabled={googleWalletConfigured()}
+          href={`/ticket/${encodeURIComponent(ticket.code)}/google-wallet`}
         />
       </div>
 

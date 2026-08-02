@@ -207,6 +207,29 @@ Pass icons/logos are prebuilt in `public/brand/wallet/` from `public/brand/maddy
 
 Front-face WHEN/WHERE/title are shortened on purpose (Wallet truncates long fields); full date and address stay on the pass back. Apple does **not** allow third-party passes to have a motion/holographic sheen that tracks the phone — that effect is Apple-only. We skip strip images entirely so the face stays a smooth solid green (gradient strips band on phone screens).
 
+## Google Wallet (ops)
+
+Same ticket pages offer **Add to Google Wallet** (Android / Google account). Saves an event ticket whose QR matches the desk scan URL.
+
+### One-time Google setup
+
+1. [Pay & Wallet Console](https://pay.google.com/business/console) → create an **Issuer** (demo mode is fine to start). Copy the numeric **Issuer ID**.
+2. GCP project with **Google Wallet API** enabled + a **service account** JSON key.
+3. Console → **Users** → invite the service account email as **Admin** or **Developer**.
+4. In demo mode, add your personal Gmail under **test users** or you won’t be able to save passes.
+5. Env on Vercel / `.env.local`:
+
+| Var | Value |
+| --- | --- |
+| `GOOGLE_WALLET_ISSUER_ID` | e.g. `3388000000023179216` |
+| `GOOGLE_WALLET_CLASS_SUFFIX` | base id, e.g. `mrf_event_ticket` (we append event slug) |
+| `GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL` | `…@….iam.gserviceaccount.com` |
+| `GOOGLE_WALLET_SERVICE_ACCOUNT_KEY` | full service-account JSON (or base64 of the file) |
+
+6. Redeploy. Ticket pages → **Add to Google Wallet** → `/ticket/…/google-wallet` redirects to `pay.google.com/gp/v/save/…`.
+
+Request production access in the Wallet console when you’re ready for public (non–test-user) saves.
+
 ## Registration email (ops)
 
 1. Create a Resend API key; set `RESEND_API_KEY` + `EMAIL_FROM` on Vercel (Production). Until the custom domain is verified, use Resend’s onboarding from-address.
@@ -232,6 +255,7 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 ## Useful paths
 
 - Apple Wallet: team/player tickets offer **Add to Apple Wallet** (`.pkpass`) when Pass Type ID certs are configured; QR on the pass matches desk scan URLs; location relevance defaults to Oak Valley Pevely (override per event with venue lat/lng)
+- Google Wallet: same tickets offer **Add to Google Wallet** when Issuer ID + service account are configured (`/ticket/…/google-wallet` → signed save link); demo mode needs your Google account as a test user
 - Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/ticket/[code]/wallet` `/ticket/p/[code]` `/ticket/p/[code]/wallet` `/gallery` `/donate` `/privacy`
 - Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations` `/admin/events/[id]/registrations/new` `/admin/events/[id]/registrations/[registrationId]`
 - API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `/api/cron/registration-reminders`

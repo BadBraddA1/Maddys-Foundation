@@ -2,7 +2,9 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AddToAppleWallet } from "@/components/add-to-apple-wallet"
+import { AddToGoogleWallet } from "@/components/add-to-google-wallet"
 import { appleWalletConfigured } from "@/lib/apple-wallet-config"
+import { googleWalletConfigured } from "@/lib/google-wallet-config"
 import { siteName } from "@/lib/site-metadata"
 import { getPublicPlayerTicketByCode } from "@/lib/ticket"
 
@@ -74,6 +76,10 @@ export default async function PlayerTicketPage({ params }: Props) {
         <AddToAppleWallet
           enabled={appleWalletConfigured()}
           href={`/ticket/p/${encodeURIComponent(ticket.code)}/wallet`}
+        />
+        <AddToGoogleWallet
+          enabled={googleWalletConfigured()}
+          href={`/ticket/p/${encodeURIComponent(ticket.code)}/google-wallet`}
         />
       </div>
 
