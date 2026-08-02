@@ -100,7 +100,10 @@ function clipPassText(value: string, max: number): string {
 }
 
 function walletFrontTitle(title: string): string {
-  return clipPassText(title, 28)
+  // Event-ticket primary field is short; prefer a scramble-friendly label.
+  const t = title.trim()
+  if (/golf\s*scramble/i.test(t)) return "Golf Scramble"
+  return clipPassText(t, 22)
 }
 
 function venueFor(input: WalletPassInput) {
