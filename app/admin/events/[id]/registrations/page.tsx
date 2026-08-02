@@ -54,17 +54,29 @@ export default async function RegistrationsPage({ params }: Props) {
           : ""}
       </p>
 
-      <ReleaseHoldsButton eventId={event.id} heldCount={holds.total} />
-      {isTeamEvent(event) ? <SyncPlayersButton eventId={event.id} /> : null}
-
-      <p className="mt-4">
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          href={`/admin/events/${event.id}/registrations/new`}
+          className="btn-deep inline-flex min-h-11 items-center px-5 text-sm font-medium"
+        >
+          Add registration
+        </Link>
         <Link
           href={`/admin/check-in?eventId=${event.id}`}
-          className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
+          className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
         >
           Day-of check-in desk
         </Link>
-      </p>
+        <Link
+          href={`/admin/events/${event.id}`}
+          className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
+        >
+          Edit event
+        </Link>
+      </div>
+
+      <ReleaseHoldsButton eventId={event.id} heldCount={holds.total} />
+      {isTeamEvent(event) ? <SyncPlayersButton eventId={event.id} /> : null}
       {rows.length === 0 ? (
         <p className="mt-10 text-muted">
           No paid {capacityUnitLabel(event)} yet.
@@ -119,6 +131,12 @@ export default async function RegistrationsPage({ params }: Props) {
                   </p>
                 ) : null}
                 <div className="mt-3 flex flex-col gap-1">
+                  <Link
+                    href={`/admin/events/${event.id}/registrations/${row.id}`}
+                    className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
+                  >
+                    Edit roster
+                  </Link>
                   <ConfirmRegistrationButton
                     eventId={event.id}
                     registrationId={row.id}
@@ -169,6 +187,12 @@ export default async function RegistrationsPage({ params }: Props) {
                     </td>
                     <td className="py-3">
                       <div className="flex flex-col gap-1">
+                        <Link
+                          href={`/admin/events/${event.id}/registrations/${row.id}`}
+                          className="inline-flex min-h-11 items-center font-medium underline underline-offset-4"
+                        >
+                          Edit
+                        </Link>
                         <ConfirmRegistrationButton
                           eventId={event.id}
                           registrationId={row.id}

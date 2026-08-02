@@ -7,7 +7,7 @@ Public foundation site + custom event registration for **maddysfoundation.org** 
 - Marketing site (home, Maddy’s story, donate, privacy, **gallery**)
 - Published events list + detail pages (Google / Apple Maps links from location)
 - Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set; opening the register form **reserves a capacity slot** for **10 minutes** (assumes they’ll pay); unpaid / expired holds return to the pool; roster only shows paid teams
-- Staff admin (`/admin`) to create/edit events, view rosters, confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), and **gallery** photos
+- Staff admin (`/admin`) to create/edit/delete events, **add/edit/delete roster registrations** (and team player lists), confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), and **gallery** photos
 - Footer sponsor logo strip (scrolling) fed from Turso + R2; lives in the root layout (won’t remount on nav); rAF wall-clock position; duplicates logos until the track fills the viewport
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.
@@ -146,6 +146,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); **player QR auto check-in**; `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
 - Registration email: confirmation on paid confirm (Stripe webhook + admin Mark paid) via Resend; team ticket `/ticket/[code]` (captain enters teammate emails → personal `/ticket/p/[code]` QRs); daily cron (`vercel.json` 14:00 UTC) sends a 7-day teammate reminder; roster/check-in can **Resend confirmation**
 - Admin events: create / edit / **delete** + optional cover image URL for event OG cards
+- Admin roster: **Add registration**, **Edit roster** (captain + player names/emails), **Delete registration** on `/admin/events/[id]/registrations`
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
 - Gallery: `/admin/gallery` uploads photos to R2 (optional **event tag**); public `/gallery` filters by event (`?event=slug`)
 - Site palette: fairway green hero/footer + soft gold accent (warm off-white page)
@@ -191,5 +192,5 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 ## Useful paths
 
 - Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/ticket/p/[code]` `/gallery` `/donate` `/privacy`
-- Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations`
+- Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations` `/admin/events/[id]/registrations/new` `/admin/events/[id]/registrations/[registrationId]`
 - API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `/api/cron/registration-reminders`
