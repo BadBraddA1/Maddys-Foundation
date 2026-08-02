@@ -155,7 +155,7 @@ export async function buildTicketPkpass(
     foregroundColor: "rgb(244, 241, 232)",
     backgroundColor: "rgb(28, 61, 50)",
     labelColor: "rgb(201, 168, 74)",
-    logoText: "Maddy’s",
+    // No logoText — header is just the circular badge over the solid pass green.
     sharingProhibited: false,
   }
 
