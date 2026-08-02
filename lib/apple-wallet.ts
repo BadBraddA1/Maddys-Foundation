@@ -62,18 +62,27 @@ async function passImages(): Promise<Record<string, Buffer>> {
 
 /** Compact front-face copy — Wallet truncates long secondary values with “…”. */
 export function walletFrontWhen(iso: string, fallbackLabel: string): string {
-  const d = new Date(toEventIso(iso))
-  if (Number.isNaN(d.getTime())) {
-    return clipPassText(fallbackLabel, 22)
-  }
-  return d.toLocaleDateString("en-US", {
-    timeZone: "America/Chicago",
+  // Event times in Turso are America/Chicago wall clocks without a zone.
+  // Don't append Z / shift to UTC or the pass shows the wrong hour.
+  const m = iso
+    .trim()
+    .match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::\d{2})?)?/)
+  if (!m) return clipPassText(fallbackLabel, 22)
+  const year = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+  const hour = Number(m[4] ?? 0)
+  const minute = Number(m[5] ?? 0)
+  const weekday = new Date(year, month - 1, day).toLocaleDateString("en-US", {
     weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
   })
+  const monthShort = new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+  })
+  const hour12 = ((hour + 11) % 12) + 1
+  const ampm = hour >= 12 ? "PM" : "AM"
+  const mm = String(minute).padStart(2, "0")
+  return `${weekday}, ${monthShort} ${day}, ${hour12}:${mm} ${ampm}`
 }
 
 /** Venue name only (drop street) so WHERE stays readable on the face. */
