@@ -21,6 +21,7 @@ type Body = {
   close_at?: string | null
   fee_cents?: number
   team_size?: number | null
+  cover_image_url?: string | null
 }
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -57,12 +58,18 @@ export async function PATCH(req: Request, ctx: Ctx) {
     (body.slug?.trim() && slugify(body.slug)) || existing.slug
 
   try {
+    const cover =
+      body.cover_image_url !== undefined
+        ? body.cover_image_url?.trim() || null
+        : existing.cover_image_url
+
     await sql.execute(
       `UPDATE events SET
         slug = ?, title = ?, summary = ?, description = ?, location = ?,
         starts_at = ?, ends_at = ?, capacity = ?, is_published = ?,
         registration_open = ?, open_at = ?, close_at = ?, fee_cents = ?,
-        team_size = ?, paypal_link = NULL, updated_at = CURRENT_TIMESTAMP
+        team_size = ?, cover_image_url = ?, paypal_link = NULL,
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
       [
         slug,
@@ -87,6 +94,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
         body.close_at !== undefined ? body.close_at : existing.close_at,
         body.fee_cents !== undefined ? body.fee_cents : existing.fee_cents,
         body.team_size !== undefined ? body.team_size : existing.team_size,
+        cover,
         id,
       ],
     )
@@ -122,10 +130,19 @@ export async function DELETE(_req: Request, ctx: Ctx) {
   }
 
   const existing = await getEventById(id)
-  const slug = existing?.slug
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+  const slug = existing.slug
+
+  // Explicit cleanup — Turso may not enforce FK cascades.
+  await sql.execute(`DELETE FROM check_in_history WHERE event_id = ?`, [id])
+  await sql.execute(`DELETE FROM event_players WHERE event_id = ?`, [id])
+  await sql.execute(`DELETE FROM capacity_holds WHERE event_id = ?`, [id])
+  await sql.execute(`DELETE FROM addon_prices WHERE event_id = ?`, [id])
   await sql.execute(`DELETE FROM registrations WHERE event_id = ?`, [id])
   await sql.execute(`DELETE FROM events WHERE id = ?`, [id])
-  await audit(admin.email, "delete_event", "event", String(id), "")
+  await audit(admin.email, "delete_event", "event", String(id), existing.title)
   revalidatePublicEvents(slug)
   return NextResponse.json({ ok: true })
 }

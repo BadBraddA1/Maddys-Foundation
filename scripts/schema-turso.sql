@@ -85,6 +85,11 @@ CREATE TABLE IF NOT EXISTS event_players (
   golf_cannon INTEGER NOT NULL DEFAULT 0,
   golf_pro INTEGER NOT NULL DEFAULT 0,
   addon_total_cents INTEGER NOT NULL DEFAULT 0,
+  /** Teammate email for personal ticket (captain may set after register). */
+  email TEXT NOT NULL DEFAULT '',
+  /** Per-player day-of QR code (e.g. OV-P-A3K9Q2). */
+  check_in_code TEXT,
+  ticket_email_sent_at TEXT,
   updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   UNIQUE (registration_id, sort_order)
 );
@@ -94,6 +99,14 @@ CREATE INDEX IF NOT EXISTS idx_event_players_event
 
 CREATE INDEX IF NOT EXISTS idx_event_players_registration
   ON event_players (registration_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_event_players_check_in_code
+  ON event_players (check_in_code);
+
+-- Existing DBs:
+-- ALTER TABLE event_players ADD COLUMN email TEXT NOT NULL DEFAULT '';
+-- ALTER TABLE event_players ADD COLUMN check_in_code TEXT;
+-- ALTER TABLE event_players ADD COLUMN ticket_email_sent_at TEXT;
 
 CREATE TABLE IF NOT EXISTS addon_prices (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -20,6 +20,11 @@ export type EventPlayer = {
   golf_cannon: number
   golf_pro: number
   addon_total_cents: number
+  /** Teammate email for personal ticket (may be empty until captain fills it). */
+  email: string
+  /** Per-player day-of QR (e.g. OV-P-A3K9Q2). */
+  check_in_code: string | null
+  ticket_email_sent_at: string | null
   updated_at: string
 }
 

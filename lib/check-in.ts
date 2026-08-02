@@ -2,6 +2,7 @@ import { sql } from "@/lib/db"
 import { audit } from "@/lib/audit"
 import {
   checkInPrefixFromSlug,
+  ensurePlayerCheckInCode,
   ensureRegistrationCheckInCode,
 } from "@/lib/check-in-code"
 import {
@@ -83,7 +84,57 @@ function mapPlayer(row: Record<string, unknown>): EventPlayer {
     golf_cannon: Number(row.golf_cannon ?? 0),
     golf_pro: Number(row.golf_pro ?? 0),
     addon_total_cents: Number(row.addon_total_cents ?? 0),
+    email: String(row.email ?? ""),
+    check_in_code: row.check_in_code ? String(row.check_in_code) : null,
+    ticket_email_sent_at: row.ticket_email_sent_at
+      ? String(row.ticket_email_sent_at)
+      : null,
     updated_at: String(row.updated_at ?? ""),
+  }
+}
+
+/** Best-effort ALTERs for DBs created before per-player tickets. */
+let playerColumnsReady: Promise<void> | null = null
+
+export function ensureEventPlayerTicketColumns(): Promise<void> {
+  if (!playerColumnsReady) {
+    playerColumnsReady = (async () => {
+      const alters = [
+        `ALTER TABLE event_players ADD COLUMN email TEXT NOT NULL DEFAULT ''`,
+        `ALTER TABLE event_players ADD COLUMN check_in_code TEXT`,
+        `ALTER TABLE event_players ADD COLUMN ticket_email_sent_at TEXT`,
+      ]
+      for (const q of alters) {
+        try {
+          await sql.execute(q, [])
+        } catch {
+          // column already exists
+        }
+      }
+      try {
+        await sql.execute(
+          `CREATE UNIQUE INDEX IF NOT EXISTS idx_event_players_check_in_code
+           ON event_players (check_in_code)`,
+          [],
+        )
+      } catch {
+        // index may fail if duplicate codes somehow exist
+      }
+    })()
+  }
+  return playerColumnsReady
+}
+
+async function ensurePlayerCodesForRegistration(
+  registrationId: number,
+  prefix: string,
+): Promise<void> {
+  await ensureEventPlayerTicketColumns()
+  const players = await listPlayersForRegistration(registrationId)
+  for (const p of players) {
+    if (!p.check_in_code) {
+      await ensurePlayerCheckInCode(p.id, prefix)
+    }
   }
 }
 
@@ -129,8 +180,9 @@ export async function syncPlayersForRegistration(
   registrationId: number,
   actor = "system",
 ): Promise<number> {
+  await ensureEventPlayerTicketColumns()
   const regs = await sql`
-    SELECT id, event_id, name, notes, team_name, status, paid
+    SELECT id, event_id, name, email, notes, team_name, status, paid
     FROM registrations WHERE id = ${registrationId} LIMIT 1
   `
   const reg = regs[0]
@@ -138,6 +190,11 @@ export async function syncPlayersForRegistration(
   if (Number(reg.paid) !== 1 && String(reg.status) !== "confirmed") return 0
 
   const eventId = Number(reg.event_id)
+  const eventRows = await sql`
+    SELECT slug FROM events WHERE id = ${eventId} LIMIT 1
+  `
+  const prefix = checkInPrefixFromSlug(String(eventRows[0]?.slug ?? "MF"))
+
   const parsed = parseRegistrationRoster(
     String(reg.notes ?? ""),
     String(reg.name ?? ""),
@@ -165,16 +222,36 @@ export async function syncPlayersForRegistration(
       ? parsed.players
       : [String(reg.name ?? "Player").trim()].filter(Boolean)
 
+  const captainEmail = String(reg.email ?? "").trim()
+
   for (let i = 0; i < names.length; i++) {
     if (byOrder.has(i)) continue
     await sql.execute(
       `INSERT INTO event_players
-        (event_id, registration_id, display_name, sort_order)
-       VALUES (?, ?, ?, ?)`,
-      [eventId, registrationId, names[i], i],
+        (event_id, registration_id, display_name, sort_order, email)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        eventId,
+        registrationId,
+        names[i],
+        i,
+        i === 0 ? captainEmail : "",
+      ],
     )
     created += 1
   }
+
+  // Prefill captain email on player 0 when still empty
+  if (captainEmail) {
+    await sql.execute(
+      `UPDATE event_players SET email = ?
+       WHERE registration_id = ? AND sort_order = 0
+         AND (email IS NULL OR email = '')`,
+      [captainEmail, registrationId],
+    )
+  }
+
+  await ensurePlayerCodesForRegistration(registrationId, prefix)
 
   if (created > 0) {
     await audit(
@@ -230,7 +307,7 @@ export async function ensureCheckInRosterForRegistration(
   opts?: { teamName?: string; playerNames?: string[] },
 ): Promise<void> {
   const regs = await sql`
-    SELECT id, event_id, name, notes, team_name, paid, status
+    SELECT id, event_id, name, email, notes, team_name, paid, status
     FROM registrations WHERE id = ${registrationId} LIMIT 1
   `
   const reg = regs[0]
@@ -261,6 +338,7 @@ export async function ensureCheckInRosterForRegistration(
   }
 
   await ensureAddonPrices(eventId)
+  await ensureEventPlayerTicketColumns()
 
   const names =
     opts?.playerNames && opts.playerNames.length > 0
@@ -270,16 +348,19 @@ export async function ensureCheckInRosterForRegistration(
         : [String(reg.name ?? "Player")]
 
   const existing = await listPlayersForRegistration(registrationId)
-  if (existing.length > 0) return
-
-  for (let i = 0; i < names.length; i++) {
-    await sql.execute(
-      `INSERT INTO event_players
-        (event_id, registration_id, display_name, sort_order)
-       VALUES (?, ?, ?, ?)`,
-      [eventId, registrationId, names[i], i],
-    )
+  const captainEmail = String(reg.email ?? "").trim()
+  if (existing.length === 0) {
+    for (let i = 0; i < names.length; i++) {
+      await sql.execute(
+        `INSERT INTO event_players
+          (event_id, registration_id, display_name, sort_order, email)
+         VALUES (?, ?, ?, ?, ?)`,
+        [eventId, registrationId, names[i], i, i === 0 ? captainEmail : ""],
+      )
+    }
   }
+
+  await ensurePlayerCodesForRegistration(registrationId, prefix)
 }
 
 export async function searchTeams(opts: {

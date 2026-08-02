@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { TicketCaptainShare } from "@/components/ticket-captain-share"
 import { siteName } from "@/lib/site-metadata"
 import { getPublicTicketByCode } from "@/lib/ticket"
 
@@ -43,7 +44,7 @@ export default async function TicketPage({ params }: Props) {
         <p className="text-sm uppercase tracking-[0.14em] text-muted">Team</p>
         <p className="mt-1 font-display text-2xl text-ink">{ticket.teamName}</p>
         <p className="mt-6 text-sm uppercase tracking-[0.14em] text-muted">
-          Check-in code
+          Team check-in code
         </p>
         <p className="mt-2 font-mono text-3xl tracking-widest text-ink">
           {ticket.code}
@@ -57,23 +58,36 @@ export default async function TicketPage({ params }: Props) {
           className="mx-auto mt-6"
         />
         <p className="mt-3 text-sm text-muted text-pretty">
-          Show this screen or code at the check-in desk. Share with every
-          teammate.
+          Captains: use this page to email each teammate a personal QR. On event
+          day, staff can also scan this team code to open your roster.
         </p>
       </div>
 
-      {ticket.players.length > 0 ? (
+      {ticket.playerDetails.length > 0 ? (
         <section className="mt-8">
           <h2 className="font-display text-xl text-ink">Players</h2>
-          <ol className="mt-3 list-decimal space-y-1 pl-5 text-ink">
-            {ticket.players.map((name) => (
-              <li key={name}>{name}</li>
+          <ol className="mt-3 list-decimal space-y-2 pl-5 text-ink">
+            {ticket.playerDetails.map((p) => (
+              <li key={p.id}>
+                <span>{p.displayName}</span>
+                {p.checkInCode ? (
+                  <span className="mt-0.5 block font-mono text-sm text-muted">
+                    {p.checkInCode}
+                  </span>
+                ) : null}
+              </li>
             ))}
           </ol>
         </section>
       ) : (
         <p className="mt-6 text-sm text-muted">Captain: {ticket.captainName}</p>
       )}
+
+      <TicketCaptainShare
+        teamCode={ticket.code}
+        players={ticket.playerDetails}
+        captainEmail={ticket.captainEmail}
+      />
 
       <p className="mt-10 print:hidden">
         <Link

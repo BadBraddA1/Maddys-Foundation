@@ -143,8 +143,9 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Her Story: Maddy’s bio (Herculaneum High, sports, sister Lydia) + day-on-the-green invite; purpose = scholarships for graduating seniors (Herculaneum & DeSoto) + Board-approved community service
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, **31 team capacity**, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 - Stripe: Checkout on paid registration + webhook confirms roster; **10-minute hold** then unpaid drafts are released (Stripe session expired + row deleted) and never shown in admin
-- Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
-- Registration email: confirmation on paid confirm (Stripe webhook + admin Mark paid) via Resend; public shareable ticket `/ticket/[code]` with QR; daily cron (`vercel.json` 14:00 UTC) sends a 7-day teammate reminder; roster/check-in can **Resend confirmation**
+- Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); **player QR auto check-in**; `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
+- Registration email: confirmation on paid confirm (Stripe webhook + admin Mark paid) via Resend; team ticket `/ticket/[code]` (captain enters teammate emails → personal `/ticket/p/[code]` QRs); daily cron (`vercel.json` 14:00 UTC) sends a 7-day teammate reminder; roster/check-in can **Resend confirmation**
+- Admin events: create / edit / **delete** + optional cover image URL for event OG cards
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
 - Gallery: `/admin/gallery` uploads photos to R2 (optional **event tag**); public `/gallery` filters by event (`?event=slug`)
 - Site palette: fairway green hero/footer + soft gold accent (warm off-white page)
@@ -153,11 +154,15 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 
 1. Staff sign in at `/admin` (password or Clerk).
 2. Open **Check-in desk** (or Roster → Day-of check-in).
-3. First time / after imports: on the event roster, **Sync players from roster notes**.
-4. **Scan QR** on iPhone (Safari, staff already logged in) or type the team **check-in code** (`OV-……`), or search by team name → Load → check players in; **Save add-ons** separately (Skins / Golf Cannon / Golf Pro per player).
-5. Each registration gets a unique `check_in_code` at register time. Captains share `/ticket/CODE` (QR encodes that URL). Staff desk still accepts `?code=` or typed codes.
+3. First time / after imports: on the event roster, **Sync players from roster notes** (also allocates per-player codes `OV-P-……`).
+4. **Scan QR** on iPhone (Safari, staff already logged in):
+   - **Player QR** (`/ticket/p/OV-P-……`) → checks that person in automatically, then opens the team for add-ons / undo.
+   - **Team QR** (`/ticket/OV-……`) → loads the roster only (no bulk auto check-in).
+   - Or type a code / search by team name → Load → tap check-in; **Save add-ons** separately (Skins / Golf Cannon / Golf Pro per player).
+5. Each registration gets a team `check_in_code`; each `event_players` row gets its own `check_in_code`. Captains use `/ticket/CODE` to email personal tickets.
 6. Dashboard for live totals and CSV export.
 7. Local test data: `pnpm db:seed-checkin` seeds 5 paid Oak Valley teams (`*@checkin-seed.test`) with codes, players, mixed desk add-ons, and a few already checked in. Mailer skips `*.test` addresses.
+8. Schema note: existing Turso DBs need `event_players.email`, `check_in_code`, `ticket_email_sent_at` (applied automatically on sync, or via comments in `scripts/schema-turso.sql`).
 
 Paid registration Mulligans/Skins stay on the registration notes; desk add-ons are separate day-of sales.
 
@@ -165,8 +170,9 @@ Paid registration Mulligans/Skins stay on the registration notes; desk add-ons a
 
 1. Create a Resend API key; set `RESEND_API_KEY` + `EMAIL_FROM` on Vercel (Production). Until the custom domain is verified, use Resend’s onboarding from-address.
 2. Set `CRON_SECRET` and ensure Vercel Cron can hit `/api/cron/registration-reminders` (Authorization: Bearer).
-3. After a paid registration, captains get a confirmation with code + ticket link. ~7 days before the event (America/Chicago), they get a “share with teammates” reminder.
-4. Staff can resend from the event roster or check-in team page.
+3. After a paid registration, captains get a confirmation with the **team ticket** link. On `/ticket/CODE` they enter each teammate’s email → **Save & send tickets** → each player gets `/ticket/p/CODE` with a personal QR.
+4. ~7 days before the event (America/Chicago), captains get a “share with teammates” reminder.
+5. Staff can resend the captain confirmation from the event roster or check-in team page. Captains can resend player tickets with the “Resend even if already sent” checkbox.
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 
@@ -184,6 +190,6 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 
 ## Useful paths
 
-- Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/gallery` `/donate` `/privacy`
-- Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]/registrations`
-- API: `POST /api/register` · `POST/PATCH /api/admin/events` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `/api/cron/registration-reminders`
+- Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/ticket/p/[code]` `/gallery` `/donate` `/privacy`
+- Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations`
+- API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `/api/cron/registration-reminders`

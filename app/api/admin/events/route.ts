@@ -21,6 +21,7 @@ type Body = {
   close_at?: string | null
   fee_cents?: number
   team_size?: number | null
+  cover_image_url?: string | null
 }
 
 export async function GET() {
@@ -71,12 +72,15 @@ export async function POST(req: Request) {
   if (!slug) slug = `event-${Date.now()}`
 
   try {
+    const cover =
+      body.cover_image_url?.trim() || null
+
     const result = await sql.execute(
       `INSERT INTO events (
         slug, title, summary, description, location,
         starts_at, ends_at, capacity, is_published, registration_open,
-        open_at, close_at, fee_cents, team_size, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        open_at, close_at, fee_cents, team_size, cover_image_url, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
         slug,
         title,
@@ -92,6 +96,7 @@ export async function POST(req: Request) {
         body.close_at || null,
         body.fee_cents ?? 0,
         body.team_size ?? null,
+        cover,
       ],
     )
 

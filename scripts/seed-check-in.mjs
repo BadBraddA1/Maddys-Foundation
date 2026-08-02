@@ -43,6 +43,14 @@ function genCode(prefix) {
   return `${prefix}-${body}`
 }
 
+function genPlayerCode(prefix) {
+  let body = ""
+  for (let i = 0; i < 6; i++) {
+    body += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+  }
+  return `${prefix}-P-${body}`
+}
+
 const TEAMS = [
   {
     team: "Birdie Bunch",
@@ -104,6 +112,24 @@ async function main() {
   try {
     await db.execute(
       `CREATE UNIQUE INDEX IF NOT EXISTS idx_registrations_check_in_code ON registrations (check_in_code)`,
+    )
+  } catch {
+    // ignore
+  }
+  for (const q of [
+    `ALTER TABLE event_players ADD COLUMN email TEXT NOT NULL DEFAULT ''`,
+    `ALTER TABLE event_players ADD COLUMN check_in_code TEXT`,
+    `ALTER TABLE event_players ADD COLUMN ticket_email_sent_at TEXT`,
+  ]) {
+    try {
+      await db.execute(q)
+    } catch {
+      // already exists
+    }
+  }
+  try {
+    await db.execute(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_event_players_check_in_code ON event_players (check_in_code)`,
     )
   } catch {
     // ignore
@@ -230,24 +256,44 @@ async function main() {
       const checkedInAt = plan.checked
         ? new Date().toISOString()
         : null
-      await db.execute(
-        `INSERT INTO event_players
-          (event_id, registration_id, display_name, sort_order,
-           checked_in, checked_in_at, skins, golf_cannon, golf_pro, addon_total_cents)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          eventId,
-          registrationId,
-          t.players[p],
-          p,
-          plan.checked,
-          checkedInAt,
-          plan.skins,
-          plan.golf_cannon,
-          plan.golf_pro,
-          total,
-        ],
-      )
+      const playerEmail =
+        p === 0
+          ? email
+          : `${t.team.toLowerCase().replace(/\s+/g, ".")}.p${p + 1}@checkin-seed.test`
+      let playerCode = genPlayerCode(prefix)
+      for (let attempt = 0; attempt < 8; attempt++) {
+        try {
+          await db.execute(
+            `INSERT INTO event_players
+              (event_id, registration_id, display_name, sort_order,
+               checked_in, checked_in_at, skins, golf_cannon, golf_pro,
+               addon_total_cents, email, check_in_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              eventId,
+              registrationId,
+              t.players[p],
+              p,
+              plan.checked,
+              checkedInAt,
+              plan.skins,
+              plan.golf_cannon,
+              plan.golf_pro,
+              total,
+              playerEmail,
+              playerCode,
+            ],
+          )
+          break
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          if (msg.includes("UNIQUE") || msg.includes("unique")) {
+            playerCode = genPlayerCode(prefix)
+            continue
+          }
+          throw err
+        }
+      }
     }
 
     seeded.push({

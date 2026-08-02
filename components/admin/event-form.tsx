@@ -41,8 +41,12 @@ export function EventForm({ event }: Props) {
   const [teamSize, setTeamSize] = useState(
     event?.team_size != null ? String(event.team_size) : "",
   )
+  const [coverImageUrl, setCoverImageUrl] = useState(
+    event?.cover_image_url ?? "",
+  )
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -72,6 +76,7 @@ export function EventForm({ event }: Props) {
         team_size != null && Number.isFinite(team_size) && team_size > 1
           ? team_size
           : null,
+      cover_image_url: coverImageUrl.trim() || null,
     }
 
     try {
@@ -97,6 +102,32 @@ export function EventForm({ event }: Props) {
       setError("Network error. Check your connection and try again.")
     } finally {
       setPending(false)
+    }
+  }
+
+  async function onDelete() {
+    if (!event) return
+    const ok = window.confirm(
+      `Delete “${event.title}”? This removes registrations, players, and holds for this event. This cannot be undone.`,
+    )
+    if (!ok) return
+    setDeleting(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/events/${event.id}`, {
+        method: "DELETE",
+      })
+      const data = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) {
+        setError(data.error || "Delete failed.")
+        return
+      }
+      router.push("/admin")
+      router.refresh()
+    } catch {
+      setError("Network error. Check your connection and try again.")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -177,6 +208,30 @@ export function EventForm({ event }: Props) {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
+      </div>
+      <div>
+        <label
+          htmlFor={`${formId}-cover`}
+          className="block text-sm font-medium text-ink"
+        >
+          Cover image URL{" "}
+          <span className="font-normal text-muted">(optional)</span>
+        </label>
+        <input
+          id={`${formId}-cover`}
+          name="cover_image_url"
+          type="url"
+          className={field}
+          maxLength={500}
+          value={coverImageUrl}
+          onChange={(e) => setCoverImageUrl(e.target.value)}
+          placeholder="https://…"
+          aria-describedby={`${formId}-cover-hint`}
+        />
+        <p id={`${formId}-cover-hint`} className="mt-1.5 text-sm text-muted">
+          Used on the event Open Graph card when set. Leave blank for the default
+          Maddy plate.
+        </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -323,14 +378,27 @@ export function EventForm({ event }: Props) {
           {error}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        aria-busy={pending}
-        className="btn-deep inline-flex min-h-11 items-center px-6 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {pending ? "Saving…" : event ? "Update event" : "Create event"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={pending || deleting}
+          aria-busy={pending}
+          className="btn-deep inline-flex min-h-11 items-center px-6 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {pending ? "Saving…" : event ? "Update event" : "Create event"}
+        </button>
+        {event ? (
+          <button
+            type="button"
+            disabled={pending || deleting}
+            aria-busy={deleting}
+            onClick={() => void onDelete()}
+            className="inline-flex min-h-11 items-center border border-danger px-5 text-sm font-medium text-danger disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {deleting ? "Deleting…" : "Delete event"}
+          </button>
+        ) : null}
+      </div>
     </form>
   )
 }

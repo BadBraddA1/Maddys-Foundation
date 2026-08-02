@@ -19,12 +19,26 @@ export function parseScannedCheckInPayload(raw: string): string | null {
     if (code?.trim()) return code.trim().toUpperCase()
     const team = url.searchParams.get("team")
     if (team?.trim()) return `TEAM:${team.trim()}`
+    // /ticket/p/OV-P-XXXXXX or /ticket/OV-XXXXXX
+    const parts = url.pathname.split("/").filter(Boolean)
+    const ticketIdx = parts.findIndex((p) => p === "ticket")
+    if (ticketIdx >= 0) {
+      if (parts[ticketIdx + 1] === "p" && parts[ticketIdx + 2]) {
+        return decodeURIComponent(parts[ticketIdx + 2]!).toUpperCase()
+      }
+      if (parts[ticketIdx + 1] && parts[ticketIdx + 1] !== "p") {
+        return decodeURIComponent(parts[ticketIdx + 1]!).toUpperCase()
+      }
+    }
   } catch {
     // not a URL
   }
-  const m = text.match(/\b([A-Z]{1,4}-[A-Z0-9]{4,10})\b/i)
-  if (m?.[1]) return m[1].toUpperCase()
-  if (/^[A-Z0-9-]{4,16}$/i.test(text)) return text.toUpperCase()
+  // Prefer per-player codes (PREFIX-P-BODY)
+  const player = text.match(/\b([A-Z0-9]{1,4}-P-[A-Z0-9]{4,10})\b/i)
+  if (player?.[1]) return player[1].toUpperCase()
+  const teamCode = text.match(/\b([A-Z]{1,4}-[A-Z0-9]{4,10})\b/i)
+  if (teamCode?.[1]) return teamCode[1].toUpperCase()
+  if (/^[A-Z0-9-]{4,24}$/i.test(text)) return text.toUpperCase()
   return null
 }
 
@@ -96,7 +110,7 @@ export function CheckInQrScanner({ open, onClose, onCode }: Props) {
       className="fixed inset-0 z-50 flex flex-col bg-ink/90 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Scan team QR code"
+      aria-label="Scan check-in QR code"
     >
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
         <div className="flex items-center justify-between gap-3 text-white">
@@ -110,8 +124,8 @@ export function CheckInQrScanner({ open, onClose, onCode }: Props) {
           </button>
         </div>
         <p className="mt-2 text-sm text-white/80">
-          Point the camera at the team QR. Works on iPhone Safari when camera
-          access is allowed.
+          Point the camera at a player or team QR. Player codes check in
+          automatically. Works on iPhone Safari when camera access is allowed.
         </p>
         <div
           id={regionId}

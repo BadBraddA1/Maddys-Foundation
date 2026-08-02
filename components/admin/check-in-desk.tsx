@@ -161,27 +161,49 @@ export function CheckInDesk({
       setError(null)
       setMessage(null)
       try {
-        const res = await fetch(
-          `/api/admin/check-in/teams?eventId=${eventId}&code=${encodeURIComponent(parsed)}`,
-        )
+        const res = await fetch(`/api/admin/check-in/scan`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: parsed, eventId }),
+        })
         const data = (await res.json()) as {
-          registrationId?: number
           error?: string
+          message?: string
+          registrationId?: number
+          team?: CheckInTeam
+          autoCheckedIn?: boolean
+          alreadyCheckedIn?: boolean
+          player?: EventPlayer
         }
-        if (!res.ok || !data.registrationId) {
+        if (!res.ok) {
           setError(data.error || "Code not found.")
           return
         }
         setCodeInput(parsed)
-        await loadTeam(data.registrationId)
-        setMessage(`Loaded team for code ${parsed}.`)
+        if (data.team) {
+          applyTeam(data.team)
+          setQuery(data.team.teamName)
+          const qrRes = await fetch(
+            `/api/admin/check-in/teams/${data.team.registrationId}/qr`,
+          )
+          const qrData = (await qrRes.json()) as {
+            url?: string
+            dataUrl?: string
+          }
+          if (qrRes.ok && qrData.url && qrData.dataUrl) {
+            setQr({ url: qrData.url, dataUrl: qrData.dataUrl })
+          }
+        } else if (data.registrationId) {
+          await loadTeam(data.registrationId)
+        }
+        setMessage(data.message || `Loaded code ${parsed}.`)
       } catch {
         setError("Could not look up code.")
       } finally {
         setLoadingTeam(false)
       }
     },
-    [eventId, loadTeam],
+    [eventId, loadTeam, applyTeam],
   )
 
   useEffect(() => {
