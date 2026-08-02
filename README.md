@@ -167,6 +167,42 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 
 Paid registration Mulligans/Skins stay on the registration notes; desk add-ons are separate day-of sales.
 
+## Apple Wallet (ops)
+
+Lets captains/players tap **Add to Apple Wallet** on `/ticket/…` and `/ticket/p/…`. On event day, iPhone can surface the pass on the lock screen near the golf course (GPS + event time).
+
+### One-time Apple Developer setup
+
+1. In [Apple Developer](https://developer.apple.com/account) → **Identifiers** → **+** → **Pass Type IDs** → e.g. `pass.org.maddysfoundation.ticket`.
+2. **Certificates** → **+** → **Pass Type ID Certificate** → select that ID → create CSR on a Mac (Keychain Access → Certificate Assistant → Request from CA) → download the `.cer`.
+3. In Keychain, export the Pass certificate + private key as a `.p12` (set a password).
+4. Convert to PEM (on a Mac with the `.p12`):
+
+```bash
+# Signer cert + key from the p12
+openssl pkcs12 -in Certificates.p12 -clcerts -nokeys -out signerCert.pem -passin pass:YOUR_P12_PASSWORD
+openssl pkcs12 -in Certificates.p12 -nocerts -nodes -out signerKey.pem -passin pass:YOUR_P12_PASSWORD
+# Apple WWDR (G4) — download from Apple PKI if needed
+curl -L -o AppleWWDRCAG4.cer https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer
+openssl x509 -inform DER -in AppleWWDRCAG4.cer -out wwdr.pem
+```
+
+5. Put on Vercel / `.env.local` (PEM can be pasted with `\n`, or base64 of the whole PEM file):
+
+| Var | Value |
+| --- | --- |
+| `APPLE_WALLET_PASS_TYPE_ID` | e.g. `pass.org.maddysfoundation.ticket` |
+| `APPLE_WALLET_TEAM_ID` | 10-character Team ID from Apple Developer membership |
+| `APPLE_WALLET_WWDR` | contents of `wwdr.pem` |
+| `APPLE_WALLET_SIGNER_CERT` | contents of `signerCert.pem` |
+| `APPLE_WALLET_SIGNER_KEY` | contents of `signerKey.pem` |
+| `APPLE_WALLET_SIGNER_KEY_PASSPHRASE` | only if the key is encrypted |
+
+6. Redeploy. Open a ticket page on iPhone → **Add to Apple Wallet**.
+7. Optional: set **Venue latitude / longitude** on the event (admin) for the course pin. Blank → Oak Valley Pevely `38.292404, -90.391714`.
+
+Without these env vars the button shows a “not configured yet” note and `/ticket/…/wallet` returns 503.
+
 ## Registration email (ops)
 
 1. Create a Resend API key; set `RESEND_API_KEY` + `EMAIL_FROM` on Vercel (Production). Until the custom domain is verified, use Resend’s onboarding from-address.
@@ -191,6 +227,7 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 
 ## Useful paths
 
-- Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/ticket/p/[code]` `/gallery` `/donate` `/privacy`
+- Apple Wallet: team/player tickets offer **Add to Apple Wallet** (`.pkpass`) when Pass Type ID certs are configured; QR on the pass matches desk scan URLs; location relevance defaults to Oak Valley Pevely (override per event with venue lat/lng)
+- Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/ticket/[code]/wallet` `/ticket/p/[code]` `/ticket/p/[code]/wallet` `/gallery` `/donate` `/privacy`
 - Staff: `/admin` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations` `/admin/events/[id]/registrations/new` `/admin/events/[id]/registrations/[registrationId]`
 - API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `/api/cron/registration-reminders`

@@ -18,6 +18,9 @@ export type EventRow = {
   /** When set (e.g. 4), registration is for a full team of that size. */
   team_size: number | null
   cover_image_url: string | null
+  /** GPS for Apple Wallet relevance (lock screen near the course). */
+  venue_latitude: number | null
+  venue_longitude: number | null
   created_at: string
   updated_at: string
   /** Slots held toward capacity (paid + in-checkout). One row = one team when team_size > 1. */

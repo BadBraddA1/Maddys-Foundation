@@ -44,6 +44,14 @@ function mapEvent(row: SqlRow): EventRow {
     team_size: row.team_size == null ? null : Number(row.team_size),
     cover_image_url:
       row.cover_image_url == null ? null : String(row.cover_image_url),
+    venue_latitude:
+      row.venue_latitude == null || row.venue_latitude === ""
+        ? null
+        : Number(row.venue_latitude),
+    venue_longitude:
+      row.venue_longitude == null || row.venue_longitude === ""
+        ? null
+        : Number(row.venue_longitude),
     created_at: String(row.created_at ?? ""),
     updated_at: String(row.updated_at ?? ""),
     registration_count:

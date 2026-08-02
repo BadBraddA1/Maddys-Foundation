@@ -44,6 +44,12 @@ export function EventForm({ event }: Props) {
   const [coverImageUrl, setCoverImageUrl] = useState(
     event?.cover_image_url ?? "",
   )
+  const [venueLat, setVenueLat] = useState(
+    event?.venue_latitude != null ? String(event.venue_latitude) : "",
+  )
+  const [venueLng, setVenueLng] = useState(
+    event?.venue_longitude != null ? String(event.venue_longitude) : "",
+  )
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -77,6 +83,8 @@ export function EventForm({ event }: Props) {
           ? team_size
           : null,
       cover_image_url: coverImageUrl.trim() || null,
+      venue_latitude: venueLat.trim() ? Number(venueLat) : null,
+      venue_longitude: venueLng.trim() ? Number(venueLng) : null,
     }
 
     try {
@@ -233,6 +241,50 @@ export function EventForm({ event }: Props) {
           Maddy plate.
         </p>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor={`${formId}-lat`}
+            className="block text-sm font-medium text-ink"
+          >
+            Venue latitude{" "}
+            <span className="font-normal text-muted">(Apple Wallet)</span>
+          </label>
+          <input
+            id={`${formId}-lat`}
+            name="venue_latitude"
+            type="number"
+            step="any"
+            className={field}
+            value={venueLat}
+            onChange={(e) => setVenueLat(e.target.value)}
+            placeholder="38.292404"
+            aria-describedby={`${formId}-venue-hint`}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor={`${formId}-lng`}
+            className="block text-sm font-medium text-ink"
+          >
+            Venue longitude
+          </label>
+          <input
+            id={`${formId}-lng`}
+            name="venue_longitude"
+            type="number"
+            step="any"
+            className={field}
+            value={venueLng}
+            onChange={(e) => setVenueLng(e.target.value)}
+            placeholder="-90.391714"
+          />
+        </div>
+      </div>
+      <p id={`${formId}-venue-hint`} className="text-sm text-muted">
+        Optional GPS so the Wallet pass can surface on iPhone lock screens near
+        the course. Oak Valley Pevely defaults if blank: 38.292404, -90.391714.
+      </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor={`${formId}-starts`} className="block text-sm font-medium text-ink">

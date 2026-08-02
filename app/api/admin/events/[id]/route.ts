@@ -22,6 +22,8 @@ type Body = {
   fee_cents?: number
   team_size?: number | null
   cover_image_url?: string | null
+  venue_latitude?: number | null
+  venue_longitude?: number | null
 }
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -62,13 +64,28 @@ export async function PATCH(req: Request, ctx: Ctx) {
       body.cover_image_url !== undefined
         ? body.cover_image_url?.trim() || null
         : existing.cover_image_url
+    const venueLat =
+      body.venue_latitude !== undefined
+        ? body.venue_latitude != null &&
+          Number.isFinite(Number(body.venue_latitude))
+          ? Number(body.venue_latitude)
+          : null
+        : existing.venue_latitude
+    const venueLng =
+      body.venue_longitude !== undefined
+        ? body.venue_longitude != null &&
+          Number.isFinite(Number(body.venue_longitude))
+          ? Number(body.venue_longitude)
+          : null
+        : existing.venue_longitude
 
     await sql.execute(
       `UPDATE events SET
         slug = ?, title = ?, summary = ?, description = ?, location = ?,
         starts_at = ?, ends_at = ?, capacity = ?, is_published = ?,
         registration_open = ?, open_at = ?, close_at = ?, fee_cents = ?,
-        team_size = ?, cover_image_url = ?, paypal_link = NULL,
+        team_size = ?, cover_image_url = ?, venue_latitude = ?,
+        venue_longitude = ?, paypal_link = NULL,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
       [
@@ -95,6 +112,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
         body.fee_cents !== undefined ? body.fee_cents : existing.fee_cents,
         body.team_size !== undefined ? body.team_size : existing.team_size,
         cover,
+        venueLat,
+        venueLng,
         id,
       ],
     )

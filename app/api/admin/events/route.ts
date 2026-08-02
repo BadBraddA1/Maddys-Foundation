@@ -22,6 +22,8 @@ type Body = {
   fee_cents?: number
   team_size?: number | null
   cover_image_url?: string | null
+  venue_latitude?: number | null
+  venue_longitude?: number | null
 }
 
 export async function GET() {
@@ -74,13 +76,23 @@ export async function POST(req: Request) {
   try {
     const cover =
       body.cover_image_url?.trim() || null
+    const venueLat =
+      body.venue_latitude != null && Number.isFinite(Number(body.venue_latitude))
+        ? Number(body.venue_latitude)
+        : null
+    const venueLng =
+      body.venue_longitude != null &&
+      Number.isFinite(Number(body.venue_longitude))
+        ? Number(body.venue_longitude)
+        : null
 
     const result = await sql.execute(
       `INSERT INTO events (
         slug, title, summary, description, location,
         starts_at, ends_at, capacity, is_published, registration_open,
-        open_at, close_at, fee_cents, team_size, cover_image_url, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        open_at, close_at, fee_cents, team_size, cover_image_url,
+        venue_latitude, venue_longitude, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
         slug,
         title,
@@ -97,6 +109,8 @@ export async function POST(req: Request) {
         body.fee_cents ?? 0,
         body.team_size ?? null,
         cover,
+        venueLat,
+        venueLng,
       ],
     )
 

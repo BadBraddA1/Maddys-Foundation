@@ -26,6 +26,9 @@ export type PublicTicket = {
   eventSlug: string
   eventLocation: string
   eventWhen: string
+  eventStartsAt: string
+  venueLatitude: number | null
+  venueLongitude: number | null
   /** @deprecated use playerDetails — kept for simple lists */
   players: string[]
   playerDetails: PublicTicketPlayer[]
@@ -42,6 +45,9 @@ export type PublicPlayerTicket = {
   eventSlug: string
   eventLocation: string
   eventWhen: string
+  eventStartsAt: string
+  venueLatitude: number | null
+  venueLongitude: number | null
   checkedIn: boolean
 }
 
@@ -54,7 +60,8 @@ export async function getPublicTicketByCode(
   const rows = await sql`
     SELECT r.id, r.name, r.email, r.team_name, r.check_in_code,
       e.title AS event_title, e.slug AS event_slug,
-      e.location AS event_location, e.starts_at AS event_starts_at
+      e.location AS event_location, e.starts_at AS event_starts_at,
+      e.venue_latitude, e.venue_longitude
     FROM registrations r
     INNER JOIN events e ON e.id = r.event_id
     WHERE upper(r.check_in_code) = ${normalized}
@@ -104,6 +111,15 @@ export async function getPublicTicketByCode(
     eventSlug: String(row.event_slug),
     eventLocation: String(row.event_location ?? ""),
     eventWhen: formatEventDate(String(row.event_starts_at)),
+    eventStartsAt: String(row.event_starts_at),
+    venueLatitude:
+      row.venue_latitude == null || row.venue_latitude === ""
+        ? null
+        : Number(row.venue_latitude),
+    venueLongitude:
+      row.venue_longitude == null || row.venue_longitude === ""
+        ? null
+        : Number(row.venue_longitude),
     players: playerDetails.map((p) => p.displayName),
     playerDetails,
   }
@@ -120,7 +136,8 @@ export async function getPublicPlayerTicketByCode(
     SELECT p.id, p.display_name, p.check_in_code, p.checked_in,
       r.name AS captain_name, r.team_name, r.check_in_code AS team_code,
       e.title AS event_title, e.slug AS event_slug,
-      e.location AS event_location, e.starts_at AS event_starts_at
+      e.location AS event_location, e.starts_at AS event_starts_at,
+      e.venue_latitude, e.venue_longitude
     FROM event_players p
     INNER JOIN registrations r ON r.id = p.registration_id
     INNER JOIN events e ON e.id = p.event_id
@@ -142,6 +159,15 @@ export async function getPublicPlayerTicketByCode(
     eventSlug: String(row.event_slug),
     eventLocation: String(row.event_location ?? ""),
     eventWhen: formatEventDate(String(row.event_starts_at)),
+    eventStartsAt: String(row.event_starts_at),
+    venueLatitude:
+      row.venue_latitude == null || row.venue_latitude === ""
+        ? null
+        : Number(row.venue_latitude),
+    venueLongitude:
+      row.venue_longitude == null || row.venue_longitude === ""
+        ? null
+        : Number(row.venue_longitude),
     checkedIn: Number(row.checked_in ?? 0) === 1,
   }
 }

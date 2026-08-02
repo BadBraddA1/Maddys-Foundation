@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { AddToAppleWallet } from "@/components/add-to-apple-wallet"
 import { TicketCaptainShare } from "@/components/ticket-captain-share"
+import { appleWalletConfigured } from "@/lib/apple-wallet"
 import { siteName } from "@/lib/site-metadata"
 import { getPublicTicketByCode } from "@/lib/ticket"
 
@@ -61,6 +63,10 @@ export default async function TicketPage({ params }: Props) {
           Captains: use this page to email each teammate a personal QR. On event
           day, staff can also scan this team code to open your roster.
         </p>
+        <AddToAppleWallet
+          enabled={appleWalletConfigured()}
+          href={`/ticket/${encodeURIComponent(ticket.code)}/wallet`}
+        />
       </div>
 
       {ticket.playerDetails.length > 0 ? (

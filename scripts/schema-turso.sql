@@ -17,9 +17,16 @@ CREATE TABLE IF NOT EXISTS events (
   fee_cents INTEGER NOT NULL DEFAULT 0,
   team_size INTEGER,
   cover_image_url TEXT,
+  /** Optional GPS for Apple Wallet lock-screen relevance near the venue. */
+  venue_latitude REAL,
+  venue_longitude REAL,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
+
+-- Existing DBs:
+-- ALTER TABLE events ADD COLUMN venue_latitude REAL;
+-- ALTER TABLE events ADD COLUMN venue_longitude REAL;
 
 CREATE INDEX IF NOT EXISTS idx_events_published_starts
   ON events (is_published, starts_at);

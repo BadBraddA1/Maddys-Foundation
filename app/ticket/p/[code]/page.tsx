@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { AddToAppleWallet } from "@/components/add-to-apple-wallet"
+import { appleWalletConfigured } from "@/lib/apple-wallet"
 import { siteName } from "@/lib/site-metadata"
 import { getPublicPlayerTicketByCode } from "@/lib/ticket"
 
@@ -69,6 +71,10 @@ export default async function PlayerTicketPage({ params }: Props) {
             Already checked in.
           </p>
         ) : null}
+        <AddToAppleWallet
+          enabled={appleWalletConfigured()}
+          href={`/ticket/p/${encodeURIComponent(ticket.code)}/wallet`}
+        />
       </div>
 
       {ticket.teamCode ? (
