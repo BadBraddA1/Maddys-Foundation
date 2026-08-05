@@ -48,8 +48,17 @@ Production uses **Clerk** on `maddysfoundation.org` (custom Clerk DNS: `accounts
 
 1. Keys on Vercel: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` (Production + Preview).
 2. URL hints: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`.
-3. In Clerk Dashboard → Users → your user → Public metadata: `{ "role": "admin" }`.
+3. In Clerk Dashboard → Users → your user → Public metadata: `{ "role": "admin" }` (first admin only — after that use **Staff & invites**).
 4. Open [`/sign-in`](https://maddysfoundation.org/sign-in) or [`/sign-up`](https://maddysfoundation.org/sign-up) (or `/admin`, which redirects to sign-in), then you’ll land on `/admin`.
+
+### Staff invites & roles (`/admin/staff`)
+
+Signed-in Clerk admins can:
+
+1. **Invite by email** — Clerk sends the invite; `publicMetadata.role = "admin"` is attached, so they get admin automatically when they accept.
+2. **Copy invite link** — share the same invite URL yourself if email is slow.
+3. **Promote existing users** — anyone who already signed up shows under “Signed-up users”; tap **Make admin**.
+4. **Revoke pending invites** or **Remove admin** (you can’t remove your own role).
 
 Staff password code may still exist for emergencies, but it is **not shown** on the sign-in UI — use Clerk.
 

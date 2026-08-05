@@ -26,9 +26,9 @@ export default function SignUpPage() {
         </p>
         <h1 className="mt-2 font-display text-3xl">Create staff account</h1>
         <p className="mt-3 text-sm text-muted">
-          After signing up, an admin must set{" "}
-          <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
-          in Clerk before you can open the desk.
+          Prefer an invite from an existing admin — that grants access
+          automatically. Open sign-up only if you already have an invite email
+          or someone will promote you afterward.
         </p>
       </div>
 
