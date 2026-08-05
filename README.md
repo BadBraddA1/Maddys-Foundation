@@ -62,7 +62,7 @@ Signed-in Clerk admins can:
 
 ### Audit log (`/admin/audit`)
 
-Turso table `audit_logs` records staff/system actions (events, registrations, check-in, Stripe, staff invites/roles). Newest 200 rows on `/admin/audit`; click an actor email to filter.
+Turso table `audit_logs` records staff/system actions (events, registrations, check-in, Stripe, staff invites/roles). Newest 200 rows on `/admin/audit`; click a row for the full entry (`/admin/audit/[id]`), or click an actor email to filter.
 
 Staff password code may still exist for emergencies, but it is **not shown** on the sign-in UI — use Clerk.
 
