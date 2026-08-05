@@ -107,7 +107,7 @@ Never commit `.env.local` or tokens.
 
 1. Bucket: `maddys-foundation-media` (public r2.dev URL in `R2_PUBLIC_URL`).
 2. Worker: `npx wrangler deploy` from repo root (uses `wrangler.toml` + `worker/media-upload.ts`); set secret with `npx wrangler secret put UPLOAD_SECRET`.
-3. Staff: `/admin/sponsors` (name + logo → footer marquee) and `/admin/gallery` (photos → `/gallery`).
+3. Staff: `/admin/sponsors` (name + logo → footer marquee) and `/admin/gallery` (photos → `/gallery`). Gallery supports **bulk upload**: multi-select JPEG/PNG/WebP/GIF, shared event tag + caption, concurrent uploads (2 at a time) with per-file progress and failure list. Multi-file titles come from filenames; single-file can set an explicit title.
 4. Tables: `sponsors`, `gallery_images` in Turso (see `scripts/schema-turso.sql`).
 
 **Stripe plan (keys + how to get them):** [`docs/STRIPE.md`](docs/STRIPE.md)
@@ -153,7 +153,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Admin events: create / edit / **delete** + optional cover image URL for event OG cards
 - Admin roster: **Add registration**, **Edit roster** (captain + player names/emails), **Delete registration** on `/admin/events/[id]/registrations`
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
-- Gallery: `/admin/gallery` uploads photos to R2 (optional **event tag**); public `/gallery` filters by event (`?event=slug`)
+- Gallery: `/admin/gallery` uploads one or many photos to R2 (shared optional **event tag** + caption; progress + per-file errors); public `/gallery` filters by event (`?event=slug`)
 - Site palette: fairway green hero/footer + soft gold accent (warm off-white page)
 
 ## Day-of check-in (ops)

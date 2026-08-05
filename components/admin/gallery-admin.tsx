@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { GalleryImage } from "@/lib/gallery"
 
 type EventOption = { id: number; title: string; slug: string }
@@ -12,16 +12,53 @@ type Props = {
   r2Ready: boolean
 }
 
+const UPLOAD_CONCURRENCY = 2
+const ACCEPT =
+  "image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+
+function titleFromFilename(name: string): string {
+  return name
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160)
+}
+
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  async function worker() {
+    while (next < items.length) {
+      const i = next++
+      results[i] = await fn(items[i]!, i)
+    }
+  }
+  const n = Math.min(concurrency, items.length)
+  await Promise.all(Array.from({ length: n }, () => worker()))
+  return results
+}
+
 export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [images, setImages] = useState(initialImages)
   const [title, setTitle] = useState("")
   const [caption, setCaption] = useState("")
   const [eventId, setEventId] = useState("")
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [progress, setProgress] = useState<{
+    done: number
+    total: number
+  } | null>(null)
+  const [failures, setFailures] = useState<string[]>([])
 
   async function refresh() {
     const res = await fetch("/api/admin/gallery")
@@ -32,32 +69,78 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault()
-    if (!file || busy) return
+    if (files.length === 0 || busy) return
     setBusy(true)
     setError(null)
     setMessage(null)
+    setFailures([])
+    setProgress({ done: 0, total: files.length })
+
+    const batchCaption = caption
+    const batchEventId = eventId || "none"
+    const singleTitle = title.trim()
+    let ok = 0
+    const failed: string[] = []
+
     try {
-      const form = new FormData()
-      form.set("title", title)
-      form.set("caption", caption)
-      form.set("eventId", eventId || "none")
-      form.set("image", file)
-      const res = await fetch("/api/admin/gallery", { method: "POST", body: form })
-      const data = (await res.json()) as { error?: string }
-      if (!res.ok) {
-        setError(data.error || "Could not add image.")
-        return
-      }
+      await mapPool(files, UPLOAD_CONCURRENCY, async (file) => {
+        const form = new FormData()
+        const fileTitle =
+          files.length === 1 && singleTitle
+            ? singleTitle
+            : titleFromFilename(file.name) || singleTitle
+        form.set("title", fileTitle)
+        form.set("caption", batchCaption)
+        form.set("eventId", batchEventId)
+        form.set("image", file)
+        try {
+          const res = await fetch("/api/admin/gallery", {
+            method: "POST",
+            body: form,
+          })
+          const data = (await res.json()) as { error?: string }
+          if (!res.ok) {
+            failed.push(`${file.name}: ${data.error || "upload failed"}`)
+          } else {
+            ok += 1
+          }
+        } catch {
+          failed.push(`${file.name}: network error`)
+        } finally {
+          setProgress((p) =>
+            p ? { done: Math.min(p.done + 1, p.total), total: p.total } : p,
+          )
+        }
+      })
+
+      setFailures(failed)
       setTitle("")
       setCaption("")
       setEventId("")
-      setFile(null)
-      setMessage("Image added.")
+      setFiles([])
+      if (fileInputRef.current) fileInputRef.current.value = ""
+
+      if (ok === 0) {
+        setError(
+          failed.length
+            ? `None of ${files.length} photos uploaded.`
+            : "Could not add images.",
+        )
+      } else if (failed.length) {
+        setMessage(
+          `Uploaded ${ok} of ${files.length}. ${failed.length} failed.`,
+        )
+      } else {
+        setMessage(
+          ok === 1 ? "Image added." : `Uploaded ${ok} photos.`,
+        )
+      }
       await refresh()
     } catch {
-      setError("Could not add image.")
+      setError("Could not add images.")
     } finally {
       setBusy(false)
+      setProgress(null)
     }
   }
 
@@ -168,24 +251,41 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
           {message}
         </p>
       ) : null}
+      {failures.length > 0 ? (
+        <ul
+          className="border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger space-y-1"
+          role="alert"
+        >
+          {failures.map((f) => (
+            <li key={f}>{f}</li>
+          ))}
+        </ul>
+      ) : null}
 
       <form onSubmit={(e) => void onCreate(e)} className="border border-line bg-surface p-5 space-y-4">
-        <h2 className="font-display text-xl">Add photo</h2>
-        <div>
-          <label htmlFor="gallery-title" className="block text-sm font-medium">
-            Title (optional)
-          </label>
-          <input
-            id="gallery-title"
-            className="field-control mt-1.5 min-h-11 w-full"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={160}
-          />
-        </div>
+        <h2 className="font-display text-xl">Add photos</h2>
+        <p className="text-sm text-muted">
+          Select one or many images. Shared event tag and caption apply to the
+          whole batch. Multi-file titles come from each filename.
+        </p>
+        {files.length <= 1 ? (
+          <div>
+            <label htmlFor="gallery-title" className="block text-sm font-medium">
+              Title (optional)
+            </label>
+            <input
+              id="gallery-title"
+              className="field-control mt-1.5 min-h-11 w-full"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={160}
+              disabled={busy}
+            />
+          </div>
+        ) : null}
         <div>
           <label htmlFor="gallery-caption" className="block text-sm font-medium">
-            Caption (optional)
+            Caption (optional, shared)
           </label>
           <textarea
             id="gallery-caption"
@@ -193,17 +293,19 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             maxLength={500}
+            disabled={busy}
           />
         </div>
         <div>
           <label htmlFor="gallery-event" className="block text-sm font-medium">
-            Event tag (optional)
+            Event tag (optional, shared)
           </label>
           <select
             id="gallery-event"
             className="field-control mt-1.5 min-h-11 w-full"
             value={eventId}
             onChange={(e) => setEventId(e.target.value)}
+            disabled={busy}
           >
             <option value="">No event</option>
             {events.map((ev) => (
@@ -213,28 +315,49 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
             ))}
           </select>
           <p className="mt-1.5 text-xs text-muted">
-            Tagging links the photo to an event on the public gallery filters.
+            Tagging links photos to an event on the public gallery filters.
           </p>
         </div>
         <div>
           <label htmlFor="gallery-image" className="block text-sm font-medium">
-            Photo
+            Photos
           </label>
           <input
             id="gallery-image"
+            ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+            multiple
+            accept={ACCEPT}
             className="mt-1.5 block w-full text-sm"
             required
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            disabled={busy}
+            onChange={(e) =>
+              setFiles(e.target.files ? Array.from(e.target.files) : [])
+            }
           />
+          {files.length > 0 ? (
+            <p className="mt-1.5 text-xs text-muted">
+              {files.length} file{files.length === 1 ? "" : "s"} selected
+            </p>
+          ) : null}
         </div>
+        {progress ? (
+          <p className="text-sm text-muted" role="status" aria-live="polite">
+            Uploading {progress.done} / {progress.total}…
+          </p>
+        ) : null}
         <button
           type="submit"
-          disabled={busy || !r2Ready}
+          disabled={busy || !r2Ready || files.length === 0}
           className="btn-deep inline-flex min-h-11 items-center px-5 text-sm font-medium disabled:opacity-60"
         >
-          {busy ? "Saving…" : "Add to gallery"}
+          {busy
+            ? progress
+              ? `Uploading ${progress.done}/${progress.total}…`
+              : "Saving…"
+            : files.length > 1
+              ? `Add ${files.length} to gallery`
+              : "Add to gallery"}
         </button>
       </form>
 

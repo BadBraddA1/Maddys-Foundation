@@ -9,6 +9,7 @@ import {
 import { ALLOWED_MEDIA_TYPES, MAX_MEDIA_BYTES, r2Configured } from "@/lib/r2"
 
 export const runtime = "nodejs"
+export const maxDuration = 60
 
 function parseOptionalEventId(raw: FormDataEntryValue | null): {
   eventId?: number | null
