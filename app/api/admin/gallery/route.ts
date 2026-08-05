@@ -4,6 +4,7 @@ import {
   createGalleryImage,
   deleteGalleryImage,
   listGalleryImages,
+  listGalleryTags,
   updateGalleryImage,
 } from "@/lib/gallery"
 import { ALLOWED_MEDIA_TYPES, MAX_MEDIA_BYTES, r2Configured } from "@/lib/r2"
@@ -11,16 +12,21 @@ import { ALLOWED_MEDIA_TYPES, MAX_MEDIA_BYTES, r2Configured } from "@/lib/r2"
 export const runtime = "nodejs"
 export const maxDuration = 60
 
-function parseOptionalEventId(raw: FormDataEntryValue | null): {
-  eventId?: number | null
-  clearEvent?: boolean
-} {
-  if (raw == null) return {}
-  const s = String(raw).trim()
-  if (s === "" || s === "none") return { eventId: null, clearEvent: true }
-  const n = Number(s)
-  if (!Number.isFinite(n) || n <= 0) return { eventId: null, clearEvent: true }
-  return { eventId: n }
+function parseTagIds(form: FormData): number[] | undefined {
+  if (!form.has("tagIds") && !form.has("tagId")) return undefined
+  const raw: string[] = []
+  for (const value of form.getAll("tagIds")) {
+    raw.push(String(value))
+  }
+  for (const value of form.getAll("tagId")) {
+    raw.push(String(value))
+  }
+  // Also accept comma-separated single field
+  const flat = raw
+    .flatMap((s) => s.split(","))
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isFinite(n) && n > 0)
+  return [...new Set(flat)]
 }
 
 export async function GET() {
@@ -29,8 +35,15 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-  const images = await listGalleryImages()
-  return NextResponse.json({ images, r2Configured: r2Configured() })
+  const [images, tags] = await Promise.all([
+    listGalleryImages(),
+    listGalleryTags(),
+  ])
+  return NextResponse.json({
+    images,
+    tags,
+    r2Configured: r2Configured(),
+  })
 }
 
 export async function POST(req: Request) {
@@ -49,7 +62,7 @@ export async function POST(req: Request) {
   const form = await req.formData()
   const title = String(form.get("title") ?? "")
   const caption = String(form.get("caption") ?? "")
-  const { eventId } = parseOptionalEventId(form.get("eventId"))
+  const tagIds = parseTagIds(form) ?? []
   const file = form.get("image")
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Image file is required." }, { status: 400 })
@@ -68,7 +81,7 @@ export async function POST(req: Request) {
     const image = await createGalleryImage({
       title,
       caption,
-      eventId: eventId ?? null,
+      tagIds,
       file,
     })
     return NextResponse.json({ image }, { status: 201 })
@@ -107,9 +120,7 @@ export async function PATCH(req: Request) {
 
   const publishedRaw = form.get("isPublished")
   const sortRaw = form.get("sortOrder")
-  const eventPatch = form.has("eventId")
-    ? parseOptionalEventId(form.get("eventId"))
-    : {}
+  const tagIds = parseTagIds(form)
 
   try {
     const updated = await updateGalleryImage(id, {
@@ -120,7 +131,7 @@ export async function PATCH(req: Request) {
       sortOrder:
         sortRaw == null || sortRaw === "" ? undefined : Number(sortRaw),
       file: image,
-      ...eventPatch,
+      tagIds,
     })
     return NextResponse.json({ image: updated })
   } catch (err) {

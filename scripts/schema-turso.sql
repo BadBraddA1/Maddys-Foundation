@@ -186,6 +186,26 @@ CREATE INDEX IF NOT EXISTS idx_gallery_published_sort
 CREATE INDEX IF NOT EXISTS idx_gallery_event
   ON gallery_images (event_id);
 
+-- Freeform gallery tags (not tied to events). Photos can have many tags.
+CREATE TABLE IF NOT EXISTS gallery_tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE INDEX IF NOT EXISTS idx_gallery_tags_name
+  ON gallery_tags (name);
+
+CREATE TABLE IF NOT EXISTS gallery_image_tags (
+  image_id INTEGER NOT NULL REFERENCES gallery_images(id) ON DELETE CASCADE,
+  tag_id INTEGER NOT NULL REFERENCES gallery_tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (image_id, tag_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_gallery_image_tags_tag
+  ON gallery_image_tags (tag_id);
+
 CREATE TABLE IF NOT EXISTS audit_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   actor TEXT NOT NULL DEFAULT 'system',

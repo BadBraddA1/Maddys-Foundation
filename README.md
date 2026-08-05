@@ -107,8 +107,8 @@ Never commit `.env.local` or tokens.
 
 1. Bucket: `maddys-foundation-media` (public r2.dev URL in `R2_PUBLIC_URL`).
 2. Worker: `npx wrangler deploy` from repo root (uses `wrangler.toml` + `worker/media-upload.ts`); set secret with `npx wrangler secret put UPLOAD_SECRET`.
-3. Staff: `/admin/sponsors` (name + logo → footer marquee) and `/admin/gallery` (photos → `/gallery`). Gallery supports **bulk upload**: multi-select JPEG/PNG/WebP/GIF, shared event tag + caption, concurrent uploads (2 at a time) with per-file progress and failure list. Multi-file titles come from filenames; single-file can set an explicit title.
-4. Tables: `sponsors`, `gallery_images` in Turso (see `scripts/schema-turso.sql`).
+3. Staff: `/admin/sponsors` (name + logo → footer marquee) and `/admin/gallery` (photos → `/gallery`). Gallery supports **bulk upload** (multi-select, shared caption/tags, progress) and **freeform tags** you create in admin — not tied to events. Public `/gallery` filters with `?tag=slug`.
+4. Tables: `sponsors`, `gallery_images`, `gallery_tags`, `gallery_image_tags` in Turso (see `scripts/schema-turso.sql`). Existing DBs: run `scripts/migrate-gallery-tags.sql` once (backfills tags from legacy `event_id` links).
 
 **Stripe plan (keys + how to get them):** [`docs/STRIPE.md`](docs/STRIPE.md)
 
@@ -153,7 +153,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Admin events: create / edit / **delete** + optional cover image URL for event OG cards
 - Admin roster: **Add registration**, **Edit roster** (captain + player names/emails), **Delete registration** on `/admin/events/[id]/registrations`
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
-- Gallery: `/admin/gallery` uploads one or many photos to R2 (shared optional **event tag** + caption; progress + per-file errors); public `/gallery` filters by event (`?event=slug`)
+- Gallery: `/admin/gallery` creates freeform **tags**, bulk-uploads photos to R2 (shared tags + caption; progress + per-file errors); public `/gallery` filters by `?tag=slug`
 - Site palette: fairway green hero/footer + soft gold accent (warm off-white page)
 
 ## Day-of check-in (ops)
@@ -263,4 +263,4 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 - Google Wallet: same tickets offer **Add to Google Wallet** when Issuer ID + service account are configured (`/ticket/…/google-wallet` → signed save link); demo mode needs your Google account as a test user
 - Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/ticket/[code]/wallet` `/ticket/p/[code]` `/ticket/p/[code]/wallet` `/gallery` `/donate` `/privacy`
 - Staff: `/admin` `/admin/staff` `/admin/audit` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations` `/admin/events/[id]/registrations/new` `/admin/events/[id]/registrations/[registrationId]`
-- API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `GET/POST /api/admin/staff` · `PATCH /api/admin/staff/[userId]` · `DELETE /api/admin/staff/invitations/[id]` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `/api/cron/registration-reminders`
+- API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `GET/POST /api/admin/staff` · `PATCH /api/admin/staff/[userId]` · `DELETE /api/admin/staff/invitations/[id]` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `GET/POST/DELETE /api/admin/gallery/tags` · `/api/cron/registration-reminders`

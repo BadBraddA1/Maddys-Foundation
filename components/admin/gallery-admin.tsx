@@ -2,13 +2,11 @@
 
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
-import type { GalleryImage } from "@/lib/gallery"
-
-type EventOption = { id: number; title: string; slug: string }
+import type { GalleryImage, GalleryTag } from "@/lib/gallery"
 
 type Props = {
   initialImages: GalleryImage[]
-  events: EventOption[]
+  initialTags: GalleryTag[]
   r2Ready: boolean
 }
 
@@ -43,13 +41,72 @@ async function mapPool<T, R>(
   return results
 }
 
-export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
+function TagChecklist({
+  tags,
+  selected,
+  onChange,
+  disabled,
+  idPrefix,
+}: {
+  tags: GalleryTag[]
+  selected: number[]
+  onChange: (ids: number[]) => void
+  disabled?: boolean
+  idPrefix: string
+}) {
+  if (tags.length === 0) {
+    return (
+      <p className="mt-1.5 text-sm text-muted">
+        No tags yet — create one above.
+      </p>
+    )
+  }
+  return (
+    <ul className="mt-2 flex flex-wrap gap-2">
+      {tags.map((tag) => {
+        const checked = selected.includes(tag.id)
+        return (
+          <li key={tag.id}>
+            <label
+              htmlFor={`${idPrefix}-${tag.id}`}
+              className={`inline-flex min-h-11 cursor-pointer items-center border px-3 text-sm ${
+                checked
+                  ? "border-deep bg-deep text-on-deep"
+                  : "border-line bg-surface text-ink"
+              } ${disabled ? "opacity-60" : ""}`}
+            >
+              <input
+                id={`${idPrefix}-${tag.id}`}
+                type="checkbox"
+                className="sr-only"
+                checked={checked}
+                disabled={disabled}
+                onChange={() => {
+                  onChange(
+                    checked
+                      ? selected.filter((id) => id !== tag.id)
+                      : [...selected, tag.id],
+                  )
+                }}
+              />
+              {tag.name}
+            </label>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+export function GalleryAdmin({ initialImages, initialTags, r2Ready }: Props) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [images, setImages] = useState(initialImages)
+  const [tags, setTags] = useState(initialTags)
   const [title, setTitle] = useState("")
   const [caption, setCaption] = useState("")
-  const [eventId, setEventId] = useState("")
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
+  const [newTagName, setNewTagName] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,9 +119,76 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
 
   async function refresh() {
     const res = await fetch("/api/admin/gallery")
-    const data = (await res.json()) as { images?: GalleryImage[] }
+    const data = (await res.json()) as {
+      images?: GalleryImage[]
+      tags?: GalleryTag[]
+    }
     if (data.images) setImages(data.images)
+    if (data.tags) setTags(data.tags)
     router.refresh()
+  }
+
+  async function onCreateTag(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newTagName.trim() || busy) return
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const form = new FormData()
+      form.set("name", newTagName.trim())
+      const res = await fetch("/api/admin/gallery/tags", {
+        method: "POST",
+        body: form,
+      })
+      const data = (await res.json()) as { tag?: GalleryTag; error?: string }
+      if (!res.ok || !data.tag) {
+        setError(data.error || "Could not create tag.")
+        return
+      }
+      setTags((prev) =>
+        [...prev, data.tag!].sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+        ),
+      )
+      setSelectedTagIds((prev) => [...prev, data.tag!.id])
+      setNewTagName("")
+      setMessage(`Tag “${data.tag.name}” created.`)
+    } catch {
+      setError("Could not create tag.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function onDeleteTag(tag: GalleryTag) {
+    if (
+      !window.confirm(
+        `Delete tag “${tag.name}”? It will be removed from all photos.`,
+      )
+    ) {
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/gallery/tags?id=${tag.id}`, {
+        method: "DELETE",
+      })
+      const data = (await res.json()) as { error?: string }
+      if (!res.ok) {
+        setError(data.error || "Could not delete tag.")
+        return
+      }
+      setTags((prev) => prev.filter((t) => t.id !== tag.id))
+      setSelectedTagIds((prev) => prev.filter((id) => id !== tag.id))
+      setMessage(`Tag “${tag.name}” deleted.`)
+      await refresh()
+    } catch {
+      setError("Could not delete tag.")
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function onCreate(e: React.FormEvent) {
@@ -77,8 +201,9 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
     setProgress({ done: 0, total: files.length })
 
     const batchCaption = caption
-    const batchEventId = eventId || "none"
+    const batchTagIds = selectedTagIds
     const singleTitle = title.trim()
+    const total = files.length
     let ok = 0
     const failed: string[] = []
 
@@ -86,12 +211,12 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
       await mapPool(files, UPLOAD_CONCURRENCY, async (file) => {
         const form = new FormData()
         const fileTitle =
-          files.length === 1 && singleTitle
+          total === 1 && singleTitle
             ? singleTitle
             : titleFromFilename(file.name) || singleTitle
         form.set("title", fileTitle)
         form.set("caption", batchCaption)
-        form.set("eventId", batchEventId)
+        for (const id of batchTagIds) form.append("tagIds", String(id))
         form.set("image", file)
         try {
           const res = await fetch("/api/admin/gallery", {
@@ -116,24 +241,19 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
       setFailures(failed)
       setTitle("")
       setCaption("")
-      setEventId("")
       setFiles([])
       if (fileInputRef.current) fileInputRef.current.value = ""
 
       if (ok === 0) {
         setError(
           failed.length
-            ? `None of ${files.length} photos uploaded.`
+            ? `None of ${total} photos uploaded.`
             : "Could not add images.",
         )
       } else if (failed.length) {
-        setMessage(
-          `Uploaded ${ok} of ${files.length}. ${failed.length} failed.`,
-        )
+        setMessage(`Uploaded ${ok} of ${total}. ${failed.length} failed.`)
       } else {
-        setMessage(
-          ok === 1 ? "Image added." : `Uploaded ${ok} photos.`,
-        )
+        setMessage(ok === 1 ? "Image added." : `Uploaded ${ok} photos.`)
       }
       await refresh()
     } catch {
@@ -141,6 +261,29 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
     } finally {
       setBusy(false)
       setProgress(null)
+    }
+  }
+
+  async function saveImageTags(image: GalleryImage, nextIds: number[]) {
+    setBusy(true)
+    setError(null)
+    try {
+      const form = new FormData()
+      form.set("id", String(image.id))
+      for (const id of nextIds) form.append("tagIds", String(id))
+      if (nextIds.length === 0) form.set("tagIds", "")
+      const res = await fetch("/api/admin/gallery", { method: "PATCH", body: form })
+      const data = (await res.json()) as { error?: string }
+      if (!res.ok) {
+        setError(data.error || "Could not update tags.")
+        return
+      }
+      setMessage("Tags saved.")
+      await refresh()
+    } catch {
+      setError("Could not update tags.")
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -160,28 +303,6 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
       await refresh()
     } catch {
       setError("Could not update.")
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function setImageEvent(image: GalleryImage, next: string) {
-    setBusy(true)
-    setError(null)
-    try {
-      const form = new FormData()
-      form.set("id", String(image.id))
-      form.set("eventId", next || "none")
-      const res = await fetch("/api/admin/gallery", { method: "PATCH", body: form })
-      const data = (await res.json()) as { error?: string }
-      if (!res.ok) {
-        setError(data.error || "Could not update event tag.")
-        return
-      }
-      setMessage("Event tag saved.")
-      await refresh()
-    } catch {
-      setError("Could not update event tag.")
     } finally {
       setBusy(false)
     }
@@ -262,11 +383,62 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
         </ul>
       ) : null}
 
+      <section className="border border-line bg-surface p-5 space-y-4">
+        <h2 className="font-display text-xl">Tags</h2>
+        <p className="text-sm text-muted">
+          Freeform labels for the public gallery filters — not tied to events.
+          Examples: Golf outing, Volunteers, Community night.
+        </p>
+        <form onSubmit={(e) => void onCreateTag(e)} className="flex flex-wrap gap-2">
+          <label htmlFor="new-tag" className="sr-only">
+            New tag name
+          </label>
+          <input
+            id="new-tag"
+            className="field-control min-h-11 min-w-[12rem] flex-1"
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+            maxLength={80}
+            placeholder="New tag name"
+            disabled={busy}
+          />
+          <button
+            type="submit"
+            disabled={busy || !newTagName.trim()}
+            className="btn-deep inline-flex min-h-11 items-center px-5 text-sm font-medium disabled:opacity-60"
+          >
+            Create tag
+          </button>
+        </form>
+        {tags.length > 0 ? (
+          <ul className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <li
+                key={tag.id}
+                className="inline-flex min-h-11 items-center gap-2 border border-line px-3 text-sm"
+              >
+                <span>{tag.name}</span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="text-danger underline-offset-2 hover:underline disabled:opacity-40"
+                  onClick={() => void onDeleteTag(tag)}
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">No tags yet.</p>
+        )}
+      </section>
+
       <form onSubmit={(e) => void onCreate(e)} className="border border-line bg-surface p-5 space-y-4">
         <h2 className="font-display text-xl">Add photos</h2>
         <p className="text-sm text-muted">
-          Select one or many images. Shared event tag and caption apply to the
-          whole batch. Multi-file titles come from each filename.
+          Select one or many images. Shared tags and caption apply to the whole
+          batch. Multi-file titles come from each filename.
         </p>
         {files.length <= 1 ? (
           <div>
@@ -297,26 +469,14 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
           />
         </div>
         <div>
-          <label htmlFor="gallery-event" className="block text-sm font-medium">
-            Event tag (optional, shared)
-          </label>
-          <select
-            id="gallery-event"
-            className="field-control mt-1.5 min-h-11 w-full"
-            value={eventId}
-            onChange={(e) => setEventId(e.target.value)}
+          <span className="block text-sm font-medium">Tags (optional, shared)</span>
+          <TagChecklist
+            idPrefix="upload-tag"
+            tags={tags}
+            selected={selectedTagIds}
+            onChange={setSelectedTagIds}
             disabled={busy}
-          >
-            <option value="">No event</option>
-            {events.map((ev) => (
-              <option key={ev.id} value={String(ev.id)}>
-                {ev.title}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1.5 text-xs text-muted">
-            Tagging links photos to an event on the public gallery filters.
-          </p>
+          />
         </div>
         <div>
           <label htmlFor="gallery-image" className="block text-sm font-medium">
@@ -382,22 +542,16 @@ export function GalleryAdmin({ initialImages, events, r2Ready }: Props) {
                   {img.is_published ? "Published" : "Hidden"}
                   {img.caption ? ` · ${img.caption}` : ""}
                 </p>
-                <label className="mt-3 block text-sm">
-                  <span className="font-medium text-ink">Event tag</span>
-                  <select
-                    className="field-control mt-1.5 min-h-11 w-full"
-                    value={img.event_id != null ? String(img.event_id) : ""}
+                <div className="mt-3">
+                  <span className="block text-sm font-medium text-ink">Tags</span>
+                  <TagChecklist
+                    idPrefix={`img-${img.id}-tag`}
+                    tags={tags}
+                    selected={(img.tags ?? []).map((t) => t.id)}
                     disabled={busy}
-                    onChange={(e) => void setImageEvent(img, e.target.value)}
-                  >
-                    <option value="">No event</option>
-                    {events.map((ev) => (
-                      <option key={ev.id} value={String(ev.id)}>
-                        {ev.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    onChange={(ids) => void saveImageTags(img, ids)}
+                  />
+                </div>
                 <div className="mt-3 flex flex-wrap gap-2 text-sm">
                   <button
                     type="button"

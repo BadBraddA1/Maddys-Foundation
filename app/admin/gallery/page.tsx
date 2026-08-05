@@ -2,8 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { GalleryAdmin } from "@/components/admin/gallery-admin"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
-import { listAllEvents } from "@/lib/events"
-import { listGalleryImages } from "@/lib/gallery"
+import { listGalleryImages, listGalleryTags } from "@/lib/gallery"
 import { r2Configured } from "@/lib/r2"
 
 export const dynamic = "force-dynamic"
@@ -13,9 +12,9 @@ export default async function AdminGalleryPage() {
   const admin = await getAdminOrNull()
   if (!admin) redirect("/admin")
 
-  const [images, events] = await Promise.all([
+  const [images, tags] = await Promise.all([
     listGalleryImages().catch(() => []),
-    listAllEvents().catch(() => []),
+    listGalleryTags().catch(() => []),
   ])
 
   return (
@@ -33,16 +32,12 @@ export default async function AdminGalleryPage() {
           <Link href="/gallery" className="underline underline-offset-4">
             /gallery
           </Link>{" "}
-          page. Tag a photo to an event to filter it there.
+          page. Create freeform tags (not tied to events) to filter photos there.
         </p>
       </div>
       <GalleryAdmin
         initialImages={images}
-        events={events.map((e) => ({
-          id: e.id,
-          title: e.title,
-          slug: e.slug,
-        }))}
+        initialTags={tags}
         r2Ready={r2Configured()}
       />
     </div>
