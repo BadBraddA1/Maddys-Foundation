@@ -123,6 +123,12 @@ export default async function AdminLayout({
             >
               Staff
             </Link>
+            <Link
+              href="/admin/audit"
+              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+            >
+              Audit
+            </Link>
           </div>
           <div className="flex min-w-0 items-center gap-3">
             <span className="truncate text-sm text-muted">{admin.email}</span>

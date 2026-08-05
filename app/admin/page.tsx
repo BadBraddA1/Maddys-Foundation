@@ -75,6 +75,12 @@ export default async function AdminHomePage() {
           >
             Staff & invites
           </Link>
+          <Link
+            href="/admin/audit"
+            className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
+          >
+            Audit log
+          </Link>
         </div>
       </div>
 

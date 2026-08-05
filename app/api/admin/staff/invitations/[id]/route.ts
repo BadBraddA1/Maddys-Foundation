@@ -27,7 +27,7 @@ export async function DELETE(_req: Request, ctx: Ctx) {
   }
 
   try {
-    await revokeStaffInvitation(id)
+    await revokeStaffInvitation(id, admin.email)
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error("[admin staff invitation DELETE]", err)

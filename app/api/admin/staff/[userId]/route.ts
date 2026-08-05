@@ -36,7 +36,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const role: StaffRole = body.role === "admin" ? "admin" : ""
 
   try {
-    const user = await setStaffRole(userId, role, admin.userId)
+    const user = await setStaffRole(userId, role, admin.userId, admin.email)
     return NextResponse.json({
       user,
       message:

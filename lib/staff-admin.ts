@@ -1,4 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server"
+import { audit } from "@/lib/audit"
 import { siteUrl } from "@/lib/site-metadata"
 
 export type StaffRole = "admin" | ""
@@ -76,7 +77,10 @@ export async function listPendingInvitations(): Promise<StaffInvitation[]> {
   }))
 }
 
-export async function inviteStaffAdmin(emailAddress: string): Promise<StaffInvitation> {
+export async function inviteStaffAdmin(
+  emailAddress: string,
+  actorEmail: string,
+): Promise<StaffInvitation> {
   const email = emailAddress.trim().toLowerCase()
   if (!email || !email.includes("@")) {
     throw new Error("Enter a valid email address.")
@@ -91,6 +95,8 @@ export async function inviteStaffAdmin(emailAddress: string): Promise<StaffInvit
     ignoreExisting: false,
   })
 
+  await audit(actorEmail, "invite_staff", "invitation", invitation.id, email)
+
   return {
     id: invitation.id,
     email: invitation.emailAddress,
@@ -100,15 +106,20 @@ export async function inviteStaffAdmin(emailAddress: string): Promise<StaffInvit
   }
 }
 
-export async function revokeStaffInvitation(invitationId: string): Promise<void> {
+export async function revokeStaffInvitation(
+  invitationId: string,
+  actorEmail: string,
+): Promise<void> {
   const client = await clerkClient()
   await client.invitations.revokeInvitation(invitationId)
+  await audit(actorEmail, "revoke_invite", "invitation", invitationId, "")
 }
 
 export async function setStaffRole(
   userId: string,
   role: StaffRole,
   actorUserId: string,
+  actorEmail: string,
 ): Promise<StaffMember> {
   if (userId === actorUserId && role !== "admin") {
     throw new Error("You can’t remove your own admin role.")
@@ -129,11 +140,21 @@ export async function setStaffRole(
     publicMetadata: nextMeta,
   })
 
-  return {
+  const member: StaffMember = {
     id: updated.id,
     email: primaryEmail(updated),
     name: displayName(updated),
     role: roleFromMeta(updated.publicMetadata as Record<string, unknown>),
     createdAt: updated.createdAt,
   }
+
+  await audit(
+    actorEmail,
+    role === "admin" ? "grant_admin" : "revoke_admin",
+    "user",
+    userId,
+    member.email || member.name,
+  )
+
+  return member
 }

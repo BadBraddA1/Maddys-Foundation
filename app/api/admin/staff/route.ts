@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const invitation = await inviteStaffAdmin(body.email ?? "")
+    const invitation = await inviteStaffAdmin(body.email ?? "", admin.email)
     return NextResponse.json({
       invitation,
       message: `Invite sent to ${invitation.email}. They’ll get admin when they accept.`,
