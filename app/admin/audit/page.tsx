@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getAdminOrNull } from "@/lib/auth"
-import { listAuditLogs } from "@/lib/audit"
+import { describeAudit, listAuditLogs } from "@/lib/audit"
 
 export const dynamic = "force-dynamic"
 
@@ -40,7 +40,8 @@ export default async function AdminAuditPage({
         <div>
           <h1 className="font-display text-3xl">Audit log</h1>
           <p className="mt-2 text-sm text-muted">
-            Staff and system actions — who changed what, newest first.
+            Staff and system actions — click a row to see the full entry. Newest
+            first.
           </p>
         </div>
         {actorFilter ? (
@@ -72,16 +73,20 @@ export default async function AdminAuditPage({
               <tr className="border-b border-line text-muted">
                 <th className="py-3 pr-4 font-medium">When</th>
                 <th className="py-3 pr-4 font-medium">Who</th>
-                <th className="py-3 pr-4 font-medium">Action</th>
-                <th className="py-3 pr-4 font-medium">Target</th>
-                <th className="py-3 font-medium">Detail</th>
+                <th className="py-3 pr-4 font-medium">What happened</th>
+                <th className="py-3 font-medium">Target</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {logs.map((log) => (
-                <tr key={log.id}>
+                <tr key={log.id} className="group hover:bg-surface/80">
                   <td className="py-3 pr-4 whitespace-nowrap text-muted">
-                    {formatWhen(log.createdAt)}
+                    <Link
+                      href={`/admin/audit/${log.id}`}
+                      className="block min-h-11 content-center text-muted group-hover:text-ink"
+                    >
+                      {formatWhen(log.createdAt)}
+                    </Link>
                   </td>
                   <td className="py-3 pr-4">
                     <Link
@@ -91,17 +96,28 @@ export default async function AdminAuditPage({
                       {log.actor}
                     </Link>
                   </td>
-                  <td className="py-3 pr-4 font-medium text-ink">{log.action}</td>
-                  <td className="py-3 pr-4 text-muted">
-                    {log.entityType}
-                    {log.entityId ? (
-                      <>
-                        {" · "}
-                        <span className="text-ink">{log.entityId}</span>
-                      </>
-                    ) : null}
+                  <td className="py-3 pr-4">
+                    <Link
+                      href={`/admin/audit/${log.id}`}
+                      className="block min-h-11 content-center font-medium text-ink underline-offset-4 group-hover:underline"
+                    >
+                      {describeAudit(log)}
+                    </Link>
                   </td>
-                  <td className="py-3 text-muted">{log.detail || "—"}</td>
+                  <td className="py-3 text-muted">
+                    <Link
+                      href={`/admin/audit/${log.id}`}
+                      className="block min-h-11 content-center"
+                    >
+                      {log.entityType}
+                      {log.entityId ? (
+                        <>
+                          {" · "}
+                          <span className="text-ink">{log.entityId}</span>
+                        </>
+                      ) : null}
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>

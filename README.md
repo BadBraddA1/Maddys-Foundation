@@ -60,6 +60,10 @@ Signed-in Clerk admins can:
 3. **Promote existing users** — anyone who already signed up shows under “Signed-up users”; tap **Make admin**.
 4. **Revoke pending invites** or **Remove admin** (you can’t remove your own role).
 
+### Audit log (`/admin/audit`)
+
+Turso table `audit_logs` records staff/system actions (events, registrations, check-in, Stripe, staff invites/roles). Newest 200 rows on `/admin/audit`; click an actor email to filter.
+
 Staff password code may still exist for emergencies, but it is **not shown** on the sign-in UI — use Clerk.
 
 ### Local admin without Clerk
