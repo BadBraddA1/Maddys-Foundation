@@ -3,7 +3,11 @@
 import { useRouter } from "next/navigation"
 import { useId, useState } from "react"
 
-export function StaffPasswordForm() {
+export function StaffPasswordForm({
+  redirectTo = "/admin",
+}: {
+  redirectTo?: string
+}) {
   const formId = useId()
   const router = useRouter()
   const [password, setPassword] = useState("")
@@ -25,6 +29,7 @@ export function StaffPasswordForm() {
         setError(data.error || "Could not sign in.")
         return
       }
+      router.push(redirectTo)
       router.refresh()
     } catch {
       setError("Network error. Try again.")

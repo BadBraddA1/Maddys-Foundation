@@ -51,11 +51,7 @@ const clerkHandler = clerkMiddleware(async (auth, req) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  // Stay on /admin so the staff password form can render.
-  if (req.nextUrl.pathname.startsWith("/admin")) {
-    return NextResponse.next()
-  }
-
+  // Clerk is primary — send staff to sign-in (password fallback lives there too).
   const signIn = req.nextUrl.clone()
   signIn.pathname = "/sign-in"
   signIn.searchParams.set("redirect_url", req.nextUrl.pathname)

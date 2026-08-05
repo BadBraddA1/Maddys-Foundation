@@ -44,22 +44,14 @@ turso db shell maddys-foundation < scripts/schema-turso.sql
 
 ## Clerk (staff admin)
 
-1. Create a Clerk application for this site.
-2. Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in `.env.local` and Vercel.
-3. In Clerk Dashboard → Users → your user → Metadata → Public: `{ "role": "admin" }`.
-4. Sign in at `/sign-in`, then open `/admin`.
+Production uses **Clerk** on `maddysfoundation.org` (custom Clerk DNS: `accounts`, `clerk`, DKIM, `clkmail`).
 
-Without Clerk keys the public site still runs; use the staff password on `/admin`.
+1. Keys on Vercel: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` (Production + Preview).
+2. Optional URL hints: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-in`.
+3. In Clerk Dashboard → Users → your user → Public metadata: `{ "role": "admin" }`.
+4. Open [`/sign-in`](https://maddysfoundation.org/sign-in) (or `/admin`, which redirects there), then you’ll land on `/admin`.
 
-### Staff password (temporary)
-
-Until Clerk is live on the real domain, `/admin` accepts a shared password:
-
-1. Set `ADMIN_STAFF_PASSWORD` (default in code is `Braddcorp` if unset — set it explicitly on Vercel).
-2. Open `/admin`, enter the password.
-3. Optional: `ADMIN_STAFF_SECRET` for cookie signing (otherwise uses the password / Stripe secret).
-
-Remove or rotate the password once Clerk admins are wired.
+Staff password remains an **emergency fallback** on the sign-in page (`ADMIN_STAFF_PASSWORD`). Prefer Clerk for day-to-day access.
 
 ### Local admin without Clerk
 
