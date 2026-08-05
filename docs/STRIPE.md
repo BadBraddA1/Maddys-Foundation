@@ -49,9 +49,9 @@ Optional later:
 **Production / Vercel**
 
 1. **Developers → Webhooks → Add endpoint**
-2. Endpoint URL (pick one; update after domain cutover):
-   - Preview: `https://maddys-foundation.vercel.app/api/stripe/webhook`
-   - Canonical later: `https://maddysfoundation.org/api/stripe/webhook`
+2. Endpoint URL:
+   - Production: `https://maddysfoundation.org/api/stripe/webhook`
+   - Preview (optional): `https://<preview>.vercel.app/api/stripe/webhook`
 3. Subscribe at least to:
    - `checkout.session.completed`
    - `checkout.session.expired` (drops unpaid registration drafts)

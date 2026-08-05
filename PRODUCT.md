@@ -33,4 +33,4 @@ Emotions: calm courage, joy without denial, invitation rather than urgency.
 1. Maddy’s presence leads — photo and name before features.
 2. One job per section; hero stays lean (brand, headline, line, CTAs, image).
 3. Registration is phone-simple; admin is boring and reliable.
-4. Domain `maddysfoundation.org` is the product name on the web when DNS lands.
+4. Domain `maddysfoundation.org` is the product name on the web.

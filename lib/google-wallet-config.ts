@@ -67,7 +67,8 @@ export function googleWalletClassSuffix(eventSlug: string): string {
 
 export function googleWalletOrigins(): string[] {
   const origins = new Set<string>([
-    "https://maddys-foundation.vercel.app",
+    "https://maddysfoundation.org",
+    "https://www.maddysfoundation.org",
     siteUrl,
   ])
   try {

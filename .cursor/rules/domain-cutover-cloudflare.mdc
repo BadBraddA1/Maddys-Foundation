@@ -3,15 +3,15 @@ description: Cloudflare / DNS / domain cutover for maddysfoundation.org — rest
 alwaysApply: true
 ---
 
-# Domain cutover reminder (Cloudflare / DNS)
+# Domain reminder (Cloudflare / DNS)
 
-When the user asks to set up **Cloudflare**, **DNS**, or cut over **`maddysfoundation.org`** for this project:
+Canonical production host is **https://maddysfoundation.org**.
 
-1. Point DNS (Cloudflare preferred) at the Vercel project `maddys-foundation`.
-2. Add `maddysfoundation.org` (+ `www`) in Vercel → Domains.
-3. **Required:** set `NEXT_PUBLIC_SITE_URL=https://maddysfoundation.org` on Vercel (Production + Preview) — replace the temporary `https://maddys-foundation.vercel.app` value.
-4. Redeploy production (`vercel --prod` or push) so `metadataBase`, Open Graph, and absolute URLs use the real domain (OG images 404’d on the parked domain before).
-5. Also update `lib/site-metadata.ts` if it still special-cases / ignores `maddysfoundation.org` for OG — remove that guard once DNS resolves correctly.
-6. Smoke-check: `/opengraph-image.jpg` and home `og:image` resolve on `https://maddysfoundation.org`.
+When the user asks about **Cloudflare**, **DNS**, or the custom domain for this project:
 
-Do this as part of the Cloudflare/DNS task — don’t stop at DNS-only.
+1. DNS (Cloudflare preferred) should point at Vercel project `maddys-foundation`.
+2. Vercel Domains: `maddysfoundation.org` + `www` (www → apex).
+3. **Required:** `NEXT_PUBLIC_SITE_URL=https://maddysfoundation.org` on Production (and Preview if absolute OG should match).
+4. Redeploy after env changes so `metadataBase` / Open Graph use the real domain.
+5. `lib/site-metadata.ts` should prefer `NEXT_PUBLIC_SITE_URL`, then production → `https://maddysfoundation.org` (no vercel.app fallback for prod).
+6. Smoke-check: `https://maddysfoundation.org/opengraph-image` and home `og:url` / `og:image`.

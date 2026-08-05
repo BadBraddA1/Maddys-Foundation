@@ -9,19 +9,16 @@ export const siteDescription =
 export const ogImageAlt =
   "Madalyn Robinson Foundation — events, scholarships, and hope"
 
+const CANONICAL_SITE_URL = "https://maddysfoundation.org"
+
 function resolveSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "").trim()
-  // Custom domain is pending DNS — don't emit OG URLs that 404 there.
-  if (
-    fromEnv &&
-    !/^https?:\/\/(www\.)?maddysfoundation\.org$/i.test(fromEnv)
-  ) {
-    return fromEnv
-  }
+  if (fromEnv) return fromEnv
+  if (process.env.VERCEL_ENV === "production") return CANONICAL_SITE_URL
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}`
   }
-  return "https://maddys-foundation.vercel.app"
+  return CANONICAL_SITE_URL
 }
 
 export const siteUrl = resolveSiteUrl()

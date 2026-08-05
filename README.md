@@ -1,6 +1,6 @@
 # Madalyn Robinson Foundation
 
-Public foundation site + custom event registration for **maddysfoundation.org** (domain pending). Built on the Braddcorp stack: Next.js (App Router), Turso, Clerk (staff), Vercel.
+Public foundation site + custom event registration for **[maddysfoundation.org](https://maddysfoundation.org)**. Built on the Braddcorp stack: Next.js (App Router), Turso, Clerk (staff), Vercel.
 
 ## What this is
 
@@ -19,7 +19,7 @@ Inspired in tone by Mighty Maddy — original brand, copy, and design.
 | App | Next.js 16 + Tailwind 4 |
 | DB | Turso `maddys-foundation` (group `braddcorp`) |
 | Auth | Clerk — staff only (`publicMetadata.role = "admin"`) |
-| Host | Vercel project `maddys-foundation` → [maddys-foundation.vercel.app](https://maddys-foundation.vercel.app) |
+| Host | Vercel project `maddys-foundation` → **[maddysfoundation.org](https://maddysfoundation.org)** |
 | Media | Cloudflare R2 bucket `maddys-foundation-media` + Worker `maddys-foundation-media` |
 | Repo | [`BadBraddA1/Maddys-Foundation`](https://github.com/BadBraddA1/Maddys-Foundation) |
 | Turso | `maddys-foundation` in group `braddcorp` |
@@ -77,7 +77,7 @@ A yellow banner shows when bypass is active. It only works in **development** or
 | --- | --- | --- |
 | `TURSO_DATABASE_URL` | yes | libSQL URL |
 | `TURSO_AUTH_TOKEN` | yes | Turso token |
-| `NEXT_PUBLIC_SITE_URL` | yes (prod) | Canonical URL / metadata (use Vercel URL until `maddysfoundation.org` DNS is live — OG images 404 on the parked domain) |
+| `NEXT_PUBLIC_SITE_URL` | yes (prod) | Canonical URL / metadata — `https://maddysfoundation.org` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | admin | Clerk |
 | `CLERK_SECRET_KEY` | admin | Clerk |
 | `ADMIN_DEV_BYPASS` | no | `1` = local/preview staff access without Clerk |
@@ -107,15 +107,15 @@ Never commit `.env.local` or tokens.
 
 **Stripe plan (keys + how to get them):** [`docs/STRIPE.md`](docs/STRIPE.md)
 
-## Domain cutover (`maddysfoundation.org`)
+## Domain (`maddysfoundation.org`)
 
-When DNS is ready (Cloudflare preferred):
+Production canonical host is **https://maddysfoundation.org** (www should redirect to apex).
 
-1. Point DNS to the Vercel project `maddys-foundation`.
-2. Add `maddysfoundation.org` (+ `www`) in Vercel → Domains.
-3. Set `NEXT_PUBLIC_SITE_URL=https://maddysfoundation.org` on Vercel (Production + Preview) — currently temporarily set to `https://maddys-foundation.vercel.app` so OG images work.
-4. Redeploy production.
-5. Confirm `https://maddysfoundation.org/opengraph-image` returns 200.
+1. DNS points at Vercel project `maddys-foundation`.
+2. Domains in Vercel: `maddysfoundation.org` + `www`.
+3. `NEXT_PUBLIC_SITE_URL=https://maddysfoundation.org` on Production (+ Preview if you want absolute OG URLs to match).
+4. After env changes, redeploy production.
+5. Smoke-check: `https://maddysfoundation.org/opengraph-image` returns 200 and home `og:url` is the custom domain.
 
 Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask to set up Cloudflare/DNS).
 
