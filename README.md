@@ -7,7 +7,7 @@ Public foundation site + custom event registration for **[maddysfoundation.org](
 - Marketing site (home, Maddy’s story, donate, privacy, **gallery**)
 - Published events list + detail pages (Google / Apple Maps links from location)
 - Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set; opening the register form **reserves a capacity slot** for **10 minutes** (assumes they’ll pay); unpaid / expired holds return to the pool; roster only shows paid teams
-- Staff admin (`/admin`) to create/edit/delete events, **add/edit/delete roster registrations** (and team player lists), confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), and **gallery** photos
+- Staff admin (`/admin`) to create/edit/delete events, **add/edit/delete roster registrations** (and team player lists), confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), **gallery** photos, and **staff invites / roles** (`/admin/staff`)
 - Footer sponsor logo strip (scrolling) fed from Turso + R2; lives in the root layout (won’t remount on nav); rAF wall-clock position; duplicates logos until the track fills the viewport
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.
