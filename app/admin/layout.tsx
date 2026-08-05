@@ -1,7 +1,5 @@
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { StaffLogoutButton } from "@/components/admin/staff-logout-button"
-import { StaffPasswordForm } from "@/components/admin/staff-password-form"
 import { SkipLink } from "@/components/skip-link"
 import {
   adminAvailable,
@@ -42,41 +40,30 @@ export default async function AdminLayout({
   const clerk = clerkConfigured()
 
   if (!admin) {
-    // With Clerk enabled, middleware normally sends you to /sign-in first.
-    // This UI covers "signed in but not admin" and the no-Clerk password path.
     return (
       <div className="mx-auto max-w-xl px-5 py-24">
         <SkipLink />
         <main id="main">
           <h1 className="font-display text-3xl">Staff admin</h1>
-          {clerk ? (
-            <>
-              <p className="mt-4 text-muted">
-                Sign in with Clerk, then make sure your user has{" "}
-                <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
-                in the Clerk Dashboard.
-              </p>
-              <Link
-                href="/sign-in?redirect_url=/admin"
-                className="btn-deep mt-8 inline-flex min-h-11 items-center px-6 text-sm font-medium"
-              >
-                Sign in with Clerk
-              </Link>
-              <details className="mt-10">
-                <summary className="cursor-pointer text-sm text-muted">
-                  Emergency staff password
-                </summary>
-                <StaffPasswordForm redirectTo="/admin" />
-              </details>
-            </>
-          ) : (
-            <>
-              <p className="mt-4 text-muted">
-                Enter the staff password to manage events.
-              </p>
-              <StaffPasswordForm redirectTo="/admin" />
-            </>
-          )}
+          <p className="mt-4 text-muted">
+            Sign in with Clerk, then make sure your user has{" "}
+            <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
+            in the Clerk Dashboard.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/sign-in?redirect_url=/admin"
+              className="btn-deep inline-flex min-h-11 items-center px-6 text-sm font-medium"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/sign-up"
+              className="inline-flex min-h-11 items-center border border-line bg-surface px-6 text-sm font-medium text-ink"
+            >
+              Sign up
+            </Link>
+          </div>
           <Link
             href="/"
             className="mt-8 inline-flex min-h-11 items-center text-sm font-medium text-muted underline underline-offset-4 hover:text-ink"
@@ -98,14 +85,6 @@ export default async function AdminLayout({
         >
           Admin dev bypass is on — not for production. Remove{" "}
           <code className="font-medium">ADMIN_DEV_BYPASS</code> when done testing.
-        </div>
-      ) : null}
-      {admin.viaPassword ? (
-        <div
-          className="border-b border-accent bg-accent-soft px-5 py-2 text-center text-sm text-accent-ink"
-          role="status"
-        >
-          Signed in with staff password — prefer Clerk for day-to-day staff access.
         </div>
       ) : null}
       <header className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-surface">
@@ -141,7 +120,6 @@ export default async function AdminLayout({
           </div>
           <div className="flex min-w-0 items-center gap-3">
             <span className="truncate text-sm text-muted">{admin.email}</span>
-            {admin.viaPassword ? <StaffLogoutButton /> : null}
             {clerk && !bypass && !admin.viaPassword ? <UserButton /> : null}
           </div>
         </div>

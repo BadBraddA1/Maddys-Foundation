@@ -47,11 +47,11 @@ turso db shell maddys-foundation < scripts/schema-turso.sql
 Production uses **Clerk** on `maddysfoundation.org` (custom Clerk DNS: `accounts`, `clerk`, DKIM, `clkmail`).
 
 1. Keys on Vercel: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` (Production + Preview).
-2. Optional URL hints: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-in`.
+2. URL hints: `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`.
 3. In Clerk Dashboard → Users → your user → Public metadata: `{ "role": "admin" }`.
-4. Open [`/sign-in`](https://maddysfoundation.org/sign-in) (or `/admin`, which redirects there), then you’ll land on `/admin`.
+4. Open [`/sign-in`](https://maddysfoundation.org/sign-in) or [`/sign-up`](https://maddysfoundation.org/sign-up) (or `/admin`, which redirects to sign-in), then you’ll land on `/admin`.
 
-Staff password remains an **emergency fallback** on the sign-in page (`ADMIN_STAFF_PASSWORD`). Prefer Clerk for day-to-day access.
+Staff password code may still exist for emergencies, but it is **not shown** on the sign-in UI — use Clerk.
 
 ### Local admin without Clerk
 

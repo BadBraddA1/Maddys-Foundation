@@ -51,7 +51,7 @@ const clerkHandler = clerkMiddleware(async (auth, req) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  // Clerk is primary — send staff to sign-in (password fallback lives there too).
+  // Clerk is primary — send staff to sign-in.
   const signIn = req.nextUrl.clone()
   signIn.pathname = "/sign-in"
   signIn.searchParams.set("redirect_url", req.nextUrl.pathname)

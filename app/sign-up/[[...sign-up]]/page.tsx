@@ -1,12 +1,12 @@
-import { SignIn } from "@clerk/nextjs"
+import { SignUp } from "@clerk/nextjs"
 import Link from "next/link"
 import { clerkConfigured } from "@/lib/auth"
 
-export default function SignInPage() {
+export default function SignUpPage() {
   if (!clerkConfigured()) {
     return (
       <div className="mx-auto max-w-md px-5 py-24 text-center">
-        <h1 className="font-display text-3xl">Sign in</h1>
+        <h1 className="font-display text-3xl">Sign up</h1>
         <p className="mt-4 text-muted">Staff access is not configured yet.</p>
         <Link
           href="/"
@@ -24,16 +24,18 @@ export default function SignInPage() {
         <p className="text-sm font-medium uppercase tracking-wide text-muted">
           Madalyn Robinson Foundation
         </p>
-        <h1 className="mt-2 font-display text-3xl">Staff sign-in</h1>
+        <h1 className="mt-2 font-display text-3xl">Create staff account</h1>
         <p className="mt-3 text-sm text-muted">
-          Sign in with your Clerk account to open the admin desk.
+          After signing up, an admin must set{" "}
+          <code className="text-ink">publicMetadata.role = &quot;admin&quot;</code>{" "}
+          in Clerk before you can open the desk.
         </p>
       </div>
 
-      <SignIn
+      <SignUp
         routing="path"
-        path="/sign-in"
-        signUpUrl="/sign-up"
+        path="/sign-up"
+        signInUrl="/sign-in"
         forceRedirectUrl="/admin"
         fallbackRedirectUrl="/admin"
       />
