@@ -47,7 +47,7 @@ export async function listAuditLogs(opts?: {
   const actor = opts?.actor?.trim()
 
   const result = actor
-    ? await sql.execute(
+    ? await sql.query(
         `SELECT id, actor, action, entity_type, entity_id, detail, created_at
          FROM audit_logs
          WHERE actor = ?
@@ -55,7 +55,7 @@ export async function listAuditLogs(opts?: {
          LIMIT ? OFFSET ?`,
         [actor, limit, offset],
       )
-    : await sql.execute(
+    : await sql.query(
         `SELECT id, actor, action, entity_type, entity_id, detail, created_at
          FROM audit_logs
          ORDER BY datetime(created_at) DESC, id DESC
@@ -63,5 +63,5 @@ export async function listAuditLogs(opts?: {
         [limit, offset],
       )
 
-  return result.rows.map(mapAudit)
+  return result.map(mapAudit)
 }
