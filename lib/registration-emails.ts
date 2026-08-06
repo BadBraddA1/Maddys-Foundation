@@ -8,6 +8,17 @@ import { sql } from "@/lib/db"
 import { formatEventDate, toEventIso } from "@/lib/events"
 import { emailConfigured, sendEmail } from "@/lib/email"
 import type { EmailTemplateKind } from "@/lib/email-templates"
+import {
+  emailCodeBlock,
+  emailCta,
+  emailDetailRows,
+  emailHeading,
+  emailParagraph,
+  emailQrBlock,
+  emailSecondaryLink,
+  escapeEmailHtml,
+  wrapEmailHtml,
+} from "@/lib/email-layout"
 import { publicSiteUrl } from "@/lib/stripe"
 import { siteName } from "@/lib/site-metadata"
 import { playerTicketUrlForCode } from "@/lib/ticket"
@@ -85,11 +96,7 @@ async function ensureCode(reg: RegEmailRow): Promise<string> {
 }
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
+  return escapeEmailHtml(s)
 }
 
 function sampleRegRow(): RegEmailRow {
@@ -141,24 +148,29 @@ function buildPlayerTicketBodies(opts: {
     `— ${siteName}`,
   ].join("\n")
 
-  const html = `
-    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a2e24;line-height:1.5">
-      <p>Hi ${escapeHtml(opts.name)},</p>
-      <p>You're on team <strong>${escapeHtml(opts.team)}</strong> for <strong>${escapeHtml(opts.eventTitle)}</strong>.</p>
-      <p>
-        <strong>When:</strong> ${escapeHtml(opts.when)}<br/>
-        <strong>Where:</strong> ${escapeHtml(opts.where)}
-      </p>
-      <p style="font-size:1.15rem;letter-spacing:0.04em">
-        <strong>Your check-in code:</strong>
-        <span style="font-family:ui-monospace,monospace">${escapeHtml(opts.code)}</span>
-      </p>
-      <p><img src="${escapeHtml(opts.qrImgSrc)}" alt="Check-in QR code" width="200" height="200" style="display:block;border:0"/></p>
-      <p><a href="${escapeHtml(opts.ticketUrl)}">Open your personal ticket</a> — show this screen at the check-in desk.</p>
-      <p>Staff will scan your QR to check you in automatically.</p>
-      <p style="color:#5a6b60;font-size:0.9rem">— ${escapeHtml(siteName)}</p>
-    </div>
-  `.trim()
+  const bodyHtml = [
+    emailHeading("Your check-in ticket"),
+    emailParagraph(`Hi ${escapeHtml(opts.name)},`),
+    emailParagraph(
+      `You're on team <strong>${escapeHtml(opts.team)}</strong> for <strong>${escapeHtml(opts.eventTitle)}</strong>.`,
+    ),
+    emailDetailRows([
+      { label: "When", value: opts.when },
+      { label: "Where", value: opts.where },
+    ]),
+    emailCodeBlock(opts.code, "Your check-in code"),
+    emailQrBlock(opts.qrImgSrc),
+    emailCta(opts.ticketUrl, "Open your personal ticket"),
+    emailParagraph(
+      "Show this screen at the check-in desk. Staff will scan your QR to check you in automatically.",
+      true,
+    ),
+  ].join("")
+
+  const html = wrapEmailHtml({
+    preheader: `Personal check-in QR for ${opts.eventTitle}`,
+    bodyHtml,
+  })
   return { subject, html, text }
 }
 
@@ -232,6 +244,7 @@ function buildBodies(opts: {
 
   if (opts.kind === "confirmation") {
     const subject = `You're registered — ${opts.reg.event_title}`
+    const eventUrl = `${publicSiteUrl()}/events/${opts.reg.event_slug}`
     const text = [
       `Hi ${opts.reg.name},`,
       "",
@@ -245,31 +258,36 @@ function buildBodies(opts: {
       "",
       shareBlurb,
       "",
-      `Event details: ${publicSiteUrl()}/events/${opts.reg.event_slug}`,
+      `Event details: ${eventUrl}`,
       "",
       `— ${siteName}`,
     ].join("\n")
 
-    const html = `
-      <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a2e24;line-height:1.5">
-        <p>Hi ${escapeHtml(opts.reg.name)},</p>
-        <p>You're confirmed for <strong>${escapeHtml(opts.reg.event_title)}</strong>.</p>
-        <p>
-          <strong>Team:</strong> ${escapeHtml(opts.reg.team_name)}<br/>
-          <strong>When:</strong> ${escapeHtml(when)}<br/>
-          <strong>Where:</strong> ${escapeHtml(where)}
-        </p>
-        <p style="font-size:1.25rem;letter-spacing:0.06em">
-          <strong>Check-in code:</strong>
-          <span style="font-family:ui-monospace,monospace">${escapeHtml(opts.code)}</span>
-        </p>
-        <p><img src="${escapeHtml(opts.qrImgSrc)}" alt="Check-in QR code" width="200" height="200" style="display:block;border:0"/></p>
-        <p><a href="${escapeHtml(opts.ticketUrl)}">Open your team ticket</a> — print or save this page and share it with teammates.</p>
-        <p>${escapeHtml(shareBlurb)}</p>
-        <p><a href="${escapeHtml(`${publicSiteUrl()}/events/${opts.reg.event_slug}`)}">Event details</a></p>
-        <p style="color:#5a6b60;font-size:0.9rem">— ${escapeHtml(siteName)}</p>
-      </div>
-    `.trim()
+    const bodyHtml = [
+      emailHeading("You're registered"),
+      emailParagraph(`Hi ${escapeHtml(opts.reg.name)},`),
+      emailParagraph(
+        `You're confirmed for <strong>${escapeHtml(opts.reg.event_title)}</strong>.`,
+      ),
+      emailDetailRows([
+        { label: "Team", value: opts.reg.team_name },
+        { label: "When", value: when },
+        { label: "Where", value: where },
+      ]),
+      emailCodeBlock(opts.code, "Team check-in code"),
+      emailQrBlock(opts.qrImgSrc),
+      emailCta(opts.ticketUrl, "Open your team ticket"),
+      emailParagraph(escapeHtml(shareBlurb), true),
+      emailParagraph(
+        `${emailSecondaryLink(eventUrl, "Event details")}`,
+        true,
+      ),
+    ].join("")
+
+    const html = wrapEmailHtml({
+      preheader: `Confirmed for ${opts.reg.event_title} — team ${opts.reg.team_name}`,
+      bodyHtml,
+    })
     return { subject, html, text }
   }
 
@@ -289,24 +307,26 @@ function buildBodies(opts: {
     `— ${siteName}`,
   ].join("\n")
 
-  const html = `
-    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a2e24;line-height:1.5">
-      <p>Hi ${escapeHtml(opts.reg.name)},</p>
-      <p><strong>${escapeHtml(opts.reg.event_title)}</strong> is about a week away.</p>
-      <p>
-        <strong>Team:</strong> ${escapeHtml(opts.reg.team_name)}<br/>
-        <strong>When:</strong> ${escapeHtml(when)}
-      </p>
-      <p style="font-size:1.25rem;letter-spacing:0.06em">
-        <strong>Check-in code:</strong>
-        <span style="font-family:ui-monospace,monospace">${escapeHtml(opts.code)}</span>
-      </p>
-      <p><img src="${escapeHtml(opts.qrImgSrc)}" alt="Check-in QR code" width="200" height="200" style="display:block;border:0"/></p>
-      <p><a href="${escapeHtml(opts.ticketUrl)}">Open your team ticket</a> and share it with every teammate before event day.</p>
-      <p>${escapeHtml(shareBlurb)}</p>
-      <p style="color:#5a6b60;font-size:0.9rem">— ${escapeHtml(siteName)}</p>
-    </div>
-  `.trim()
+  const bodyHtml = [
+    emailHeading("One week to go"),
+    emailParagraph(`Hi ${escapeHtml(opts.reg.name)},`),
+    emailParagraph(
+      `<strong>${escapeHtml(opts.reg.event_title)}</strong> is about a week away.`,
+    ),
+    emailDetailRows([
+      { label: "Team", value: opts.reg.team_name },
+      { label: "When", value: when },
+    ]),
+    emailCodeBlock(opts.code, "Team check-in code"),
+    emailQrBlock(opts.qrImgSrc),
+    emailCta(opts.ticketUrl, "Open your team ticket"),
+    emailParagraph(escapeHtml(shareBlurb), true),
+  ].join("")
+
+  const html = wrapEmailHtml({
+    preheader: `${opts.reg.event_title} is in about a week — share teammate tickets`,
+    bodyHtml,
+  })
   return { subject, html, text }
 }
 
