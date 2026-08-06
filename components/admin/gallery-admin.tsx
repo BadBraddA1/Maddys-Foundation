@@ -14,15 +14,6 @@ const UPLOAD_CONCURRENCY = 2
 const ACCEPT =
   "image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
 
-function titleFromFilename(name: string): string {
-  return name
-    .replace(/\.[^.]+$/, "")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 160)
-}
-
 async function mapPool<T, R>(
   items: T[],
   concurrency: number,
@@ -208,10 +199,8 @@ export function GalleryAdmin({ initialImages, initialTags, r2Ready }: Props) {
     try {
       await mapPool(files, UPLOAD_CONCURRENCY, async (file) => {
         const form = new FormData()
-        const fileTitle =
-          total === 1 && singleTitle
-            ? singleTitle
-            : titleFromFilename(file.name) || singleTitle
+        // Public gallery does not show titles; only set when staff typed one for a single file.
+        const fileTitle = total === 1 ? singleTitle : ""
         form.set("title", fileTitle)
         form.set("caption", batchCaption)
         for (const id of batchTagIds) form.append("tagIds", String(id))
@@ -436,7 +425,7 @@ export function GalleryAdmin({ initialImages, initialTags, r2Ready }: Props) {
         <h2 className="font-display text-xl">Add photos</h2>
         <p className="text-sm text-muted">
           Select one or many images. Shared tags and caption apply to the whole
-          batch. Multi-file titles come from each filename.
+          batch. Titles are optional (not shown on the public gallery).
         </p>
         {files.length <= 1 ? (
           <div>

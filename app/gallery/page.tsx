@@ -120,9 +120,6 @@ export default async function GalleryPage({ searchParams }: Props) {
                         ))}
                       </p>
                     ) : null}
-                    {img.title ? (
-                      <p className="mt-1 font-medium text-ink">{img.title}</p>
-                    ) : null}
                     {img.caption ? (
                       <p className="mt-1 text-sm text-muted">{img.caption}</p>
                     ) : null}

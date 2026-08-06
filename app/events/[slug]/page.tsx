@@ -118,6 +118,17 @@ export default async function EventDetailPage({ params }: Props) {
           </p>
         ) : null}
 
+        {open ? (
+          <div className="mt-8">
+            <Link
+              href={`/events/${event.slug}/register`}
+              className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink sm:w-auto"
+            >
+              {teamSize ? "Register your team" : "Register for this event"}
+            </Link>
+          </div>
+        ) : null}
+
         <EventCapacityBanner event={event} />
 
         {event.description ? (
