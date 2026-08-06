@@ -7,9 +7,13 @@ import { ensureEventPlayerTicketColumns } from "@/lib/check-in"
 import { sql } from "@/lib/db"
 import { formatEventDate, toEventIso } from "@/lib/events"
 import { emailConfigured, sendEmail } from "@/lib/email"
+import type { EmailTemplateKind } from "@/lib/email-templates"
 import { publicSiteUrl } from "@/lib/stripe"
 import { siteName } from "@/lib/site-metadata"
 import { playerTicketUrlForCode } from "@/lib/ticket"
+
+export type { EmailTemplateKind } from "@/lib/email-templates"
+export { EMAIL_TEMPLATE_OPTIONS } from "@/lib/email-templates"
 
 type RegEmailRow = {
   id: number
@@ -80,6 +84,133 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
+}
+
+function sampleRegRow(): RegEmailRow {
+  const starts = new Date()
+  starts.setUTCDate(starts.getUTCDate() + 21)
+  return {
+    id: 0,
+    name: "Alex Captain",
+    email: "alex@example.com",
+    team_name: "Sample Fairway Four",
+    check_in_code: "OV-TEST01",
+    confirmation_email_sent_at: null,
+    reminder_email_sent_at: null,
+    event_id: 0,
+    event_title: "Oak Valley Golf Scramble (sample)",
+    event_slug: "oak-valley-golf-scramble",
+    event_location: "Oak Valley Golf Club, Pevely, MO",
+    event_starts_at: starts.toISOString(),
+  }
+}
+
+function sampleQrSrc(ticketUrl: string): string {
+  // Prefer a real ticket QR route when available; fall back to brand mark.
+  return `${ticketUrl}/qr`
+}
+
+function buildPlayerTicketBodies(opts: {
+  name: string
+  team: string
+  eventTitle: string
+  when: string
+  where: string
+  code: string
+  ticketUrl: string
+  qrImgSrc: string
+}): { subject: string; html: string; text: string } {
+  const subject = `Your check-in ticket — ${opts.eventTitle}`
+  const text = [
+    `Hi ${opts.name},`,
+    "",
+    `You're on team ${opts.team} for ${opts.eventTitle}.`,
+    `When: ${opts.when}`,
+    `Where: ${opts.where}`,
+    "",
+    `Your personal check-in code: ${opts.code}`,
+    `Your ticket (show this QR at the desk): ${opts.ticketUrl}`,
+    "",
+    "Staff will scan your QR to check you in automatically.",
+    "",
+    `— ${siteName}`,
+  ].join("\n")
+
+  const html = `
+    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a2e24;line-height:1.5">
+      <p>Hi ${escapeHtml(opts.name)},</p>
+      <p>You're on team <strong>${escapeHtml(opts.team)}</strong> for <strong>${escapeHtml(opts.eventTitle)}</strong>.</p>
+      <p>
+        <strong>When:</strong> ${escapeHtml(opts.when)}<br/>
+        <strong>Where:</strong> ${escapeHtml(opts.where)}
+      </p>
+      <p style="font-size:1.15rem;letter-spacing:0.04em">
+        <strong>Your check-in code:</strong>
+        <span style="font-family:ui-monospace,monospace">${escapeHtml(opts.code)}</span>
+      </p>
+      <p><img src="${escapeHtml(opts.qrImgSrc)}" alt="Check-in QR code" width="200" height="200" style="display:block;border:0"/></p>
+      <p><a href="${escapeHtml(opts.ticketUrl)}">Open your personal ticket</a> — show this screen at the check-in desk.</p>
+      <p>Staff will scan your QR to check you in automatically.</p>
+      <p style="color:#5a6b60;font-size:0.9rem">— ${escapeHtml(siteName)}</p>
+    </div>
+  `.trim()
+  return { subject, html, text }
+}
+
+/** Build sample email bodies for admin template testing (no DB writes). */
+export function buildSampleEmail(
+  kind: EmailTemplateKind,
+): { subject: string; html: string; text: string } {
+  const reg = sampleRegRow()
+  const code = reg.check_in_code || "OV-TEST01"
+
+  if (kind === "player_ticket") {
+    const ticketUrl = playerTicketUrlForCode("OV-P-TEST01")
+    return buildPlayerTicketBodies({
+      name: "Sam Player",
+      team: reg.team_name,
+      eventTitle: reg.event_title,
+      when: formatEventDate(reg.event_starts_at),
+      where: reg.event_location || "See event page for location",
+      code: "OV-P-TEST01",
+      ticketUrl,
+      qrImgSrc: sampleQrSrc(ticketUrl),
+    })
+  }
+
+  const ticketUrl = ticketUrlForCode(code)
+  return buildBodies({
+    kind,
+    reg,
+    code,
+    ticketUrl,
+    qrImgSrc: sampleQrSrc(ticketUrl),
+  })
+}
+
+/** Send a sample template to an address (admin test). Does not update registration flags. */
+export async function sendTestTemplateEmail(opts: {
+  kind: EmailTemplateKind
+  to: string
+}): Promise<{ ok: true; id?: string } | { ok: false; error: string }> {
+  const to = opts.to.trim().toLowerCase()
+  if (!isValidPlayerEmail(to)) {
+    return { ok: false, error: "Enter a valid email address." }
+  }
+  if (!emailConfigured()) {
+    return {
+      ok: false,
+      error: "Email is not configured (SENDKIT_API_KEY + EMAIL_FROM).",
+    }
+  }
+  const bodies = buildSampleEmail(opts.kind)
+  const subject = `[TEST] ${bodies.subject}`
+  return sendEmail({
+    to,
+    subject,
+    html: bodies.html,
+    text: bodies.text,
+  })
 }
 
 function buildBodies(opts: {
@@ -336,42 +467,22 @@ export async function sendPlayerTicketEmail(
   const team = String(row.team_name ?? "").trim() || String(row.captain_name)
   const eventTitle = String(row.event_title)
 
-  const subject = `Your check-in ticket — ${eventTitle}`
-  const text = [
-    `Hi ${name},`,
-    "",
-    `You're on team ${team} for ${eventTitle}.`,
-    `When: ${when}`,
-    `Where: ${where}`,
-    "",
-    `Your personal check-in code: ${code}`,
-    `Your ticket (show this QR at the desk): ${ticketUrl}`,
-    "",
-    "Staff will scan your QR to check you in automatically.",
-    "",
-    `— ${siteName}`,
-  ].join("\n")
-
-  const html = `
-    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a2e24;line-height:1.5">
-      <p>Hi ${escapeHtml(name)},</p>
-      <p>You're on team <strong>${escapeHtml(team)}</strong> for <strong>${escapeHtml(eventTitle)}</strong>.</p>
-      <p>
-        <strong>When:</strong> ${escapeHtml(when)}<br/>
-        <strong>Where:</strong> ${escapeHtml(where)}
-      </p>
-      <p style="font-size:1.15rem;letter-spacing:0.04em">
-        <strong>Your check-in code:</strong>
-        <span style="font-family:ui-monospace,monospace">${escapeHtml(code)}</span>
-      </p>
-      <p><img src="${escapeHtml(qrImgSrc)}" alt="Check-in QR code" width="200" height="200" style="display:block;border:0"/></p>
-      <p><a href="${escapeHtml(ticketUrl)}">Open your personal ticket</a> — show this screen at the check-in desk.</p>
-      <p>Staff will scan your QR to check you in automatically.</p>
-      <p style="color:#5a6b60;font-size:0.9rem">— ${escapeHtml(siteName)}</p>
-    </div>
-  `.trim()
-
-  const result = await sendEmail({ to, subject, html, text })
+  const bodies = buildPlayerTicketBodies({
+    name,
+    team,
+    eventTitle,
+    when,
+    where,
+    code,
+    ticketUrl,
+    qrImgSrc,
+  })
+  const result = await sendEmail({
+    to,
+    subject: bodies.subject,
+    html: bodies.html,
+    text: bodies.text,
+  })
   if (!result.ok) return { ok: false, error: result.error }
 
   await sql.execute(

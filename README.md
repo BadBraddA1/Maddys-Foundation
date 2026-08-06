@@ -7,7 +7,7 @@ Public foundation site + custom event registration for **[maddysfoundation.org](
 - Marketing site (home, Maddy’s story, donate, privacy, **gallery**)
 - Published events list + detail pages (Google / Apple Maps links from location)
 - Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set; opening the register form **reserves a capacity slot** for **10 minutes** (assumes they’ll pay); unpaid / expired holds return to the pool; roster only shows paid teams
-- Staff admin (`/admin`) to create/edit/delete events, **add/edit/delete roster registrations** (and team player lists), confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), **gallery** photos, **staff invites / roles** (`/admin/staff`), and **audit log** (`/admin/audit`)
+- Staff admin (`/admin`) to create/edit/delete events, **add/edit/delete roster registrations** (and team player lists), confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), **gallery** photos, **email template tests** (`/admin/email`), **staff invites / roles** (`/admin/staff`), and **audit log** (`/admin/audit`)
 - Footer sponsor logo strip (scrolling) fed from Turso + R2; lives in the root layout (won’t remount on nav); rAF wall-clock position; duplicates logos until the track fills the viewport
 
 Inspired in tone by Mighty Maddy — original brand, copy, and design.
@@ -240,10 +240,11 @@ Request production access in the Wallet console when you’re ready for public (
 ## Registration email (ops)
 
 1. Create a SendKit API key; set `SENDKIT_API_KEY` + `EMAIL_FROM` on Vercel (Production). `EMAIL_FROM` must use a domain verified in SendKit (e.g. `Madalyn Robinson Foundation <noreply@maddysfoundation.org>`).
-2. Set `CRON_SECRET` and ensure Vercel Cron can hit `/api/cron/registration-reminders` (Authorization: Bearer).
-3. After a paid registration, captains get a confirmation with the **team ticket** link. On `/ticket/CODE` they enter each teammate’s email → **Save & send tickets** → each player gets `/ticket/p/CODE` with a personal QR.
-4. ~7 days before the event (America/Chicago), captains get a “share with teammates” reminder.
-5. Staff can resend the captain confirmation from the event roster or check-in team page. Captains can resend player tickets with the “Resend even if already sent” checkbox.
+2. Staff can preview delivery from **`/admin/email`** — pick confirmation / 7-day reminder / player ticket, enter an address, **Send test email** (subject prefixed `[TEST]`).
+3. Set `CRON_SECRET` and ensure Vercel Cron can hit `/api/cron/registration-reminders` (Authorization: Bearer).
+4. After a paid registration, captains get a confirmation with the **team ticket** link. On `/ticket/CODE` they enter each teammate’s email → **Save & send tickets** → each player gets `/ticket/p/CODE` with a personal QR.
+5. ~7 days before the event (America/Chicago), captains get a “share with teammates” reminder.
+6. Staff can resend the captain confirmation from the event roster or check-in team page. Captains can resend player tickets with the “Resend even if already sent” checkbox.
 
 ## Site chrome checklist ([braddcorp-reg-kit playbook 05](https://github.com/BadBraddA1/braddcorp-reg-kit/blob/main/playbook/05-site-chrome.md))
 
@@ -264,5 +265,5 @@ Templates live in the kit: [`templates/site-chrome/`](https://github.com/BadBrad
 - Apple Wallet: team/player tickets offer **Add to Apple Wallet** (`.pkpass`) when Pass Type ID certs are configured; QR on the pass matches desk scan URLs; location relevance defaults to Oak Valley Pevely (override per event with venue lat/lng)
 - Google Wallet: same tickets offer **Add to Google Wallet** when Issuer ID + service account are configured (`/ticket/…/google-wallet` → signed save link); demo mode needs your Google account as a test user
 - Public: `/` `/story` `/events` `/events/[slug]/register` `/ticket/[code]` `/ticket/[code]/wallet` `/ticket/p/[code]` `/ticket/p/[code]/wallet` `/gallery` `/donate` `/privacy`
-- Staff: `/admin` `/admin/staff` `/admin/audit` `/admin/sponsors` `/admin/gallery` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations` `/admin/events/[id]/registrations/new` `/admin/events/[id]/registrations/[registrationId]`
-- API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `GET/POST /api/admin/staff` · `PATCH /api/admin/staff/[userId]` · `DELETE /api/admin/staff/invitations/[id]` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `GET/POST/DELETE /api/admin/gallery/tags` · `/api/cron/registration-reminders`
+- Staff: `/admin` `/admin/staff` `/admin/audit` `/admin/sponsors` `/admin/gallery` `/admin/email` `/admin/check-in` `/admin/check-in/dashboard` `/admin/events/new` `/admin/events/[id]` `/admin/events/[id]/registrations` `/admin/events/[id]/registrations/new` `/admin/events/[id]/registrations/[registrationId]`
+- API: `POST /api/register` · `POST/PATCH/DELETE /api/admin/events` · `GET/POST /api/admin/staff` · `PATCH /api/admin/staff/[userId]` · `DELETE /api/admin/staff/invitations/[id]` · `POST /api/admin/check-in/scan` · `POST /api/ticket/[code]/players` · `/api/admin/check-in/*` · `/api/admin/sponsors` · `/api/admin/gallery` · `GET/POST/DELETE /api/admin/gallery/tags` · `POST /api/admin/email/test` · `/api/cron/registration-reminders`

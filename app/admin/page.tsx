@@ -64,6 +64,12 @@ export default async function AdminHomePage() {
             Gallery
           </Link>
           <Link
+            href="/admin/email"
+            className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
+          >
+            Email tests
+          </Link>
+          <Link
             href="/admin/check-in"
             className="inline-flex min-h-11 items-center border border-line bg-surface px-5 text-sm font-medium text-ink"
           >

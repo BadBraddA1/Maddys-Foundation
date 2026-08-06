@@ -118,6 +118,12 @@ export default async function AdminLayout({
               Gallery
             </Link>
             <Link
+              href="/admin/email"
+              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+            >
+              Email
+            </Link>
+            <Link
               href="/admin/staff"
               className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
             >

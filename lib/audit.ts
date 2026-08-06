@@ -31,6 +31,7 @@ const ACTION_LABELS: Record<string, string> = {
   delete_registration: "Deleted a registration",
   confirm_registration: "Marked a registration paid/confirmed",
   resend_confirmation: "Resent a registration confirmation email",
+  test_email: "Sent a test email template",
   register: "Public registration submitted",
   invite_staff: "Invited a staff admin",
   revoke_invite: "Revoked a staff invite",
