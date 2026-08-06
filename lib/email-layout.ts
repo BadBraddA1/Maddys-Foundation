@@ -123,7 +123,7 @@ export function wrapEmailHtml(opts: {
 </html>`.trim()
 }
 
-export function emailDetailRow(
+export function emailDetailRows(
   rows: Array<{ label: string; value: string }>,
 ): string {
   const lines = rows
