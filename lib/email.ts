@@ -1,5 +1,3 @@
-import { Resend } from "resend"
-
 export type SendEmailInput = {
   to: string | string[]
   subject: string
@@ -13,9 +11,11 @@ export type SendEmailInput = {
   }>
 }
 
+const SENDKIT_API = "https://api.sendkit.dev"
+
 export function emailConfigured(): boolean {
   return Boolean(
-    process.env.RESEND_API_KEY?.trim() && process.env.EMAIL_FROM?.trim(),
+    process.env.SENDKIT_API_KEY?.trim() && process.env.EMAIL_FROM?.trim(),
   )
 }
 
@@ -55,25 +55,55 @@ export async function sendEmail(
     return { ok: false, error: "Email is not configured" }
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY!.trim())
-  const { data, error } = await resend.emails.send({
+  const body: Record<string, unknown> = {
     from: process.env.EMAIL_FROM!.trim(),
-    to: deliverable,
+    to: deliverable.length === 1 ? deliverable[0] : deliverable,
     subject: input.subject,
     html: input.html,
     text: input.text,
-    attachments: input.attachments?.map((a) => ({
-      filename: a.filename,
-      content: a.content,
-      contentType: a.contentType,
-      contentId: a.contentId,
-      contentDisposition: a.contentId ? ("inline" as const) : undefined,
-    })),
-  })
-
-  if (error) {
-    console.error("[email] send failed", error)
-    return { ok: false, error: error.message }
   }
-  return { ok: true, id: data?.id }
+
+  if (input.attachments?.length) {
+    body.attachments = input.attachments.map((a) => ({
+      filename: a.filename,
+      content: a.content.toString("base64"),
+      content_type: a.contentType,
+    }))
+  }
+
+  let res: Response
+  try {
+    res = await fetch(`${SENDKIT_API}/emails`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.SENDKIT_API_KEY!.trim()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Network error"
+    console.error("[email] sendkit request failed", err)
+    return { ok: false, error: message }
+  }
+
+  const raw = await res.text()
+  let parsed: { id?: string; data?: Array<{ id?: string }>; message?: string; name?: string } =
+    {}
+  try {
+    parsed = raw ? (JSON.parse(raw) as typeof parsed) : {}
+  } catch {
+    // non-JSON error body
+  }
+
+  if (!res.ok) {
+    const message =
+      parsed.message ||
+      (raw.trim() ? raw.slice(0, 240) : `SendKit HTTP ${res.status}`)
+    console.error("[email] send failed", res.status, message)
+    return { ok: false, error: message }
+  }
+
+  const id = parsed.id || parsed.data?.[0]?.id
+  return { ok: true, id }
 }

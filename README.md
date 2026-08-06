@@ -97,8 +97,8 @@ A yellow banner shows when bypass is active. It only works in **development** or
 | `R2_UPLOAD_WORKER_URL` | media | Worker that accepts staff uploads |
 | `R2_UPLOAD_SECRET` | media | Shared secret header for the upload Worker |
 | `R2_ACCOUNT_ID` / `R2_BUCKET_NAME` | media | Account + bucket name (docs / optional S3) |
-| `RESEND_API_KEY` | email | Resend API key for registration mail |
-| `EMAIL_FROM` | email | From header (Resend test domain or verified domain) |
+| `SENDKIT_API_KEY` | email | SendKit API key for registration mail |
+| `EMAIL_FROM` | email | From header (verified SendKit domain, e.g. `Madalyn Robinson Foundation <noreply@maddysfoundation.org>`) |
 | `CRON_SECRET` | cron | Bearer secret for `/api/cron/*` (reminders + optional holds) |
 
 Never commit `.env.local` or tokens.
@@ -150,7 +150,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Main event: Oak Valley Golf Scramble 2026-09-25 (shotgun 8:00 AM, Pevely) — 4-person teams, **31 team capacity**, $500/team, pay-before-confirm, contests in description; Maps links on event page; admin “Mark paid / confirm”
 - Stripe: Checkout on paid registration + webhook confirms roster; **10-minute hold** then unpaid drafts are released (Stripe session expired + row deleted) and never shown in admin
 - Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); **player QR auto check-in**; `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
-- Registration email: confirmation on paid confirm (Stripe webhook + admin Mark paid) via Resend; team ticket `/ticket/[code]` (captain enters teammate emails → personal `/ticket/p/[code]` QRs); daily cron (`vercel.json` 14:00 UTC) sends a 7-day teammate reminder; roster/check-in can **Resend confirmation**
+- Registration email: confirmation on paid confirm (Stripe webhook + admin Mark paid) via **SendKit**; team ticket `/ticket/[code]` (captain enters teammate emails → personal `/ticket/p/[code]` QRs); daily cron (`vercel.json` 14:00 UTC) sends a 7-day teammate reminder; roster/check-in can **Resend confirmation**
 - Admin events: create / edit / **delete** + optional cover image URL for event OG cards
 - Admin roster: **Add registration**, **Edit roster** (captain + player names/emails), **Delete registration** on `/admin/events/[id]/registrations`
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
@@ -239,7 +239,7 @@ Request production access in the Wallet console when you’re ready for public (
 
 ## Registration email (ops)
 
-1. Create a Resend API key; set `RESEND_API_KEY` + `EMAIL_FROM` on Vercel (Production). Until the custom domain is verified, use Resend’s onboarding from-address.
+1. Create a SendKit API key; set `SENDKIT_API_KEY` + `EMAIL_FROM` on Vercel (Production). `EMAIL_FROM` must use a domain verified in SendKit (e.g. `Madalyn Robinson Foundation <noreply@maddysfoundation.org>`).
 2. Set `CRON_SECRET` and ensure Vercel Cron can hit `/api/cron/registration-reminders` (Authorization: Bearer).
 3. After a paid registration, captains get a confirmation with the **team ticket** link. On `/ticket/CODE` they enter each teammate’s email → **Save & send tickets** → each player gets `/ticket/p/CODE` with a personal QR.
 4. ~7 days before the event (America/Chicago), captains get a “share with teammates” reminder.
