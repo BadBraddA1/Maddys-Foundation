@@ -33,8 +33,7 @@ type CheckInTeam = {
 
 type PlayerDraft = {
   skins: boolean
-  golf_cannon: boolean
-  golf_pro: boolean
+  mulligans: boolean
 }
 
 function money(cents: number) {
@@ -103,8 +102,7 @@ export function CheckInDesk({
     for (const p of next.players) {
       nextDrafts[p.id] = {
         skins: p.skins === 1,
-        golf_cannon: p.golf_cannon === 1,
-        golf_pro: p.golf_pro === 1,
+        mulligans: p.mulligans === 1,
       }
     }
     setDrafts(nextDrafts)
@@ -323,8 +321,7 @@ export function CheckInDesk({
               id: p.id,
               ...(drafts[p.id] ?? {
                 skins: false,
-                golf_cannon: false,
-                golf_pro: false,
+                mulligans: false,
               }),
             })),
           }),
@@ -548,8 +545,7 @@ export function CheckInDesk({
                 {team.players.map((player) => {
                   const draft = drafts[player.id] ?? {
                     skins: false,
-                    golf_cannon: false,
-                    golf_pro: false,
+                    mulligans: false,
                   }
                   const total = computeAddonTotalCents(draft, team.prices)
                   const inAlready = isPlayerCheckedIn(player)
@@ -643,8 +639,7 @@ export function CheckInDesk({
                     {team.players.map((player) => {
                       const draft = drafts[player.id] ?? {
                         skins: false,
-                        golf_cannon: false,
-                        golf_pro: false,
+                        mulligans: false,
                       }
                       const total = computeAddonTotalCents(draft, team.prices)
                       const inAlready = isPlayerCheckedIn(player)

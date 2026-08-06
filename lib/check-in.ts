@@ -37,9 +37,12 @@ export type CheckInTeam = {
 
 const DEFAULT_PRICES: AddonPrice[] = [
   { addon_key: "skins", label: "Skins", price_cents: 2000 },
-  { addon_key: "golf_cannon", label: "Golf Cannon", price_cents: 1000 },
-  { addon_key: "golf_pro", label: "Golf Pro", price_cents: 2500 },
+  { addon_key: "mulligans", label: "Mulligans", price_cents: 2000 },
 ]
+
+const ACTIVE_ADDON_KEYS = new Set<AddonKey>(
+  DEFAULT_PRICES.map((p) => p.addon_key),
+)
 
 export async function ensureAddonPrices(eventId: number): Promise<AddonPrice[]> {
   const existing = await sql`
@@ -49,10 +52,11 @@ export async function ensureAddonPrices(eventId: number): Promise<AddonPrice[]> 
   `
   const byKey = new Map<string, AddonPrice>()
   for (const row of existing) {
-    const key = String(row.addon_key) as AddonKey
+    const key = String(row.addon_key)
+    if (!ACTIVE_ADDON_KEYS.has(key as AddonKey)) continue
     if (!byKey.has(key)) {
       byKey.set(key, {
-        addon_key: key,
+        addon_key: key as AddonKey,
         label: String(row.label),
         price_cents: Number(row.price_cents),
       })
@@ -68,6 +72,13 @@ export async function ensureAddonPrices(eventId: number): Promise<AddonPrice[]> 
       byKey.set(def.addon_key, def)
     }
   }
+  // Drop retired desk options (Golf Cannon / Golf Pro) so old rows don't resurface.
+  await sql.execute(
+    `DELETE FROM addon_prices
+     WHERE event_id = ?
+       AND addon_key IN ('golf_cannon', 'golf_pro')`,
+    [eventId],
+  )
   return DEFAULT_PRICES.map((d) => byKey.get(d.addon_key) ?? d)
 }
 
@@ -81,8 +92,7 @@ function mapPlayer(row: Record<string, unknown>): EventPlayer {
     checked_in: Number(row.checked_in ?? 0),
     checked_in_at: row.checked_in_at == null ? null : String(row.checked_in_at),
     skins: Number(row.skins ?? 0),
-    golf_cannon: Number(row.golf_cannon ?? 0),
-    golf_pro: Number(row.golf_pro ?? 0),
+    mulligans: Number(row.mulligans ?? 0),
     addon_total_cents: Number(row.addon_total_cents ?? 0),
     email: String(row.email ?? ""),
     check_in_code: row.check_in_code ? String(row.check_in_code) : null,
@@ -93,7 +103,7 @@ function mapPlayer(row: Record<string, unknown>): EventPlayer {
   }
 }
 
-/** Best-effort ALTERs for DBs created before per-player tickets. */
+/** Best-effort ALTERs for DBs created before per-player tickets / mulligans. */
 let playerColumnsReady: Promise<void> | null = null
 
 export function ensureEventPlayerTicketColumns(): Promise<void> {
@@ -103,6 +113,7 @@ export function ensureEventPlayerTicketColumns(): Promise<void> {
         `ALTER TABLE event_players ADD COLUMN email TEXT NOT NULL DEFAULT ''`,
         `ALTER TABLE event_players ADD COLUMN check_in_code TEXT`,
         `ALTER TABLE event_players ADD COLUMN ticket_email_sent_at TEXT`,
+        `ALTER TABLE event_players ADD COLUMN mulligans INTEGER NOT NULL DEFAULT 0`,
       ]
       for (const q of alters) {
         try {
@@ -582,26 +593,25 @@ export async function saveTeamAddOns(
   players: Array<{
     id: number
     skins: boolean
-    golf_cannon: boolean
-    golf_pro: boolean
+    mulligans: boolean
   }>,
   actor: string,
 ): Promise<CheckInTeam | null> {
   const team = await getCheckInTeam(registrationId)
   if (!team) return null
 
+  await ensureEventPlayerTicketColumns()
   const priceList = team.prices
   for (const patch of players) {
     const total = computeAddonTotalCents(patch, priceList)
     await sql.execute(
       `UPDATE event_players
-       SET skins = ?, golf_cannon = ?, golf_pro = ?, addon_total_cents = ?,
-           updated_at = CURRENT_TIMESTAMP
+       SET skins = ?, mulligans = ?, golf_cannon = 0, golf_pro = 0,
+           addon_total_cents = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ? AND registration_id = ?`,
       [
         patch.skins ? 1 : 0,
-        patch.golf_cannon ? 1 : 0,
-        patch.golf_pro ? 1 : 0,
+        patch.mulligans ? 1 : 0,
         total,
         patch.id,
         registrationId,
@@ -623,6 +633,7 @@ export async function saveTeamAddOns(
 
 export async function getCheckInDashboard(eventId: number) {
   await syncPlayersForEvent(eventId)
+  await ensureEventPlayerTicketColumns()
 
   const teams = await sql`
     SELECT r.id, r.team_name, r.name, r.notes,
@@ -631,10 +642,8 @@ export async function getCheckInDashboard(eventId: number) {
         WHERE p.registration_id = r.id AND p.checked_in = 1) AS checked_in_count,
       (SELECT COALESCE(SUM(p.skins), 0) FROM event_players p
         WHERE p.registration_id = r.id) AS skins_count,
-      (SELECT COALESCE(SUM(p.golf_cannon), 0) FROM event_players p
-        WHERE p.registration_id = r.id) AS golf_cannon_count,
-      (SELECT COALESCE(SUM(p.golf_pro), 0) FROM event_players p
-        WHERE p.registration_id = r.id) AS golf_pro_count,
+      (SELECT COALESCE(SUM(p.mulligans), 0) FROM event_players p
+        WHERE p.registration_id = r.id) AS mulligans_count,
       (SELECT COALESCE(SUM(p.addon_total_cents), 0) FROM event_players p
         WHERE p.registration_id = r.id) AS addon_total_cents
     FROM registrations r
@@ -651,8 +660,7 @@ export async function getCheckInDashboard(eventId: number) {
     playerCount: Number(r.player_count ?? 0),
     checkedInCount: Number(r.checked_in_count ?? 0),
     skinsCount: Number(r.skins_count ?? 0),
-    golfCannonCount: Number(r.golf_cannon_count ?? 0),
-    golfProCount: Number(r.golf_pro_count ?? 0),
+    mulligansCount: Number(r.mulligans_count ?? 0),
     addonTotalCents: Number(r.addon_total_cents ?? 0),
   }))
 
@@ -661,8 +669,7 @@ export async function getCheckInDashboard(eventId: number) {
     players: teamRows.reduce((s, t) => s + t.playerCount, 0),
     checkedIn: teamRows.reduce((s, t) => s + t.checkedInCount, 0),
     skins: teamRows.reduce((s, t) => s + t.skinsCount, 0),
-    golfCannon: teamRows.reduce((s, t) => s + t.golfCannonCount, 0),
-    golfPro: teamRows.reduce((s, t) => s + t.golfProCount, 0),
+    mulligans: teamRows.reduce((s, t) => s + t.mulligansCount, 0),
     addonTotalCents: teamRows.reduce((s, t) => s + t.addonTotalCents, 0),
   }
 

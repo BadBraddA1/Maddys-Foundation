@@ -40,15 +40,14 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<
-    Record<number, { skins: boolean; golf_cannon: boolean; golf_pro: boolean }>
+    Record<number, { skins: boolean; mulligans: boolean }>
   >(() =>
     Object.fromEntries(
       initial.players.map((p) => [
         p.id,
         {
           skins: p.skins === 1,
-          golf_cannon: p.golf_cannon === 1,
-          golf_pro: p.golf_pro === 1,
+          mulligans: p.mulligans === 1,
         },
       ]),
     ),
@@ -65,8 +64,7 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
             p.id,
             {
               skins: p.skins === 1,
-              golf_cannon: p.golf_cannon === 1,
-              golf_pro: p.golf_pro === 1,
+              mulligans: p.mulligans === 1,
             },
           ]),
         ),
@@ -238,8 +236,7 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
         {team.players.map((player) => {
           const draft = drafts[player.id] ?? {
             skins: false,
-            golf_cannon: false,
-            golf_pro: false,
+            mulligans: false,
           }
           const inAlready = isPlayerCheckedIn(player)
           return (

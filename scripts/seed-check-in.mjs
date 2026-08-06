@@ -154,8 +154,7 @@ async function main() {
   // Default addon prices
   for (const [key, label, cents] of [
     ["skins", "Skins", 2000],
-    ["golf_cannon", "Golf Cannon", 1000],
-    ["golf_pro", "Golf Pro", 2500],
+    ["mulligans", "Mulligans", 2000],
   ]) {
     await db.execute(
       `INSERT OR IGNORE INTO addon_prices (event_id, addon_key, label, price_cents)
@@ -205,54 +204,52 @@ async function main() {
     }
     if (!registrationId) throw new Error(`Failed to insert ${t.team}`)
 
-    // Varied day-of add-ons for desk testing ($20 skins / $10 cannon / $25 pro).
+    // Varied day-of add-ons for desk testing ($20 skins / $20 mulligans).
     const addonPlans = [
       // Birdie Bunch — mix + one checked in
       [
-        { skins: 1, golf_cannon: 0, golf_pro: 0, checked: 1 },
-        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 0, golf_pro: 1, checked: 0 },
-        { skins: 1, golf_cannon: 1, golf_pro: 0, checked: 0 },
+        { skins: 1, mulligans: 0, checked: 1 },
+        { skins: 0, mulligans: 1, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 1, mulligans: 1, checked: 0 },
       ],
       // Fairway Friends — all clear (control team)
       [
-        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
       ],
       // Par Then Bar — heavy add-ons + two checked in
       [
-        { skins: 1, golf_cannon: 1, golf_pro: 1, checked: 1 },
-        { skins: 1, golf_cannon: 0, golf_pro: 0, checked: 1 },
-        { skins: 0, golf_cannon: 1, golf_pro: 1, checked: 0 },
-        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 1, mulligans: 1, checked: 1 },
+        { skins: 1, mulligans: 0, checked: 1 },
+        { skins: 0, mulligans: 1, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
       ],
-      // Eagle Eye — cannon only
+      // Eagle Eye — mulligans only
       [
-        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 1, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 0, mulligans: 1, checked: 0 },
+        { skins: 0, mulligans: 1, checked: 0 },
+        { skins: 0, mulligans: 1, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
       ],
-      // Mulligan Crew — pro + skins
+      // Mulligan Crew — skins + mulligans
       [
-        { skins: 1, golf_cannon: 0, golf_pro: 1, checked: 1 },
-        { skins: 0, golf_cannon: 0, golf_pro: 1, checked: 0 },
-        { skins: 1, golf_cannon: 0, golf_pro: 0, checked: 0 },
-        { skins: 0, golf_cannon: 0, golf_pro: 0, checked: 0 },
+        { skins: 1, mulligans: 1, checked: 1 },
+        { skins: 0, mulligans: 1, checked: 0 },
+        { skins: 1, mulligans: 0, checked: 0 },
+        { skins: 0, mulligans: 0, checked: 0 },
       ],
     ][i]
 
     for (let p = 0; p < t.players.length; p++) {
       const plan = addonPlans[p] || {
         skins: 0,
-        golf_cannon: 0,
-        golf_pro: 0,
+        mulligans: 0,
         checked: 0,
       }
-      const total =
-        plan.skins * 2000 + plan.golf_cannon * 1000 + plan.golf_pro * 2500
+      const total = plan.skins * 2000 + plan.mulligans * 2000
       const checkedInAt = plan.checked
         ? new Date().toISOString()
         : null
@@ -266,9 +263,9 @@ async function main() {
           await db.execute(
             `INSERT INTO event_players
               (event_id, registration_id, display_name, sort_order,
-               checked_in, checked_in_at, skins, golf_cannon, golf_pro,
+               checked_in, checked_in_at, skins, mulligans, golf_cannon, golf_pro,
                addon_total_cents, email, check_in_code)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)`,
             [
               eventId,
               registrationId,
@@ -277,8 +274,7 @@ async function main() {
               plan.checked,
               checkedInAt,
               plan.skins,
-              plan.golf_cannon,
-              plan.golf_pro,
+              plan.mulligans,
               total,
               playerEmail,
               playerCode,

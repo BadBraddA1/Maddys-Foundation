@@ -1,11 +1,16 @@
 /** Client-safe check-in types and money helpers (no DB). */
 
-export type AddonKey = "skins" | "golf_cannon" | "golf_pro"
+export type AddonKey = "skins" | "mulligans"
 
 export type AddonPrice = {
   addon_key: AddonKey
   label: string
   price_cents: number
+}
+
+export type AddonFlags = {
+  skins: boolean
+  mulligans: boolean
 }
 
 export type EventPlayer = {
@@ -17,8 +22,7 @@ export type EventPlayer = {
   checked_in: number
   checked_in_at: string | null
   skins: number
-  golf_cannon: number
-  golf_pro: number
+  mulligans: number
   addon_total_cents: number
   /** Teammate email for personal ticket (may be empty until captain fills it). */
   email: string
@@ -29,14 +33,13 @@ export type EventPlayer = {
 }
 
 export function computeAddonTotalCents(
-  flags: { skins: boolean; golf_cannon: boolean; golf_pro: boolean },
+  flags: AddonFlags,
   prices: AddonPrice[],
 ): number {
   const map = Object.fromEntries(prices.map((p) => [p.addon_key, p.price_cents]))
   let total = 0
   if (flags.skins) total += Number(map.skins ?? 0)
-  if (flags.golf_cannon) total += Number(map.golf_cannon ?? 0)
-  if (flags.golf_pro) total += Number(map.golf_pro ?? 0)
+  if (flags.mulligans) total += Number(map.mulligans ?? 0)
   return total
 }
 

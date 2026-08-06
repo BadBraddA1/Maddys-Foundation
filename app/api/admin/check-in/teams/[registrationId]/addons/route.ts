@@ -10,8 +10,7 @@ type Body = {
   players?: Array<{
     id: number
     skins?: boolean
-    golf_cannon?: boolean
-    golf_pro?: boolean
+    mulligans?: boolean
   }>
 }
 
@@ -46,8 +45,7 @@ export async function POST(req: Request, ctx: Ctx) {
     players.map((p) => ({
       id: Number(p.id),
       skins: Boolean(p.skins),
-      golf_cannon: Boolean(p.golf_cannon),
-      golf_pro: Boolean(p.golf_pro),
+      mulligans: Boolean(p.mulligans),
     })),
     admin.email,
   )

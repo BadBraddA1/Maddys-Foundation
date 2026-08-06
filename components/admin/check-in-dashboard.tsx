@@ -10,8 +10,7 @@ type TeamRow = {
   playerCount: number
   checkedInCount: number
   skinsCount: number
-  golfCannonCount: number
-  golfProCount: number
+  mulligansCount: number
   addonTotalCents: number
 }
 
@@ -20,8 +19,7 @@ type Totals = {
   players: number
   checkedIn: number
   skins: number
-  golfCannon: number
-  golfPro: number
+  mulligans: number
   addonTotalCents: number
 }
 
@@ -32,8 +30,7 @@ type SortKey =
   | "playerCount"
   | "checkedInCount"
   | "skinsCount"
-  | "golfCannonCount"
-  | "golfProCount"
+  | "mulligansCount"
   | "addonTotalCents"
 
 export function CheckInDashboard({ eventId, eventTitle }: Props) {
@@ -114,8 +111,7 @@ export function CheckInDashboard({ eventId, eventTitle }: Props) {
       "Total Players",
       "Players Checked In",
       "Skins",
-      "Golf Cannon",
-      "Golf Pro",
+      "Mulligans",
       "Add-On Total",
     ]
     const lines = [
@@ -126,8 +122,7 @@ export function CheckInDashboard({ eventId, eventTitle }: Props) {
           t.playerCount,
           t.checkedInCount,
           t.skinsCount,
-          t.golfCannonCount,
-          t.golfProCount,
+          t.mulligansCount,
           (t.addonTotalCents / 100).toFixed(2),
         ].join(","),
       ),
@@ -147,8 +142,7 @@ export function CheckInDashboard({ eventId, eventTitle }: Props) {
         { label: "Players", value: String(totals.players) },
         { label: "Checked in", value: String(totals.checkedIn) },
         { label: "Skins", value: String(totals.skins) },
-        { label: "Golf Cannon", value: String(totals.golfCannon) },
-        { label: "Golf Pro", value: String(totals.golfPro) },
+        { label: "Mulligans", value: String(totals.mulligans) },
         {
           label: "Add-on total",
           value: formatAddonMoney(totals.addonTotalCents),
@@ -233,8 +227,7 @@ export function CheckInDashboard({ eventId, eventTitle }: Props) {
                   ["playerCount", "Players"],
                   ["checkedInCount", "Checked in"],
                   ["skinsCount", "Skins"],
-                  ["golfCannonCount", "Cannon"],
-                  ["golfProCount", "Pro"],
+                  ["mulligansCount", "Mulligans"],
                   ["addonTotalCents", "Add-ons"],
                 ] as const
               ).map(([key, label]) => (
@@ -265,8 +258,7 @@ export function CheckInDashboard({ eventId, eventTitle }: Props) {
                 <td className="py-3 pr-3 tabular-nums">{t.playerCount}</td>
                 <td className="py-3 pr-3 tabular-nums">{t.checkedInCount}</td>
                 <td className="py-3 pr-3 tabular-nums">{t.skinsCount}</td>
-                <td className="py-3 pr-3 tabular-nums">{t.golfCannonCount}</td>
-                <td className="py-3 pr-3 tabular-nums">{t.golfProCount}</td>
+                <td className="py-3 pr-3 tabular-nums">{t.mulligansCount}</td>
                 <td className="py-3 tabular-nums">
                   {formatAddonMoney(t.addonTotalCents)}
                 </td>

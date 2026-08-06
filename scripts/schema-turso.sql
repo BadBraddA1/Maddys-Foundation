@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS event_players (
   checked_in INTEGER NOT NULL DEFAULT 0,
   checked_in_at TEXT,
   skins INTEGER NOT NULL DEFAULT 0,
+  mulligans INTEGER NOT NULL DEFAULT 0,
+  -- Legacy day-of columns (no longer offered at desk; kept for older DBs)
   golf_cannon INTEGER NOT NULL DEFAULT 0,
   golf_pro INTEGER NOT NULL DEFAULT 0,
   addon_total_cents INTEGER NOT NULL DEFAULT 0,
@@ -114,6 +116,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_event_players_check_in_code
 -- ALTER TABLE event_players ADD COLUMN email TEXT NOT NULL DEFAULT '';
 -- ALTER TABLE event_players ADD COLUMN check_in_code TEXT;
 -- ALTER TABLE event_players ADD COLUMN ticket_email_sent_at TEXT;
+-- ALTER TABLE event_players ADD COLUMN mulligans INTEGER NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS addon_prices (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
