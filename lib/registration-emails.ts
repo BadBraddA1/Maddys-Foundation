@@ -70,6 +70,11 @@ export function ticketUrlForCode(code: string): string {
   return `${publicSiteUrl()}/ticket/${encodeURIComponent(code)}`
 }
 
+/** Absolute QR image URL for emails (works even when the code is not in the DB yet). */
+export function emailQrImageUrl(ticketUrl: string): string {
+  return `${publicSiteUrl()}/api/qr?data=${encodeURIComponent(ticketUrl)}`
+}
+
 async function ensureCode(reg: RegEmailRow): Promise<string> {
   if (reg.check_in_code?.trim()) return reg.check_in_code.trim()
   return ensureRegistrationCheckInCode(
@@ -106,8 +111,7 @@ function sampleRegRow(): RegEmailRow {
 }
 
 function sampleQrSrc(ticketUrl: string): string {
-  // Prefer a real ticket QR route when available; fall back to brand mark.
-  return `${ticketUrl}/qr`
+  return emailQrImageUrl(ticketUrl)
 }
 
 function buildPlayerTicketBodies(opts: {
@@ -324,7 +328,7 @@ async function sendRegEmail(
 
   const code = await ensureCode(reg)
   const ticketUrl = ticketUrlForCode(code)
-  const qrImgSrc = `${ticketUrl}/qr`
+  const qrImgSrc = emailQrImageUrl(ticketUrl)
 
   const bodies = buildBodies({ kind, reg, code, ticketUrl, qrImgSrc })
   const result = await sendEmail({
@@ -460,7 +464,7 @@ export async function sendPlayerTicketEmail(
   const code: string =
     existingCode || (await ensurePlayerCheckInCode(playerId, prefix))
   const ticketUrl = playerTicketUrlForCode(code)
-  const qrImgSrc = `${ticketUrl}/qr`
+  const qrImgSrc = emailQrImageUrl(ticketUrl)
   const when = formatEventDate(String(row.event_starts_at))
   const where = String(row.event_location ?? "") || "See event page for location"
   const name = String(row.display_name)
