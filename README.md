@@ -240,7 +240,7 @@ Request production access in the Wallet console when you’re ready for public (
 ## Registration email (ops)
 
 1. Create a SendKit API key; set `SENDKIT_API_KEY` + `EMAIL_FROM` on Vercel (Production). `EMAIL_FROM` must use a domain verified in SendKit (e.g. `Madalyn Robinson Foundation <noreply@maddysfoundation.org>`).
-2. Staff can preview delivery from **`/admin/email`** — pick confirmation / 7-day reminder / player ticket, enter an address, **Send test email** (subject prefixed `[TEST]`). QR images use `/api/qr?data=…` so sample codes still render a scannable code.
+2. Staff can preview delivery from **`/admin/email`** — pick confirmation / 7-day reminder / player ticket, enter an address, **Send test email** (subject prefixed `[TEST]`). QR images use `/api/qr?data=…`. Sample ticket pages live at `/ticket/OV-TEST01` (team) and `/ticket/p/OV-P-TEST01` (player) so admins can click through the same flow as email links.
 3. Set `CRON_SECRET` and ensure Vercel Cron can hit `/api/cron/registration-reminders` (Authorization: Bearer).
 4. After a paid registration, captains get a confirmation with the **team ticket** link. On `/ticket/CODE` they enter each teammate’s email → **Save & send tickets** → each player gets `/ticket/p/CODE` with a personal QR.
 5. ~7 days before the event (America/Chicago), captains get a “share with teammates” reminder.

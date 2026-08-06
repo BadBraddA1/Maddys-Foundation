@@ -6,6 +6,7 @@ import { AddToGoogleWallet } from "@/components/add-to-google-wallet"
 import { appleWalletConfigured } from "@/lib/apple-wallet-config"
 import { googleWalletConfigured } from "@/lib/google-wallet-config"
 import { siteName } from "@/lib/site-metadata"
+import { isSamplePlayerCode } from "@/lib/sample-ticket"
 import { getPublicPlayerTicketByCode } from "@/lib/ticket"
 
 export const dynamic = "force-dynamic"
@@ -30,10 +31,22 @@ export default async function PlayerTicketPage({ params }: Props) {
   const ticket = await getPublicPlayerTicketByCode(decodeURIComponent(raw))
   if (!ticket) notFound()
 
+  const sample = isSamplePlayerCode(ticket.code)
   const qrSrc = `/ticket/p/${encodeURIComponent(ticket.code)}/qr`
+  const walletsOn = !sample && appleWalletConfigured()
+  const googleOn = !sample && googleWalletConfigured()
 
   return (
     <main className="mx-auto min-h-[70vh] max-w-lg px-4 py-10 print:py-4">
+      {sample ? (
+        <p
+          className="mb-6 border border-accent/40 bg-accent-soft px-4 py-3 text-sm text-accent-ink"
+          role="status"
+        >
+          Sample player ticket for staff preview — links from test emails.
+          Wallet is disabled here.
+        </p>
+      ) : null}
       <p className="text-sm text-muted">{siteName}</p>
       <h1 className="mt-2 font-display text-3xl text-ink text-pretty">
         {ticket.eventTitle}
@@ -74,11 +87,11 @@ export default async function PlayerTicketPage({ params }: Props) {
           </p>
         ) : null}
         <AddToAppleWallet
-          enabled={appleWalletConfigured()}
+          enabled={walletsOn}
           href={`/ticket/p/${encodeURIComponent(ticket.code)}/wallet`}
         />
         <AddToGoogleWallet
-          enabled={googleWalletConfigured()}
+          enabled={googleOn}
           href={`/ticket/p/${encodeURIComponent(ticket.code)}/google-wallet`}
         />
       </div>

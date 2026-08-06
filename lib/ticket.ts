@@ -5,6 +5,12 @@ import {
 import { checkInPrefixFromSlug, ensurePlayerCheckInCode } from "@/lib/check-in-code"
 import { sql } from "@/lib/db"
 import { formatEventDate } from "@/lib/events"
+import {
+  getSamplePublicPlayerTicket,
+  getSamplePublicTicket,
+  isSamplePlayerCode,
+  isSampleTeamCode,
+} from "@/lib/sample-ticket"
 import { publicSiteUrl } from "@/lib/stripe"
 
 export type PublicTicketPlayer = {
@@ -56,6 +62,7 @@ export async function getPublicTicketByCode(
 ): Promise<PublicTicket | null> {
   const normalized = code.trim().toUpperCase()
   if (!normalized) return null
+  if (isSampleTeamCode(normalized)) return getSamplePublicTicket()
 
   const rows = await sql`
     SELECT r.id, r.name, r.email, r.team_name, r.check_in_code,
@@ -131,6 +138,7 @@ export async function getPublicPlayerTicketByCode(
   await ensureEventPlayerTicketColumns()
   const normalized = code.trim().toUpperCase()
   if (!normalized) return null
+  if (isSamplePlayerCode(normalized)) return getSamplePublicPlayerTicket()
 
   const rows = await sql`
     SELECT p.id, p.display_name, p.check_in_code, p.checked_in,

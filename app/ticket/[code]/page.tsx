@@ -7,6 +7,7 @@ import { TicketCaptainShare } from "@/components/ticket-captain-share"
 import { appleWalletConfigured } from "@/lib/apple-wallet-config"
 import { googleWalletConfigured } from "@/lib/google-wallet-config"
 import { siteName } from "@/lib/site-metadata"
+import { isSampleTeamCode } from "@/lib/sample-ticket"
 import { getPublicTicketByCode } from "@/lib/ticket"
 
 export const dynamic = "force-dynamic"
@@ -31,10 +32,22 @@ export default async function TicketPage({ params }: Props) {
   const ticket = await getPublicTicketByCode(decodeURIComponent(raw))
   if (!ticket) notFound()
 
+  const sample = isSampleTeamCode(ticket.code)
   const qrSrc = `/ticket/${encodeURIComponent(ticket.code)}/qr`
+  const walletsOn = !sample && appleWalletConfigured()
+  const googleOn = !sample && googleWalletConfigured()
 
   return (
     <main className="mx-auto min-h-[70vh] max-w-lg px-4 py-10 print:py-4">
+      {sample ? (
+        <p
+          className="mb-6 border border-accent/40 bg-accent-soft px-4 py-3 text-sm text-accent-ink"
+          role="status"
+        >
+          Sample ticket for staff preview — links from test emails. Wallet and
+          teammate email sending are disabled here.
+        </p>
+      ) : null}
       <p className="text-sm text-muted">{siteName}</p>
       <h1 className="mt-2 font-display text-3xl text-ink text-pretty">
         {ticket.eventTitle}
@@ -66,11 +79,11 @@ export default async function TicketPage({ params }: Props) {
           day, staff can also scan this team code to open your roster.
         </p>
         <AddToAppleWallet
-          enabled={appleWalletConfigured()}
+          enabled={walletsOn}
           href={`/ticket/${encodeURIComponent(ticket.code)}/wallet`}
         />
         <AddToGoogleWallet
-          enabled={googleWalletConfigured()}
+          enabled={googleOn}
           href={`/ticket/${encodeURIComponent(ticket.code)}/google-wallet`}
         />
       </div>
@@ -99,6 +112,7 @@ export default async function TicketPage({ params }: Props) {
         teamCode={ticket.code}
         players={ticket.playerDetails}
         captainEmail={ticket.captainEmail}
+        sampleMode={sample}
       />
 
       <p className="mt-10 print:hidden">
@@ -108,6 +122,14 @@ export default async function TicketPage({ params }: Props) {
         >
           Event details
         </Link>
+        {sample ? (
+          <>
+            {" "}
+            <span className="text-sm text-muted">
+              (opens the live event page if that slug exists)
+            </span>
+          </>
+        ) : null}
       </p>
     </main>
   )

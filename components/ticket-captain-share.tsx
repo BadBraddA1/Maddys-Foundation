@@ -7,12 +7,15 @@ type Props = {
   teamCode: string
   players: PublicTicketPlayer[]
   captainEmail: string
+  /** Demo ticket from admin email tests — UI only, no API writes. */
+  sampleMode?: boolean
 }
 
 export function TicketCaptainShare({
   teamCode,
   players: initial,
   captainEmail,
+  sampleMode = false,
 }: Props) {
   const [emails, setEmails] = useState<Record<number, string>>(() => {
     const next: Record<number, string> = {}
@@ -40,6 +43,13 @@ export function TicketCaptainShare({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (sampleMode) {
+      setError(null)
+      setMessage(
+        "Sample ticket — teammate email sending is disabled. Use a real paid registration to try this.",
+      )
+      return
+    }
     setPending(true)
     setError(null)
     setMessage(null)
@@ -106,6 +116,12 @@ export function TicketCaptainShare({
         Enter each player’s email and we’ll send them a personal check-in QR.
         Staff scan that QR to check them in automatically on event day.
       </p>
+      {sampleMode ? (
+        <p className="mt-4 text-sm text-muted" role="status">
+          Sample preview — fields below are for layout only; nothing is saved or
+          emailed.
+        </p>
+      ) : null}
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         {initial.map((p) => (
           <div key={p.id}>
@@ -126,6 +142,7 @@ export function TicketCaptainShare({
               className="field-control mt-1.5"
               placeholder="name@example.com"
               value={emails[p.id] ?? ""}
+              disabled={sampleMode || pending}
               onChange={(e) =>
                 setEmails((prev) => ({ ...prev, [p.id]: e.target.value }))
               }
@@ -136,6 +153,7 @@ export function TicketCaptainShare({
           <input
             type="checkbox"
             checked={forceResend}
+            disabled={sampleMode || pending}
             onChange={(e) => setForceResend(e.target.checked)}
           />
           Resend even if already sent
@@ -152,7 +170,7 @@ export function TicketCaptainShare({
         ) : null}
         <button
           type="submit"
-          disabled={pending || filled === 0}
+          disabled={sampleMode || pending || filled === 0}
           aria-busy={pending}
           className="btn-deep inline-flex min-h-11 items-center px-6 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
         >

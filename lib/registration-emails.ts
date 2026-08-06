@@ -11,6 +11,7 @@ import type { EmailTemplateKind } from "@/lib/email-templates"
 import { publicSiteUrl } from "@/lib/stripe"
 import { siteName } from "@/lib/site-metadata"
 import { playerTicketUrlForCode } from "@/lib/ticket"
+import { SAMPLE_PLAYER_CODE, SAMPLE_TEAM_CODE } from "@/lib/sample-ticket"
 
 export type { EmailTemplateKind } from "@/lib/email-templates"
 export { EMAIL_TEMPLATE_OPTIONS } from "@/lib/email-templates"
@@ -99,7 +100,7 @@ function sampleRegRow(): RegEmailRow {
     name: "Alex Captain",
     email: "alex@example.com",
     team_name: "Sample Fairway Four",
-    check_in_code: "OV-TEST01",
+    check_in_code: SAMPLE_TEAM_CODE,
     confirmation_email_sent_at: null,
     reminder_email_sent_at: null,
     event_id: 0,
@@ -166,17 +167,17 @@ export function buildSampleEmail(
   kind: EmailTemplateKind,
 ): { subject: string; html: string; text: string } {
   const reg = sampleRegRow()
-  const code = reg.check_in_code || "OV-TEST01"
+  const code = reg.check_in_code || SAMPLE_TEAM_CODE
 
   if (kind === "player_ticket") {
-    const ticketUrl = playerTicketUrlForCode("OV-P-TEST01")
+    const ticketUrl = playerTicketUrlForCode(SAMPLE_PLAYER_CODE)
     return buildPlayerTicketBodies({
       name: "Sam Player",
       team: reg.team_name,
       eventTitle: reg.event_title,
       when: formatEventDate(reg.event_starts_at),
       where: reg.event_location || "See event page for location",
-      code: "OV-P-TEST01",
+      code: SAMPLE_PLAYER_CODE,
       ticketUrl,
       qrImgSrc: sampleQrSrc(ticketUrl),
     })
