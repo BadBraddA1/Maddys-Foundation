@@ -120,6 +120,7 @@ async function main() {
     `ALTER TABLE event_players ADD COLUMN email TEXT NOT NULL DEFAULT ''`,
     `ALTER TABLE event_players ADD COLUMN check_in_code TEXT`,
     `ALTER TABLE event_players ADD COLUMN ticket_email_sent_at TEXT`,
+    `ALTER TABLE event_players ADD COLUMN mulligans INTEGER NOT NULL DEFAULT 0`,
   ]) {
     try {
       await db.execute(q)
