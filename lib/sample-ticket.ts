@@ -1,21 +1,17 @@
-import { formatEventDate } from "@/lib/events"
+import { formatEventDate } from "@/lib/event-helpers"
+import {
+  SAMPLE_PLAYER_CODE,
+  SAMPLE_TEAM_CODE,
+} from "@/lib/sample-ticket-codes"
 import type { PublicPlayerTicket, PublicTicket } from "@/lib/ticket"
 
-/** Well-known demo codes used by admin email tests — no DB rows required. */
-export const SAMPLE_TEAM_CODE = "OV-TEST01"
-export const SAMPLE_PLAYER_CODE = "OV-P-TEST01"
-
-export function isSampleTeamCode(code: string): boolean {
-  return code.trim().toUpperCase() === SAMPLE_TEAM_CODE
-}
-
-export function isSamplePlayerCode(code: string): boolean {
-  return code.trim().toUpperCase() === SAMPLE_PLAYER_CODE
-}
-
-export function isSampleTicketCode(code: string): boolean {
-  return isSampleTeamCode(code) || isSamplePlayerCode(code)
-}
+export {
+  SAMPLE_PLAYER_CODE,
+  SAMPLE_TEAM_CODE,
+  isSamplePlayerCode,
+  isSampleTeamCode,
+  isSampleTicketCode,
+} from "@/lib/sample-ticket-codes"
 
 function sampleStartsAt(): string {
   const starts = new Date()

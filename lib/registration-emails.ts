@@ -22,7 +22,7 @@ import {
 import { publicSiteUrl } from "@/lib/stripe"
 import { siteName } from "@/lib/site-metadata"
 import { playerTicketUrlForCode } from "@/lib/ticket"
-import { SAMPLE_PLAYER_CODE, SAMPLE_TEAM_CODE } from "@/lib/sample-ticket"
+import { SAMPLE_PLAYER_CODE, SAMPLE_TEAM_CODE } from "@/lib/sample-ticket-codes"
 
 export type { EmailTemplateKind } from "@/lib/email-templates"
 export { EMAIL_TEMPLATE_OPTIONS } from "@/lib/email-templates"

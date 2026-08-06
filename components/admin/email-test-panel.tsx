@@ -6,7 +6,7 @@ import {
   EMAIL_TEMPLATE_OPTIONS,
   type EmailTemplateKind,
 } from "@/lib/email-templates"
-import { SAMPLE_PLAYER_CODE, SAMPLE_TEAM_CODE } from "@/lib/sample-ticket"
+import { SAMPLE_PLAYER_CODE, SAMPLE_TEAM_CODE } from "@/lib/sample-ticket-codes"
 
 type Props = {
   configured: boolean
