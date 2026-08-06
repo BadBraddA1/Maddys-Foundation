@@ -9,16 +9,17 @@ import { formatEventDate, toEventIso } from "@/lib/events"
 import { emailConfigured, sendEmail } from "@/lib/email"
 import type { EmailTemplateKind } from "@/lib/email-templates"
 import {
+  EMAIL_COLORS,
   emailCodeBlock,
-  emailCta,
   emailDetailRows,
-  emailHeading,
   emailParagraph,
   emailQrBlock,
   emailSecondaryLink,
   escapeEmailHtml,
   wrapEmailHtml,
 } from "@/lib/email-layout"
+
+const EMAIL_INK = EMAIL_COLORS.ink
 import { publicSiteUrl } from "@/lib/stripe"
 import { siteName } from "@/lib/site-metadata"
 import { playerTicketUrlForCode } from "@/lib/ticket"
@@ -149,10 +150,9 @@ function buildPlayerTicketBodies(opts: {
   ].join("\n")
 
   const bodyHtml = [
-    emailHeading("Your check-in ticket"),
     emailParagraph(`Hi ${escapeHtml(opts.name)},`),
     emailParagraph(
-      `You're on team <strong>${escapeHtml(opts.team)}</strong> for <strong>${escapeHtml(opts.eventTitle)}</strong>.`,
+      `You're on team <strong style="color:${EMAIL_INK}">${escapeHtml(opts.team)}</strong> for <strong style="color:${EMAIL_INK}">${escapeHtml(opts.eventTitle)}</strong>.`,
     ),
     emailDetailRows([
       { label: "When", value: opts.when },
@@ -160,16 +160,18 @@ function buildPlayerTicketBodies(opts: {
     ]),
     emailCodeBlock(opts.code, "Your check-in code"),
     emailQrBlock(opts.qrImgSrc),
-    emailCta(opts.ticketUrl, "Open your personal ticket"),
     emailParagraph(
       "Show this screen at the check-in desk. Staff will scan your QR to check you in automatically.",
-      true,
     ),
   ].join("")
 
   const html = wrapEmailHtml({
     preheader: `Personal check-in QR for ${opts.eventTitle}`,
+    eyebrow: "Player ticket",
+    headline: "Your check-in ticket",
     bodyHtml,
+    ctaLabel: "Open your personal ticket",
+    ctaUrl: opts.ticketUrl,
   })
   return { subject, html, text }
 }
@@ -264,10 +266,9 @@ function buildBodies(opts: {
     ].join("\n")
 
     const bodyHtml = [
-      emailHeading("You're registered"),
       emailParagraph(`Hi ${escapeHtml(opts.reg.name)},`),
       emailParagraph(
-        `You're confirmed for <strong>${escapeHtml(opts.reg.event_title)}</strong>.`,
+        `You're confirmed for <strong style="color:${EMAIL_INK}">${escapeHtml(opts.reg.event_title)}</strong>.`,
       ),
       emailDetailRows([
         { label: "Team", value: opts.reg.team_name },
@@ -276,17 +277,17 @@ function buildBodies(opts: {
       ]),
       emailCodeBlock(opts.code, "Team check-in code"),
       emailQrBlock(opts.qrImgSrc),
-      emailCta(opts.ticketUrl, "Open your team ticket"),
-      emailParagraph(escapeHtml(shareBlurb), true),
-      emailParagraph(
-        `${emailSecondaryLink(eventUrl, "Event details")}`,
-        true,
-      ),
+      emailParagraph(escapeHtml(shareBlurb)),
     ].join("")
 
     const html = wrapEmailHtml({
       preheader: `Confirmed for ${opts.reg.event_title} — team ${opts.reg.team_name}`,
+      eyebrow: "Registration confirmed",
+      headline: "You're registered",
       bodyHtml,
+      ctaLabel: "Open your team ticket",
+      ctaUrl: opts.ticketUrl,
+      secondaryHtml: `<p style="margin:18px 0 0;font-size:14px;line-height:1.55;color:${EMAIL_COLORS.muted}">${emailSecondaryLink(eventUrl, "Event details")}</p>`,
     })
     return { subject, html, text }
   }
@@ -308,10 +309,9 @@ function buildBodies(opts: {
   ].join("\n")
 
   const bodyHtml = [
-    emailHeading("One week to go"),
     emailParagraph(`Hi ${escapeHtml(opts.reg.name)},`),
     emailParagraph(
-      `<strong>${escapeHtml(opts.reg.event_title)}</strong> is about a week away.`,
+      `<strong style="color:${EMAIL_INK}">${escapeHtml(opts.reg.event_title)}</strong> is about a week away.`,
     ),
     emailDetailRows([
       { label: "Team", value: opts.reg.team_name },
@@ -319,13 +319,16 @@ function buildBodies(opts: {
     ]),
     emailCodeBlock(opts.code, "Team check-in code"),
     emailQrBlock(opts.qrImgSrc),
-    emailCta(opts.ticketUrl, "Open your team ticket"),
-    emailParagraph(escapeHtml(shareBlurb), true),
+    emailParagraph(escapeHtml(shareBlurb)),
   ].join("")
 
   const html = wrapEmailHtml({
     preheader: `${opts.reg.event_title} is in about a week — share teammate tickets`,
+    eyebrow: "7-day reminder",
+    headline: "One week to go",
     bodyHtml,
+    ctaLabel: "Open your team ticket",
+    ctaUrl: opts.ticketUrl,
   })
   return { subject, html, text }
 }
