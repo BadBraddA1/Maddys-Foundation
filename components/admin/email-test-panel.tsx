@@ -1,10 +1,12 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo, useState } from "react"
 import {
   EMAIL_TEMPLATE_OPTIONS,
   type EmailTemplateKind,
 } from "@/lib/email-templates"
+import { SAMPLE_PLAYER_CODE, SAMPLE_TEAM_CODE } from "@/lib/sample-ticket"
 
 type Props = {
   configured: boolean
@@ -72,6 +74,36 @@ export function EmailTestPanel({ configured, defaultTo, fromLabel }: Props) {
           ) : null}
         </p>
       </div>
+
+      <section className="max-w-xl border border-line bg-surface p-5">
+        <h2 className="font-display text-xl text-ink">Preview ticket pages</h2>
+        <p className="mt-2 text-sm text-muted">
+          Same sample codes used in test emails — open these to see what captains
+          and players get.
+        </p>
+        <ul className="mt-4 space-y-2 text-sm font-medium">
+          <li>
+            <Link
+              href={`/ticket/${SAMPLE_TEAM_CODE}`}
+              className="text-accent-ink underline underline-offset-4"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Team ticket ({SAMPLE_TEAM_CODE})
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={`/ticket/p/${SAMPLE_PLAYER_CODE}`}
+              className="text-accent-ink underline underline-offset-4"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Player ticket ({SAMPLE_PLAYER_CODE})
+            </Link>
+          </li>
+        </ul>
+      </section>
 
       <form
         onSubmit={(e) => void onSend(e)}
