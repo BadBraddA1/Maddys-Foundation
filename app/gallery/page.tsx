@@ -49,10 +49,8 @@ export default async function GalleryPage({ searchParams }: Props) {
           >
             <Link
               href="/gallery"
-              className={`inline-flex min-h-11 items-center border px-4 text-sm font-medium ${
-                !tagSlug
-                  ? "border-deep bg-deep text-on-deep"
-                  : "border-line bg-surface text-ink hover:bg-bg"
+              className={`inline-flex min-h-11 items-center px-4 text-sm font-medium ${
+                !tagSlug ? "btn-deep" : "btn-surface"
               }`}
             >
               All
@@ -63,10 +61,8 @@ export default async function GalleryPage({ searchParams }: Props) {
                 <Link
                   key={tag.id}
                   href={`/gallery?tag=${encodeURIComponent(tag.slug)}`}
-                  className={`inline-flex min-h-11 items-center border px-4 text-sm font-medium ${
-                    active
-                      ? "border-deep bg-deep text-on-deep"
-                      : "border-line bg-surface text-ink hover:bg-bg"
+                  className={`inline-flex min-h-11 items-center px-4 text-sm font-medium ${
+                    active ? "btn-deep" : "btn-surface"
                   }`}
                 >
                   {tag.name}

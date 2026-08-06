@@ -134,6 +134,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Type: Literata (display 400/600) + Source Sans 3 (body 400/500) — major-third scale
 - Performance: public home/events ISR (60s; register 30s); admin/register writes call `revalidatePublicEvents`; hero WebP preloaded; logo not priority; `/brand/*` long-cache
 - Color: restrained OKLCH system in `app/globals.css` / `DESIGN.md` — sunflower accent, cool fog deep, on-deep text ramp (no raw white alphas)
+- Buttons: solid CTAs / active chips use `.btn-deep` (light text on fairway green); inactive chips use `.btn-surface`. `.bg-deep` also forces `color: var(--on-deep)` so dark ink never inherits onto green planes
 - A11y polish: skip-to-content on every shell, `#main` landmarks, ≥14px chrome, squared `.field-control` inputs
 - Phone chrome: short “Maddy’s” wordmark + disclosure menu under `md`; hero nav sits on a deep top scrim for contrast
 - Home hero header: one fixed bar (scrim → solid after scroll); no portal / duplicate nav

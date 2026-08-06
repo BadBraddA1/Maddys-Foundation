@@ -69,10 +69,8 @@ function TagChecklist({
           <li key={tag.id}>
             <label
               htmlFor={`${idPrefix}-${tag.id}`}
-              className={`inline-flex min-h-11 cursor-pointer items-center border px-3 text-sm ${
-                checked
-                  ? "border-deep bg-deep text-on-deep"
-                  : "border-line bg-surface text-ink"
+              className={`inline-flex min-h-11 cursor-pointer items-center px-3 text-sm ${
+                checked ? "btn-deep" : "btn-surface"
               } ${disabled ? "opacity-60" : ""}`}
             >
               <input
