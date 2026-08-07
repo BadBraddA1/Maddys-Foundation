@@ -88,61 +88,63 @@ export default async function AdminLayout({
         </div>
       ) : null}
       <header className="sticky top-0 z-[var(--z-sticky)] border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/admin" className="font-display text-lg">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-3 py-2 md:gap-4 md:px-5 md:py-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto md:gap-4">
+            <Link href="/admin" className="shrink-0 font-display text-lg">
               Staff
             </Link>
             <Link
               href="/"
-              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+              className="hidden shrink-0 items-center text-sm text-muted hover:text-ink sm:inline-flex sm:min-h-11"
             >
               View site
             </Link>
             <Link
               href="/admin/check-in"
-              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+              className="inline-flex min-h-9 shrink-0 items-center text-sm font-medium text-ink md:min-h-11"
             >
               Check-in
             </Link>
             <Link
               href="/admin/sponsors"
-              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+              className="hidden shrink-0 items-center text-sm text-muted hover:text-ink md:inline-flex md:min-h-11"
             >
               Sponsors
             </Link>
             <Link
               href="/admin/gallery"
-              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+              className="hidden shrink-0 items-center text-sm text-muted hover:text-ink md:inline-flex md:min-h-11"
             >
               Gallery
             </Link>
             <Link
               href="/admin/email"
-              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+              className="hidden shrink-0 items-center text-sm text-muted hover:text-ink md:inline-flex md:min-h-11"
             >
               Email
             </Link>
             <Link
               href="/admin/staff"
-              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+              className="hidden shrink-0 items-center text-sm text-muted hover:text-ink md:inline-flex md:min-h-11"
             >
               Staff
             </Link>
             <Link
               href="/admin/audit"
-              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-ink"
+              className="hidden shrink-0 items-center text-sm text-muted hover:text-ink md:inline-flex md:min-h-11"
             >
               Audit
             </Link>
           </div>
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="truncate text-sm text-muted">{admin.email}</span>
+          <div className="flex min-w-0 shrink-0 items-center gap-2 md:gap-3">
+            <span className="hidden truncate text-sm text-muted sm:inline">
+              {admin.email}
+            </span>
             {clerk && !bypass && !admin.viaPassword ? <UserButton /> : null}
           </div>
         </div>
       </header>
-      <main id="main" className="mx-auto max-w-5xl px-5 py-10">
+      <main id="main" className="mx-auto max-w-5xl px-3 py-4 md:px-5 md:py-10">
         {children}
       </main>
     </div>

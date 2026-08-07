@@ -17,6 +17,8 @@ type Props = {
   cooldownMs?: number
   /** Docked under desk controls vs fullscreen overlay. */
   variant?: "modal" | "docked"
+  /** Smaller camera + less chrome (mobile day-of). */
+  compact?: boolean
 }
 
 /** Pull check-in code from a scanned URL or raw code string. */
@@ -59,6 +61,7 @@ export function CheckInQrScanner({
   continuous = true,
   cooldownMs = 2500,
   variant = "modal",
+  compact = false,
 }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
@@ -111,12 +114,13 @@ export function CheckInQrScanner({
     let cancelled = false
     const scanner = new Html5Qrcode(regionId)
     scannerRef.current = scanner
+    const box = compact ? 180 : 240
 
     void (async () => {
       try {
         await scanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 240, height: 240 } },
+          { fps: 10, qrbox: { width: box, height: box } },
           (decoded) => {
             if (cancelled) return
             handleDecoded(decoded)
@@ -150,58 +154,57 @@ export function CheckInQrScanner({
         }
       }
     }
-  }, [open, regionId, handleDecoded])
+  }, [open, regionId, handleDecoded, compact])
 
   if (!open) return null
 
+  const titleClass =
+    variant === "modal" ? "text-white" : "text-ink"
+  const mutedClass =
+    variant === "modal" ? "text-white/80" : "text-muted"
+
   const body = (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <h2
-          className={`font-display text-xl ${variant === "modal" ? "text-white" : "text-ink"}`}
-        >
+      <div className="flex items-center justify-between gap-2">
+        <h2 className={`font-display ${compact ? "text-base" : "text-xl"} ${titleClass}`}>
           {continuous ? "Live scan" : "Scan QR"}
         </h2>
         <button
           type="button"
-          className={`inline-flex min-h-11 items-center px-3 text-sm underline underline-offset-4 ${
-            variant === "modal" ? "text-white" : "text-ink"
-          }`}
+          className={`inline-flex min-h-10 items-center px-2 text-sm underline underline-offset-4 ${titleClass}`}
           onClick={onClose}
         >
-          {variant === "docked" ? "Stop camera" : "Close"}
+          {variant === "docked" ? "Stop" : "Close"}
         </button>
       </div>
-      <p
-        className={`mt-2 text-sm ${variant === "modal" ? "text-white/80" : "text-muted"}`}
-      >
-        {continuous
-          ? "Camera stays on — point at the next QR after each beep. Same code is ignored for a couple seconds."
-          : "Point the camera at a player or team QR. Player codes check in automatically."}
-      </p>
+      {!compact ? (
+        <p className={`mt-2 text-sm ${mutedClass}`}>
+          {continuous
+            ? "Camera stays on — point at the next QR. Same code ignored briefly."
+            : "Point the camera at a player or team QR. Player codes check in automatically."}
+        </p>
+      ) : null}
       <div
         id={regionId}
-        className="mt-4 min-h-[280px] overflow-hidden bg-black"
+        className={`overflow-hidden bg-black ${
+          compact ? "mt-2 min-h-[160px] max-h-[28vh]" : "mt-4 min-h-[280px]"
+        }`}
       />
       {starting ? (
-        <p
-          className={`mt-3 text-sm ${variant === "modal" ? "text-white/80" : "text-muted"}`}
-        >
-          Starting camera…
-        </p>
+        <p className={`mt-2 text-xs ${mutedClass}`}>Starting camera…</p>
       ) : null}
       {lastScanned ? (
         <p
-          className={`mt-3 text-sm font-medium ${variant === "modal" ? "text-accent" : "text-ink"}`}
+          className={`mt-2 text-xs font-medium ${variant === "modal" ? "text-accent" : "text-ink"}`}
           role="status"
         >
-          Scanned {lastScanned}
-          {coolingDown ? " · Ready again in a moment…" : " · Ready for next"}
+          {lastScanned}
+          {coolingDown ? " · wait…" : " · ready"}
         </p>
       ) : null}
       {error ? (
         <p
-          className={`mt-3 text-sm ${variant === "modal" ? "text-accent" : "text-danger"}`}
+          className={`mt-2 text-xs ${variant === "modal" ? "text-accent" : "text-danger"}`}
           role="alert"
         >
           {error}
@@ -213,7 +216,7 @@ export function CheckInQrScanner({
   if (variant === "docked") {
     return (
       <div
-        className="border border-line bg-surface p-4"
+        className={`border border-line bg-surface ${compact ? "p-2" : "p-4"}`}
         role="region"
         aria-label="Live check-in QR scanner"
       >

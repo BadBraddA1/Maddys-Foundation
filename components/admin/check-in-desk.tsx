@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   CheckInQrScanner,
   parseScannedCheckInPayload,
@@ -94,6 +94,8 @@ export function CheckInDesk({
   const [liveScan, setLiveScan] = useState(false)
   const [keepAwake, setKeepAwake] = useState(false)
   const [prefsReady, setPrefsReady] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
+  const teamPanelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setKeepAwake(readKeepAwakePreference())
@@ -111,7 +113,10 @@ export function CheckInDesk({
   useEffect(() => {
     if (!prefsReady) return
     writeLiveScanPreference(liveScan)
-    if (liveScan) setScannerOpen(false)
+    if (liveScan) {
+      setScannerOpen(false)
+      setManualOpen(false)
+    }
   }, [liveScan, prefsReady])
 
   const cameraOn = liveScan || scannerOpen
@@ -156,6 +161,9 @@ export function CheckInDesk({
       }
     }
     setDrafts(nextDrafts)
+    window.requestAnimationFrame(() => {
+      teamPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
   }, [])
 
   const loadTeam = useCallback(
@@ -424,8 +432,8 @@ export function CheckInDesk({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-3 md:space-y-6 pb-24 md:pb-0">
+      <div className="hidden items-end justify-between gap-4 md:flex">
         <div>
           <h1 className="font-display text-3xl">Player check-in</h1>
           <p className="mt-1 text-sm text-muted">{eventTitle}</p>
@@ -445,19 +453,104 @@ export function CheckInDesk({
           </Link>
         </div>
       </div>
+      <p className="truncate text-xs text-muted md:hidden">{eventTitle}</p>
 
-      <div className="border border-line bg-surface p-4 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-ink" htmlFor="check-in-code">
-            Check-in code / Scan QR
+      {/* Sticky scan controls — stays under admin header on phones */}
+      <div className="sticky top-[3.25rem] z-30 space-y-2 border border-line bg-surface p-2 shadow-sm md:static md:top-auto md:z-auto md:space-y-4 md:p-4 md:shadow-none">
+        <div className="flex gap-2">
+          <label className="flex min-h-10 flex-1 items-center gap-2 border border-line bg-bg px-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4 shrink-0"
+              checked={liveScan}
+              onChange={(e) => setLiveScan(e.target.checked)}
+            />
+            <span className="leading-tight">
+              Live scan
+              <span className="hidden text-xs text-muted sm:inline">
+                {" "}
+                · camera stays on
+              </span>
+            </span>
           </label>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <label className="flex min-h-10 flex-1 items-center gap-2 border border-line bg-bg px-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4 shrink-0"
+              checked={keepAwake}
+              onChange={(e) => setKeepAwake(e.target.checked)}
+            />
+            <span className="leading-tight">
+              Stay awake
+              <span className="mt-0.5 block text-[10px] text-muted sm:hidden">
+                {keepAwake
+                  ? wake.active
+                    ? "On"
+                    : wake.error
+                      ? "Failed"
+                      : "…"
+                  : wake.supported
+                    ? "Off"
+                    : "N/A"}
+              </span>
+              <span className="hidden text-xs text-muted sm:inline">
+                {" "}
+                ·{" "}
+                {wake.supported
+                  ? keepAwake
+                    ? wake.active
+                      ? "screen on"
+                      : wake.error || "…"
+                    : "prevent sleep"
+                  : "not supported"}
+              </span>
+            </span>
+          </label>
+        </div>
+
+        {liveScan ? (
+          <CheckInQrScanner
+            open={cameraOn}
+            continuous
+            compact
+            variant="docked"
+            onClose={() => setLiveScan(false)}
+            onCode={(code) => {
+              void loadByCode(code)
+            }}
+          />
+        ) : null}
+
+        <div className="flex flex-wrap gap-2">
+          {!liveScan ? (
+            <button
+              type="button"
+              className="inline-flex min-h-10 flex-1 items-center justify-center border border-line bg-bg px-3 text-sm font-medium text-ink md:flex-none"
+              onClick={() => setScannerOpen(true)}
+            >
+              Scan once
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="inline-flex min-h-10 flex-1 items-center justify-center border border-line px-3 text-sm md:hidden"
+            onClick={() => setManualOpen((v) => !v)}
+            aria-expanded={manualOpen}
+          >
+            {manualOpen ? "Hide code / search" : "Code / search"}
+          </button>
+        </div>
+
+        <div
+          className={`space-y-3 ${manualOpen || !liveScan ? "block" : "hidden"} md:block`}
+        >
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="check-in-code"
-              className="field-control min-h-12 flex-1 font-mono text-base uppercase tracking-wide"
+              className="field-control min-h-10 flex-1 font-mono text-sm uppercase tracking-wide md:min-h-12 md:text-base"
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
-              placeholder="OV-A3K9Q2"
+              placeholder="Code"
               autoComplete="off"
               autoCapitalize="characters"
               spellCheck={false}
@@ -470,85 +563,18 @@ export function CheckInDesk({
             />
             <button
               type="button"
-              className="btn-deep inline-flex min-h-12 items-center justify-center px-5 text-sm font-medium disabled:opacity-60"
+              className="btn-deep inline-flex min-h-10 items-center justify-center px-4 text-sm font-medium disabled:opacity-60 md:min-h-12"
               disabled={loadingTeam}
               onClick={() => void loadByCode(codeInput)}
             >
-              Load code
+              Load
             </button>
-            {!liveScan ? (
-              <button
-                type="button"
-                className="inline-flex min-h-12 items-center justify-center border border-line bg-bg px-5 text-sm font-medium text-ink"
-                onClick={() => setScannerOpen(true)}
-              >
-                Scan once
-              </button>
-            ) : null}
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <label className="flex min-h-11 items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                className="size-5"
-                checked={liveScan}
-                onChange={(e) => setLiveScan(e.target.checked)}
-              />
-              <span>
-                Always ready to scan
-                <span className="mt-0.5 block text-xs text-muted">
-                  Camera stays on — no need to tap Scan for each QR
-                </span>
-              </span>
-            </label>
-            <label className="flex min-h-11 items-center gap-3 text-sm">
-              <input
-                type="checkbox"
-                className="size-5"
-                checked={keepAwake}
-                onChange={(e) => setKeepAwake(e.target.checked)}
-              />
-              <span>
-                Keep screen awake
-                <span className="mt-0.5 block text-xs text-muted">
-                  {wake.supported
-                    ? keepAwake
-                      ? wake.active
-                        ? "Screen will stay on while this page is open"
-                        : wake.error || "Requesting wake lock…"
-                      : "Stops the phone from sleeping during check-in"
-                    : "Not supported in this browser — use Low Power Off / Auto-Lock Never"}
-                </span>
-              </span>
-            </label>
-          </div>
-          <p className="mt-2 text-xs text-muted">
-            On iPhone: open this page in Safari while staff-logged-in, allow
-            camera, turn on Always ready to scan.
-          </p>
-        </div>
-
-        {liveScan ? (
-          <CheckInQrScanner
-            open={cameraOn}
-            continuous
-            variant="docked"
-            onClose={() => setLiveScan(false)}
-            onCode={(code) => {
-              void loadByCode(code)
-            }}
-          />
-        ) : null}
-
-        <div>
-          <label className="block text-sm font-medium text-ink" htmlFor="team-search">
-            Or search team name
-          </label>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="team-search"
-              className="field-control min-h-12 flex-1 text-base"
+              className="field-control min-h-10 flex-1 text-sm md:min-h-12 md:text-base"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Team name"
@@ -562,7 +588,7 @@ export function CheckInDesk({
             </datalist>
             <button
               type="button"
-              className="inline-flex min-h-12 items-center justify-center border border-line px-6 text-sm font-medium disabled:opacity-60"
+              className="inline-flex min-h-10 items-center justify-center border border-line px-4 text-sm font-medium disabled:opacity-60 md:min-h-12"
               disabled={loadingTeam || searching}
               onClick={() => {
                 const match =
@@ -574,16 +600,16 @@ export function CheckInDesk({
                 else setError("Team not found.")
               }}
             >
-              {loadingTeam ? "Loading…" : "Load team"}
+              {loadingTeam ? "…" : "Team"}
             </button>
           </div>
-          {suggestions.length > 0 ? (
-            <ul className="mt-3 divide-y divide-line border border-line">
-              {suggestions.slice(0, 8).map((t) => (
+          {suggestions.length > 0 && (manualOpen || !liveScan || query.trim()) ? (
+            <ul className="max-h-36 divide-y divide-line overflow-y-auto border border-line md:max-h-none">
+              {suggestions.slice(0, 6).map((t) => (
                 <li key={t.registrationId}>
                   <button
                     type="button"
-                    className="flex min-h-12 w-full items-center justify-between gap-3 px-3 text-left text-sm hover:bg-bg"
+                    className="flex min-h-10 w-full items-center justify-between gap-3 px-3 text-left text-sm hover:bg-bg"
                     onClick={() => void loadTeam(t.registrationId)}
                   >
                     <span className="font-medium text-ink">{t.teamName}</span>
@@ -609,13 +635,16 @@ export function CheckInDesk({
       />
 
       {error ? (
-        <p className="border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
+        <p
+          className="border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger"
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
       {message ? (
         <p
-          className="border border-success/25 bg-success-soft px-4 py-3 text-sm text-ink"
+          className="border border-success/25 bg-success-soft px-3 py-2 text-sm text-ink"
           role="status"
         >
           {message}
@@ -623,18 +652,17 @@ export function CheckInDesk({
       ) : null}
 
       {team ? (
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-2xl">{team.teamName}</h2>
-              <p className="mt-1 text-sm text-muted">
-                {team.checkedInCount}/{team.players.length} checked in · Captain{" "}
-                {team.captainName}
+        <div ref={teamPanelRef} className="space-y-3 md:space-y-6 scroll-mt-36">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="font-display text-xl md:text-2xl">{team.teamName}</h2>
+              <p className="mt-0.5 text-sm text-muted">
+                {team.checkedInCount}/{team.players.length} in · {team.captainName}
               </p>
-              <p className="mt-1 font-mono text-sm tracking-wide text-ink">
-                Code {team.checkInCode}
-              </p>
-              <div className="mt-2">
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs tracking-wide text-ink md:text-sm">
+                  {team.checkInCode}
+                </span>
                 <PrepaidTabs
                   skins={team.prepaid.skins}
                   mulligans={team.prepaid.mulligans}
@@ -642,13 +670,13 @@ export function CheckInDesk({
               </div>
               <Link
                 href={`/admin/check-in/team/${team.registrationId}`}
-                className="mt-2 inline-flex min-h-11 items-center text-sm underline underline-offset-4"
+                className="mt-1 inline-flex min-h-9 items-center text-xs underline underline-offset-4 md:min-h-11 md:text-sm"
               >
-                Team detail / history
+                Detail / history
               </Link>
             </div>
             {qr ? (
-              <div className="border border-line bg-surface p-4 text-center print:block">
+              <div className="hidden border border-line bg-surface p-4 text-center print:block md:block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qr.dataUrl}
@@ -683,53 +711,39 @@ export function CheckInDesk({
           ) : (
             <>
               {(team.prepaid.skins || team.prepaid.mulligans) && (
-                <div className="border border-success/30 bg-success-soft px-4 py-4 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <PrepaidTabs
-                      skins={team.prepaid.skins}
-                      mulligans={team.prepaid.mulligans}
-                    />
-                  </div>
-                  <p className="text-sm text-ink">
-                    Already paid online — collect <strong>$0</strong> for
-                    prepaid add-ons.
-                  </p>
-                </div>
+                <p className="border border-success/30 bg-success-soft px-3 py-2 text-xs md:text-sm">
+                  Prepaid — collect $0 for{" "}
+                  {[
+                    team.prepaid.skins ? "skins" : null,
+                    team.prepaid.mulligans ? "mulligans" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" + ")}
+                  .
+                </p>
               )}
 
               {team.prepaid.mulligans ? (
-                <div className="flex flex-wrap items-center justify-between gap-3 border border-success/30 bg-success-soft px-4 py-4">
-                  <div>
-                    <p className="text-sm font-medium text-ink">
-                      Mulligans — whole team
-                    </p>
-                    <p className="mt-1 text-xs text-muted">Included with registration</p>
-                  </div>
-                  <PrepaidBadge label="Prepaid · $0 due" />
+                <div className="flex items-center justify-between gap-2 border border-success/30 bg-success-soft px-3 py-2">
+                  <span className="text-sm font-medium">Mulligans (team)</span>
+                  <PrepaidBadge label="Prepaid · $0" />
                 </div>
               ) : (
-                <div className="border border-line bg-surface px-4 py-4">
-                  <label className="flex min-h-11 items-center gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      className="size-5"
-                      checked={teamMulligansOn}
-                      onChange={(e) => setTeamMulligans(e.target.checked)}
-                    />
-                    <span>
-                      Mulligans — whole team (
-                      {money(mulligansPrice(team.prices))} due today)
-                    </span>
-                  </label>
-                  <p className="mt-2 text-xs text-muted">
-                    Mulligans can only be purchased for the whole team. Skins are{" "}
-                    {money(skinsPrice(team.prices))} per person day-of (unless
-                    prepaid).
-                  </p>
-                </div>
+                <label className="flex min-h-11 items-center gap-3 border border-line bg-surface px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="size-5"
+                    checked={teamMulligansOn}
+                    onChange={(e) => setTeamMulligans(e.target.checked)}
+                  />
+                  <span>
+                    Team mulligans ({money(mulligansPrice(team.prices))})
+                  </span>
+                </label>
               )}
 
-              <ul className="space-y-4 md:hidden">
+              {/* Dense mobile roster */}
+              <ul className="divide-y divide-line border border-line md:hidden">
                 {team.players.map((player) => {
                   const draft = drafts[player.id] ?? {
                     skins: false,
@@ -745,67 +759,57 @@ export function CheckInDesk({
                   )
                   const inAlready = isPlayerCheckedIn(player)
                   return (
-                    <li
-                      key={player.id}
-                      className="border border-line bg-surface px-4 py-4"
-                    >
-                      <p className="font-medium text-ink">{player.display_name}</p>
-                      <p className="mt-1 text-sm text-muted">
-                        {inAlready
-                          ? `Checked in${player.checked_in_at ? ` · ${new Date(player.checked_in_at).toLocaleString()}` : ""}`
-                          : "Not checked in"}
-                      </p>
-                      {inAlready ? (
-                        <div className="mt-4 flex flex-col gap-2">
-                          <p className="inline-flex min-h-12 w-full items-center justify-center bg-accent px-4 text-base font-semibold text-accent-ink">
-                            Checked in
+                    <li key={player.id} className="bg-surface px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-ink">
+                            {player.display_name}
                           </p>
+                          {team.prepaid.skins ? (
+                            <PrepaidBadge
+                              label="Skins prepaid"
+                              className="mt-1"
+                            />
+                          ) : (
+                            <label className="mt-1 flex items-center gap-2 text-xs text-muted">
+                              <input
+                                type="checkbox"
+                                className="size-4"
+                                checked={draft.skins}
+                                onChange={(e) =>
+                                  setPlayerSkins(player.id, e.target.checked)
+                                }
+                              />
+                              Skins
+                              {draft.skins ? ` ${money(total)}` : ""}
+                            </label>
+                          )}
+                        </div>
+                        {inAlready ? (
+                          <div className="flex shrink-0 flex-col gap-1">
+                            <span className="inline-flex min-h-9 items-center justify-center bg-accent px-2 text-xs font-semibold text-accent-ink">
+                              In
+                            </span>
+                            <button
+                              type="button"
+                              disabled={busyPlayerId === player.id}
+                              className="inline-flex min-h-9 items-center justify-center border border-line px-2 text-xs disabled:opacity-60"
+                              onClick={() => void onUndo(player)}
+                            >
+                              Undo
+                            </button>
+                          </div>
+                        ) : (
                           <button
                             type="button"
                             disabled={busyPlayerId === player.id}
-                            className="inline-flex min-h-12 w-full items-center justify-center border border-line px-4 text-sm font-medium disabled:opacity-60"
-                            onClick={() => void onUndo(player)}
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center bg-success px-3 text-sm font-semibold text-white disabled:opacity-60"
+                            onClick={() => void onCheckIn(player)}
                           >
-                            {busyPlayerId === player.id ? "Undoing…" : "Undo check-in"}
+                            {busyPlayerId === player.id ? "…" : "Check in"}
                           </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={busyPlayerId === player.id}
-                          className="mt-4 inline-flex min-h-14 w-full items-center justify-center bg-success px-4 text-base font-semibold text-white disabled:opacity-60"
-                          onClick={() => void onCheckIn(player)}
-                        >
-                          {busyPlayerId === player.id ? "Saving…" : "Check In"}
-                        </button>
-                      )}
-                      <div className="mt-4 space-y-2 text-sm">
-                        {team.prepaid.skins ? (
-                          <div className="flex min-h-11 flex-wrap items-center gap-2">
-                            <span className="font-medium text-ink">Skins</span>
-                            <PrepaidBadge label="Prepaid · $0 due" />
-                          </div>
-                        ) : (
-                          <label className="flex min-h-11 items-center gap-3">
-                            <input
-                              type="checkbox"
-                              className="size-5"
-                              checked={draft.skins}
-                              onChange={(e) =>
-                                setPlayerSkins(player.id, e.target.checked)
-                              }
-                            />
-                            <span>
-                              Skins ({money(skinsPrice(team.prices))}/person)
-                            </span>
-                          </label>
                         )}
                       </div>
-                      {!team.prepaid.skins ? (
-                        <p className="mt-3 text-sm font-medium tabular-nums">
-                          Skins due: {money(total)}
-                        </p>
-                      ) : null}
                     </li>
                   )
                 })}
@@ -906,28 +910,19 @@ export function CheckInDesk({
                 </table>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-4 border border-line bg-surface px-4 py-4">
-                <div>
-                  <p className="text-base font-medium tabular-nums">
+              {/* Sticky due/save on mobile */}
+              <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-3 py-2 md:static md:inset-auto md:mt-0 md:flex md:flex-wrap md:items-center md:justify-between md:gap-4 md:border md:px-4 md:py-4">
+                <div className="mb-1 md:mb-0">
+                  <p className="text-sm font-medium tabular-nums md:text-base">
                     {liveTeamTotal > 0
-                      ? `Due today: ${money(liveTeamTotal)}`
-                      : "Due today: $0.00"}
+                      ? `Due: ${money(liveTeamTotal)}`
+                      : "Due: $0"}
                   </p>
-                  {(team.prepaid.skins || team.prepaid.mulligans) && (
-                    <p className="mt-1 text-xs text-muted">
-                      Prepaid add-ons are not included in “due today.”
-                    </p>
-                  )}
-                  {teamMulligansOn && !team.prepaid.mulligans && liveTeamTotal > 0 ? (
-                    <p className="mt-1 text-xs text-muted">
-                      Includes team mulligans {money(mulligansPrice(team.prices))}
-                    </p>
-                  ) : null}
                 </div>
                 <button
                   type="button"
                   disabled={savingAddons}
-                  className="btn-deep inline-flex min-h-12 items-center justify-center px-6 text-sm font-medium disabled:opacity-60"
+                  className="btn-deep inline-flex min-h-11 w-full items-center justify-center px-6 text-sm font-medium disabled:opacity-60 md:w-auto"
                   onClick={() => void onSaveAddons()}
                 >
                   {savingAddons ? "Saving…" : "Save add-ons"}

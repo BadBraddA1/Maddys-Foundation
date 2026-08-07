@@ -164,7 +164,8 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 2. Open **Check-in desk** (or Roster → Day-of check-in).
 3. First time / after imports: on the event roster, **Sync players from roster notes** (also allocates per-player codes `OV-P-……`).
 4. **Scan QR** on iPhone (Safari, staff already logged in):
-   - Turn on **Always ready to scan** so the camera stays live (no need to tap Scan for every QR). Optional **Keep screen awake** keeps the phone from sleeping (Safari wake lock).
+   - Turn on **Live scan** so the camera stays live (sticky, compact on phones). Optional **Stay awake** keeps the phone from sleeping.
+   - Code/search is tucked behind **Code / search** on mobile while live scanning to cut scrolling.
    - **Player QR** (`/ticket/p/OV-P-……`) → checks that person in automatically, then opens the team for add-ons / undo.
    - **Team QR** (`/ticket/OV-……`) → loads the roster only (no bulk auto check-in).
    - Or type a code / search by team name → Load → tap check-in; **Save add-ons** separately (**Skins** $5/person day-of; **Mulligans** whole-team only at $20 — Golf Cannon / Golf Pro removed).
