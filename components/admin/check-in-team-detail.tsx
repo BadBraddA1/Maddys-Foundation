@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { ResendConfirmationButton } from "@/components/admin/resend-confirmation-button"
+import { PrepaidBadge, PrepaidTabs } from "@/components/admin/prepaid-badge"
 import {
   computePlayerAddonTotalCents,
   computeTeamDeskAddonTotalCents,
@@ -246,11 +247,19 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
           <h1 className="font-display text-3xl">{team.teamName}</h1>
           <p className="mt-1 text-sm text-muted">
             {team.checkedInCount}/{team.players.length} checked in ·{" "}
-            {formatAddonMoney(liveTotal)} day-of add-ons
+            {liveTotal > 0
+              ? `${formatAddonMoney(liveTotal)} due today`
+              : "Nothing due today"}
           </p>
           <p className="mt-1 font-mono text-sm tracking-wide">
             Code {team.checkInCode}
           </p>
+          <div className="mt-2">
+            <PrepaidTabs
+              skins={team.prepaid.skins}
+              mulligans={team.prepaid.mulligans}
+            />
+          </div>
           <div className="mt-2">
             <ResendConfirmationButton
               eventId={team.eventId}
@@ -289,34 +298,44 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
       ) : null}
 
       {(team.prepaid.skins || team.prepaid.mulligans) && (
-        <p className="border border-success/25 bg-success-soft px-4 py-3 text-sm">
-          Prepaid online:{" "}
-          {[
-            team.prepaid.skins ? "Skins (whole team)" : null,
-            team.prepaid.mulligans ? "Mulligans (whole team)" : null,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-          . Already paid — do not collect again.
-        </p>
+        <div className="border border-success/30 bg-success-soft px-4 py-4 space-y-2">
+          <PrepaidTabs
+            skins={team.prepaid.skins}
+            mulligans={team.prepaid.mulligans}
+          />
+          <p className="text-sm text-ink">
+            Already paid online — collect <strong>$0</strong> for prepaid
+            add-ons.
+          </p>
+        </div>
       )}
 
-      <div className="border border-line bg-surface px-4 py-4">
-        <label className="flex min-h-11 items-center gap-3 text-sm">
-          <input
-            type="checkbox"
-            className="size-5"
-            checked={teamMulligansOn}
-            disabled={team.prepaid.mulligans}
-            onChange={(e) => setTeamMulligans(e.target.checked)}
-          />
-          <span>
-            Mulligans — whole team (
-            {formatAddonMoney(mulligansPrice(team.prices))})
-            {team.prepaid.mulligans ? " · Prepaid" : ""}
-          </span>
-        </label>
-      </div>
+      {team.prepaid.mulligans ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 border border-success/30 bg-success-soft px-4 py-4">
+          <div>
+            <p className="text-sm font-medium text-ink">
+              Mulligans — whole team
+            </p>
+            <p className="mt-1 text-xs text-muted">Included with registration</p>
+          </div>
+          <PrepaidBadge label="Prepaid · $0 due" />
+        </div>
+      ) : (
+        <div className="border border-line bg-surface px-4 py-4">
+          <label className="flex min-h-11 items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              className="size-5"
+              checked={teamMulligansOn}
+              onChange={(e) => setTeamMulligans(e.target.checked)}
+            />
+            <span>
+              Mulligans — whole team (
+              {formatAddonMoney(mulligansPrice(team.prices))} due today)
+            </span>
+          </label>
+        </div>
+      )}
 
       <ul className="space-y-4">
         {team.players.map((player) => {
@@ -365,43 +384,60 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
                   </button>
                 )}
               </div>
-              <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    className="size-5"
-                    checked={draft.skins}
-                    disabled={team.prepaid.skins}
-                    onChange={(e) =>
-                      setDrafts((prev) => ({
-                        ...prev,
-                        [player.id]: {
-                          skins: e.target.checked,
-                          mulligans: draft.mulligans,
-                        },
-                      }))
-                    }
-                  />
-                  Skins ({formatAddonMoney(skinsPrice(team.prices))}/person)
-                  {team.prepaid.skins ? " · Prepaid" : ""}
-                  {!team.prepaid.skins && draft.skins
-                    ? ` · ${formatAddonMoney(skinsDue)}`
-                    : ""}
-                </label>
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+                {team.prepaid.skins ? (
+                  <>
+                    <span className="font-medium text-ink">Skins</span>
+                    <PrepaidBadge label="Prepaid · $0 due" />
+                  </>
+                ) : (
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="size-5"
+                      checked={draft.skins}
+                      onChange={(e) =>
+                        setDrafts((prev) => ({
+                          ...prev,
+                          [player.id]: {
+                            skins: e.target.checked,
+                            mulligans: draft.mulligans,
+                          },
+                        }))
+                      }
+                    />
+                    Skins ({formatAddonMoney(skinsPrice(team.prices))}/person)
+                    {draft.skins ? ` · ${formatAddonMoney(skinsDue)} due` : ""}
+                  </label>
+                )}
               </div>
             </li>
           )
         })}
       </ul>
 
-      <button
-        type="button"
-        disabled={saving}
-        className="btn-deep inline-flex min-h-12 items-center justify-center px-6 text-sm font-medium disabled:opacity-60"
-        onClick={() => void saveAddons()}
-      >
-        {saving ? "Saving…" : "Save add-ons"}
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-4 border border-line bg-surface px-4 py-4">
+        <div>
+          <p className="text-base font-medium tabular-nums">
+            {liveTotal > 0
+              ? `Due today: ${formatAddonMoney(liveTotal)}`
+              : "Due today: $0.00"}
+          </p>
+          {(team.prepaid.skins || team.prepaid.mulligans) && (
+            <p className="mt-1 text-xs text-muted">
+              Prepaid add-ons are not included in “due today.”
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          disabled={saving}
+          className="btn-deep inline-flex min-h-12 items-center justify-center px-6 text-sm font-medium disabled:opacity-60"
+          onClick={() => void saveAddons()}
+        >
+          {saving ? "Saving…" : "Save add-ons"}
+        </button>
+      </div>
 
       <div>
         <h2 className="font-display text-xl">History</h2>
