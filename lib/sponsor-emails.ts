@@ -84,15 +84,14 @@ export function buildSponsorEmailBodies(
         <strong>${escapeEmailHtml(amount)}</strong>.
       </p>
       <p style="margin:0 0 14px">
-        Pay securely by card with the button below. After Stripe confirms payment,
-        your logo publishes on the site automatically — no follow-up needed.
+        Pay by card below — your logo goes live automatically after payment.
       </p>
     `,
     ctaLabel: `Pay ${amount}`,
     ctaUrl: payUrl,
     footerNote: "Questions? Just reply to this email.",
   })
-  const text = `Hi ${greeting},\n\nPlease pay ${amount} to become a sponsor by card:\n${payUrl}\n\nYour logo publishes automatically after payment.\n`
+  const text = `Hi ${greeting},\n\nPlease pay ${amount} to become a sponsor:\n${payUrl}\n\nYour logo goes live automatically after payment.\n`
   return { subject, html, text }
 }
 
