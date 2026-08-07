@@ -44,3 +44,21 @@ export function parseRegistrationRoster(
 export function extractTeamNameFromNotes(notes: string): string {
   return parseRegistrationRoster(notes).teamName
 }
+
+/** Prepaid team add-ons from registration notes (written at checkout). */
+export type PrepaidAddons = {
+  mulligans: boolean
+  skins: boolean
+}
+
+/**
+ * Notes include lines like `Mulligans: yes (+$20)` / `Skins: no`.
+ * Also accepts Stripe-style metadata echoes if present.
+ */
+export function parsePrepaidAddons(notes: string): PrepaidAddons {
+  const text = notes ?? ""
+  return {
+    mulligans: /Mulligans:\s*yes\b/i.test(text),
+    skins: /Skins:\s*yes\b/i.test(text),
+  }
+}

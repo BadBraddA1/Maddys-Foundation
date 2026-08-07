@@ -6,18 +6,29 @@ import {
   ensureRegistrationCheckInCode,
 } from "@/lib/check-in-code"
 import {
-  computeAddonTotalCents,
+  computePlayerAddonTotalCents,
+  computeTeamDeskAddonTotalCents,
+  DESK_MULLIGANS_CENTS,
+  DESK_SKINS_CENTS,
   type AddonKey,
   type AddonPrice,
   type EventPlayer,
+  type PrepaidAddons,
 } from "@/lib/check-in-shared"
 import {
   extractTeamNameFromNotes,
+  parsePrepaidAddons,
   parseRegistrationRoster,
 } from "@/lib/roster-parse"
 
-export type { AddonKey, AddonPrice, EventPlayer } from "@/lib/check-in-shared"
-export { computeAddonTotalCents, formatAddonMoney, isPlayerCheckedIn } from "@/lib/check-in-shared"
+export type { AddonKey, AddonPrice, EventPlayer, PrepaidAddons } from "@/lib/check-in-shared"
+export {
+  computeAddonTotalCents,
+  computePlayerAddonTotalCents,
+  computeTeamDeskAddonTotalCents,
+  formatAddonMoney,
+  isPlayerCheckedIn,
+} from "@/lib/check-in-shared"
 
 export type CheckInTeam = {
   registrationId: number
@@ -33,11 +44,17 @@ export type CheckInTeam = {
   prices: AddonPrice[]
   teamAddonTotalCents: number
   checkedInCount: number
+  /** Paid online at registration — show on desk, do not charge again. */
+  prepaid: PrepaidAddons
 }
 
 const DEFAULT_PRICES: AddonPrice[] = [
-  { addon_key: "skins", label: "Skins", price_cents: 2000 },
-  { addon_key: "mulligans", label: "Mulligans", price_cents: 2000 },
+  { addon_key: "skins", label: "Skins", price_cents: DESK_SKINS_CENTS },
+  {
+    addon_key: "mulligans",
+    label: "Mulligans (team)",
+    price_cents: DESK_MULLIGANS_CENTS,
+  },
 ]
 
 const ACTIVE_ADDON_KEYS = new Set<AddonKey>(
@@ -70,6 +87,21 @@ export async function ensureAddonPrices(eventId: number): Promise<AddonPrice[]> 
         [eventId, def.addon_key, def.label, def.price_cents],
       )
       byKey.set(def.addon_key, def)
+    } else {
+      // Keep desk prices in sync (skins $5/person, mulligans $20/team).
+      const cur = byKey.get(def.addon_key)!
+      if (
+        cur.price_cents !== def.price_cents ||
+        cur.label !== def.label
+      ) {
+        await sql.execute(
+          `UPDATE addon_prices
+           SET label = ?, price_cents = ?
+           WHERE (event_id = ? OR event_id IS NULL) AND addon_key = ?`,
+          [def.label, def.price_cents, eventId, def.addon_key],
+        )
+        byKey.set(def.addon_key, def)
+      }
     }
   }
   // Drop retired desk options (Golf Cannon / Golf Pro) so old rows don't resurface.
@@ -80,6 +112,72 @@ export async function ensureAddonPrices(eventId: number): Promise<AddonPrice[]> 
     [eventId],
   )
   return DEFAULT_PRICES.map((d) => byKey.get(d.addon_key) ?? d)
+}
+
+/**
+ * Mirror prepaid registration add-ons onto event_players so the desk shows them.
+ * Prepaid items are marked on every player; day-of money stays $0 for those flags.
+ */
+async function applyPrepaidAddonsToPlayers(
+  registrationId: number,
+  notes: string,
+  prices: AddonPrice[],
+): Promise<PrepaidAddons> {
+  const prepaid = parsePrepaidAddons(notes)
+  if (!prepaid.skins && !prepaid.mulligans) {
+    return prepaid
+  }
+
+  await ensureEventPlayerTicketColumns()
+  const players = await listPlayersForRegistration(registrationId)
+  if (players.length === 0) return prepaid
+
+  let mulliganChargeAssigned = false
+  for (const p of players) {
+    const skins = prepaid.skins || p.skins === 1
+    const mulligans = prepaid.mulligans || p.mulligans === 1
+    const chargeTeamMulligans =
+      mulligans && !prepaid.mulligans && !mulliganChargeAssigned
+    if (chargeTeamMulligans) mulliganChargeAssigned = true
+
+    const total = computePlayerAddonTotalCents(
+      { skins, mulligans },
+      prices,
+      { prepaid, chargeTeamMulligans },
+    )
+
+    if (
+      (skins ? 1 : 0) !== p.skins ||
+      (mulligans ? 1 : 0) !== p.mulligans ||
+      total !== p.addon_total_cents
+    ) {
+      await sql.execute(
+        `UPDATE event_players
+         SET skins = ?, mulligans = ?, addon_total_cents = ?,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND registration_id = ?`,
+        [skins ? 1 : 0, mulligans ? 1 : 0, total, p.id, registrationId],
+      )
+    }
+  }
+  return prepaid
+}
+
+function recalculatePlayerAddonTotals(
+  players: Array<{ skins: boolean; mulligans: boolean }>,
+  prices: AddonPrice[],
+  prepaid: PrepaidAddons,
+): number[] {
+  let mulliganChargeAssigned = false
+  return players.map((p) => {
+    const chargeTeamMulligans =
+      p.mulligans && !prepaid.mulligans && !mulliganChargeAssigned
+    if (chargeTeamMulligans) mulliganChargeAssigned = true
+    return computePlayerAddonTotalCents(p, prices, {
+      prepaid,
+      chargeTeamMulligans,
+    })
+  })
 }
 
 function mapPlayer(row: Record<string, unknown>): EventPlayer {
@@ -264,6 +362,13 @@ export async function syncPlayersForRegistration(
 
   await ensurePlayerCodesForRegistration(registrationId, prefix)
 
+  const prices = await ensureAddonPrices(eventId)
+  await applyPrepaidAddonsToPlayers(
+    registrationId,
+    String(reg.notes ?? ""),
+    prices,
+  )
+
   if (created > 0) {
     await audit(
       actor,
@@ -372,6 +477,13 @@ export async function ensureCheckInRosterForRegistration(
   }
 
   await ensurePlayerCodesForRegistration(registrationId, prefix)
+
+  const prices = await ensureAddonPrices(eventId)
+  await applyPrepaidAddonsToPlayers(
+    registrationId,
+    String(reg.notes ?? ""),
+    prices,
+  )
 }
 
 export async function searchTeams(opts: {
@@ -450,11 +562,20 @@ export async function getCheckInTeam(
   const checkInCode = await ensureRegistrationCheckInCode(registrationId, prefix)
 
   await syncPlayersForRegistration(registrationId)
-  const players = await listPlayersForRegistration(registrationId)
   const prices = await ensureAddonPrices(Number(reg.event_id))
-  const teamAddonTotalCents = players.reduce(
-    (s, p) => s + p.addon_total_cents,
-    0,
+  const prepaid = await applyPrepaidAddonsToPlayers(
+    registrationId,
+    String(reg.notes ?? ""),
+    prices,
+  )
+  const players = await listPlayersForRegistration(registrationId)
+  const teamAddonTotalCents = computeTeamDeskAddonTotalCents(
+    players.map((p) => ({
+      skins: p.skins === 1,
+      mulligans: p.mulligans === 1,
+    })),
+    prices,
+    prepaid,
   )
   const teamName =
     String(reg.team_name ?? "").trim() ||
@@ -474,6 +595,7 @@ export async function getCheckInTeam(
     prices,
     teamAddonTotalCents,
     checkedInCount: players.filter((p) => p.checked_in === 1).length,
+    prepaid,
   }
 }
 
@@ -602,8 +724,22 @@ export async function saveTeamAddOns(
 
   await ensureEventPlayerTicketColumns()
   const priceList = team.prices
-  for (const patch of players) {
-    const total = computeAddonTotalCents(patch, priceList)
+  const prepaid = team.prepaid
+
+  // Mulligans are whole-team only: any request for mulligans applies to everyone.
+  const wantTeamMulligans =
+    prepaid.mulligans || players.some((p) => p.mulligans)
+
+  const patches = players.map((p) => ({
+    id: p.id,
+    skins: prepaid.skins || Boolean(p.skins),
+    mulligans: wantTeamMulligans,
+  }))
+
+  const totals = recalculatePlayerAddonTotals(patches, priceList, prepaid)
+
+  for (let i = 0; i < patches.length; i++) {
+    const patch = patches[i]!
     await sql.execute(
       `UPDATE event_players
        SET skins = ?, mulligans = ?, golf_cannon = 0, golf_pro = 0,
@@ -612,7 +748,7 @@ export async function saveTeamAddOns(
       [
         patch.skins ? 1 : 0,
         patch.mulligans ? 1 : 0,
-        total,
+        totals[i] ?? 0,
         patch.id,
         registrationId,
       ],
@@ -642,7 +778,8 @@ export async function getCheckInDashboard(eventId: number) {
         WHERE p.registration_id = r.id AND p.checked_in = 1) AS checked_in_count,
       (SELECT COALESCE(SUM(p.skins), 0) FROM event_players p
         WHERE p.registration_id = r.id) AS skins_count,
-      (SELECT COALESCE(SUM(p.mulligans), 0) FROM event_players p
+      (SELECT CASE WHEN COALESCE(SUM(p.mulligans), 0) > 0 THEN 1 ELSE 0 END
+        FROM event_players p
         WHERE p.registration_id = r.id) AS mulligans_count,
       (SELECT COALESCE(SUM(p.addon_total_cents), 0) FROM event_players p
         WHERE p.registration_id = r.id) AS addon_total_cents

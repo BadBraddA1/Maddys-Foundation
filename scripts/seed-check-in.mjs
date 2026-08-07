@@ -154,8 +154,8 @@ async function main() {
 
   // Default addon prices
   for (const [key, label, cents] of [
-    ["skins", "Skins", 2000],
-    ["mulligans", "Mulligans", 2000],
+    ["skins", "Skins", 500],
+    ["mulligans", "Mulligans (team)", 2000],
   ]) {
     await db.execute(
       `INSERT OR IGNORE INTO addon_prices (event_id, addon_key, label, price_cents)
@@ -205,13 +205,14 @@ async function main() {
     }
     if (!registrationId) throw new Error(`Failed to insert ${t.team}`)
 
-    // Varied day-of add-ons for desk testing ($20 skins / $20 mulligans).
+    // Varied day-of add-ons for desk testing ($5 skins / $20 team mulligans).
+    // Mulligans are whole-team; seed sets the flag on all players when the team has them.
     const addonPlans = [
-      // Birdie Bunch — mix + one checked in
+      // Birdie Bunch — skins mix + team mulligans + one checked in
       [
-        { skins: 1, mulligans: 0, checked: 1 },
+        { skins: 1, mulligans: 1, checked: 1 },
         { skins: 0, mulligans: 1, checked: 0 },
-        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 0, mulligans: 1, checked: 0 },
         { skins: 1, mulligans: 1, checked: 0 },
       ],
       // Fairway Friends — all clear (control team)
@@ -221,28 +222,31 @@ async function main() {
         { skins: 0, mulligans: 0, checked: 0 },
         { skins: 0, mulligans: 0, checked: 0 },
       ],
-      // Par Then Bar — heavy add-ons + two checked in
+      // Par Then Bar — heavy skins + team mulligans + two checked in
       [
         { skins: 1, mulligans: 1, checked: 1 },
-        { skins: 1, mulligans: 0, checked: 1 },
+        { skins: 1, mulligans: 1, checked: 1 },
         { skins: 0, mulligans: 1, checked: 0 },
-        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 0, mulligans: 1, checked: 0 },
       ],
-      // Eagle Eye — mulligans only
+      // Eagle Eye — team mulligans only
       [
         { skins: 0, mulligans: 1, checked: 0 },
         { skins: 0, mulligans: 1, checked: 0 },
         { skins: 0, mulligans: 1, checked: 0 },
-        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 0, mulligans: 1, checked: 0 },
       ],
-      // Mulligan Crew — skins + mulligans
+      // Mulligan Crew — skins + team mulligans
       [
         { skins: 1, mulligans: 1, checked: 1 },
         { skins: 0, mulligans: 1, checked: 0 },
-        { skins: 1, mulligans: 0, checked: 0 },
-        { skins: 0, mulligans: 0, checked: 0 },
+        { skins: 1, mulligans: 1, checked: 0 },
+        { skins: 0, mulligans: 1, checked: 0 },
       ],
     ][i]
+
+    const teamHasMulligans = addonPlans.some((p) => p.mulligans === 1)
+    let mulliganChargeAssigned = false
 
     for (let p = 0; p < t.players.length; p++) {
       const plan = addonPlans[p] || {
@@ -250,7 +254,10 @@ async function main() {
         mulligans: 0,
         checked: 0,
       }
-      const total = plan.skins * 2000 + plan.mulligans * 2000
+      const chargeMulligans =
+        teamHasMulligans && plan.mulligans === 1 && !mulliganChargeAssigned
+      if (chargeMulligans) mulliganChargeAssigned = true
+      const total = plan.skins * 500 + (chargeMulligans ? 2000 : 0)
       const checkedInAt = plan.checked
         ? new Date().toISOString()
         : null

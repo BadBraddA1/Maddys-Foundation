@@ -13,6 +13,11 @@ export type AddonFlags = {
   mulligans: boolean
 }
 
+export type PrepaidAddons = {
+  skins: boolean
+  mulligans: boolean
+}
+
 export type EventPlayer = {
   id: number
   event_id: number
@@ -32,14 +37,75 @@ export type EventPlayer = {
   updated_at: string
 }
 
+/** Day-of skins if not prepaid online — per person. */
+export const DESK_SKINS_CENTS = 500
+
+/** Day-of / online mulligans — whole team only. */
+export const DESK_MULLIGANS_CENTS = 2000
+
+export function priceMap(prices: AddonPrice[]): Record<string, number> {
+  return Object.fromEntries(prices.map((p) => [p.addon_key, p.price_cents]))
+}
+
+/**
+ * Day-of money owed for one player.
+ * Skins: per person (unless prepaid).
+ * Mulligans: charged once on the first player with the flag (unless prepaid).
+ */
+export function computePlayerAddonTotalCents(
+  flags: AddonFlags,
+  prices: AddonPrice[],
+  opts?: {
+    prepaid?: PrepaidAddons
+    /** True when this row should carry the team mulligans charge. */
+    chargeTeamMulligans?: boolean
+  },
+): number {
+  const map = priceMap(prices)
+  const prepaid = opts?.prepaid ?? { skins: false, mulligans: false }
+  let total = 0
+  if (flags.skins && !prepaid.skins) {
+    total += Number(map.skins ?? DESK_SKINS_CENTS)
+  }
+  if (
+    flags.mulligans &&
+    !prepaid.mulligans &&
+    opts?.chargeTeamMulligans
+  ) {
+    total += Number(map.mulligans ?? DESK_MULLIGANS_CENTS)
+  }
+  return total
+}
+
+/** @deprecated Prefer computePlayerAddonTotalCents — kept for older call sites. */
 export function computeAddonTotalCents(
   flags: AddonFlags,
   prices: AddonPrice[],
 ): number {
-  const map = Object.fromEntries(prices.map((p) => [p.addon_key, p.price_cents]))
+  return computePlayerAddonTotalCents(flags, prices, {
+    chargeTeamMulligans: flags.mulligans,
+  })
+}
+
+/** Live desk total: skins per checked player + one team mulligans fee. */
+export function computeTeamDeskAddonTotalCents(
+  players: AddonFlags[],
+  prices: AddonPrice[],
+  prepaid?: PrepaidAddons,
+): number {
+  const map = priceMap(prices)
+  const pre = prepaid ?? { skins: false, mulligans: false }
   let total = 0
-  if (flags.skins) total += Number(map.skins ?? 0)
-  if (flags.mulligans) total += Number(map.mulligans ?? 0)
+  let anyMulligans = false
+  for (const p of players) {
+    if (p.skins && !pre.skins) {
+      total += Number(map.skins ?? DESK_SKINS_CENTS)
+    }
+    if (p.mulligans) anyMulligans = true
+  }
+  if (anyMulligans && !pre.mulligans) {
+    total += Number(map.mulligans ?? DESK_MULLIGANS_CENTS)
+  }
   return total
 }
 

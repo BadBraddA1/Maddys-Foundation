@@ -166,13 +166,13 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 4. **Scan QR** on iPhone (Safari, staff already logged in):
    - **Player QR** (`/ticket/p/OV-P-……`) → checks that person in automatically, then opens the team for add-ons / undo.
    - **Team QR** (`/ticket/OV-……`) → loads the roster only (no bulk auto check-in).
-   - Or type a code / search by team name → Load → tap check-in; **Save add-ons** separately (**Skins / Mulligans** per player — Golf Cannon / Golf Pro removed).
+   - Or type a code / search by team name → Load → tap check-in; **Save add-ons** separately (**Skins** $5/person day-of; **Mulligans** whole-team only at $20 — Golf Cannon / Golf Pro removed).
 5. Each registration gets a team `check_in_code`; each `event_players` row gets its own `check_in_code`. Captains use `/ticket/CODE` to email personal tickets.
 6. Dashboard for live totals and CSV export.
 7. Local test data: `pnpm db:seed-checkin` seeds 5 paid Oak Valley teams (`*@checkin-seed.test`) with codes, players, mixed desk add-ons, and a few already checked in. Mailer skips `*.test` addresses.
 8. Schema note: existing Turso DBs need `event_players.email`, `check_in_code`, `ticket_email_sent_at`, `mulligans` (applied automatically on sync, or via comments in `scripts/schema-turso.sql`). Desk add-ons are **Skins** and **Mulligans** only.
 
-Paid registration Mulligans/Skins stay on the registration notes; desk add-ons are separate day-of sales.
+**Prepaid Mulligans/Skins** (bought on the registration form) are parsed from registration notes when the team loads on the desk and shown checked with a “Prepaid” badge — staff should not collect again. Day-of skins without prepay are **$5 per person**; mulligans day-of (and online) are **whole team only**.
 
 ## Apple Wallet (ops)
 

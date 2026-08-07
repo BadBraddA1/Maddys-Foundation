@@ -141,8 +141,8 @@ export function CheckInDashboard({ eventId, eventTitle }: Props) {
         { label: "Teams", value: String(totals.teams) },
         { label: "Players", value: String(totals.players) },
         { label: "Checked in", value: String(totals.checkedIn) },
-        { label: "Skins", value: String(totals.skins) },
-        { label: "Mulligans", value: String(totals.mulligans) },
+        { label: "Skins (players)", value: String(totals.skins) },
+        { label: "Mulligans (teams)", value: String(totals.mulligans) },
         {
           label: "Add-on total",
           value: formatAddonMoney(totals.addonTotalCents),
@@ -226,8 +226,8 @@ export function CheckInDashboard({ eventId, eventTitle }: Props) {
                   ["teamName", "Team"],
                   ["playerCount", "Players"],
                   ["checkedInCount", "Checked in"],
-                  ["skinsCount", "Skins"],
-                  ["mulligansCount", "Mulligans"],
+                  ["skinsCount", "Skins (players)"],
+                  ["mulligansCount", "Mulligans (teams)"],
                   ["addonTotalCents", "Add-ons"],
                 ] as const
               ).map(([key, label]) => (

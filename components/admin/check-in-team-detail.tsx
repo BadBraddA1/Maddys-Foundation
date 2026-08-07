@@ -2,9 +2,17 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { ResendConfirmationButton } from "@/components/admin/resend-confirmation-button"
-import { formatAddonMoney, isPlayerCheckedIn, type AddonPrice, type EventPlayer } from "@/lib/check-in-shared"
+import {
+  computePlayerAddonTotalCents,
+  computeTeamDeskAddonTotalCents,
+  formatAddonMoney,
+  isPlayerCheckedIn,
+  type AddonPrice,
+  type EventPlayer,
+  type PrepaidAddons,
+} from "@/lib/check-in-shared"
 
 type Team = {
   registrationId: number
@@ -19,6 +27,7 @@ type Team = {
   prices: AddonPrice[]
   teamAddonTotalCents: number
   checkedInCount: number
+  prepaid: PrepaidAddons
 }
 
 type HistoryRow = {
@@ -31,9 +40,20 @@ type HistoryRow = {
 
 type Props = { team: Team; history: HistoryRow[] }
 
+function skinsPrice(prices: AddonPrice[]) {
+  return prices.find((p) => p.addon_key === "skins")?.price_cents ?? 500
+}
+
+function mulligansPrice(prices: AddonPrice[]) {
+  return prices.find((p) => p.addon_key === "mulligans")?.price_cents ?? 2000
+}
+
 export function CheckInTeamDetail({ team: initial, history: initialHistory }: Props) {
   const router = useRouter()
-  const [team, setTeam] = useState(initial)
+  const [team, setTeam] = useState(() => ({
+    ...initial,
+    prepaid: initial.prepaid ?? { skins: false, mulligans: false },
+  }))
   const [history, setHistory] = useState(initialHistory)
   const [busyId, setBusyId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
@@ -41,35 +61,54 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
   const [message, setMessage] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<
     Record<number, { skins: boolean; mulligans: boolean }>
-  >(() =>
-    Object.fromEntries(
+  >(() => {
+    const prepaid = initial.prepaid ?? { skins: false, mulligans: false }
+    return Object.fromEntries(
       initial.players.map((p) => [
         p.id,
         {
-          skins: p.skins === 1,
-          mulligans: p.mulligans === 1,
+          skins: prepaid.skins || p.skins === 1,
+          mulligans: prepaid.mulligans || p.mulligans === 1,
         },
       ]),
-    ),
+    )
+  })
+
+  const teamMulligansOn = useMemo(() => {
+    if (team.prepaid.mulligans) return true
+    return Object.values(drafts).some((d) => d.mulligans)
+  }, [drafts, team.prepaid.mulligans])
+
+  const liveTotal = useMemo(
+    () =>
+      computeTeamDeskAddonTotalCents(
+        Object.values(drafts),
+        team.prices,
+        team.prepaid,
+      ),
+    [drafts, team.prices, team.prepaid],
   )
+
+  function applyTeam(next: Team) {
+    const prepaid = next.prepaid ?? { skins: false, mulligans: false }
+    setTeam({ ...next, prepaid })
+    setDrafts(
+      Object.fromEntries(
+        next.players.map((p) => [
+          p.id,
+          {
+            skins: prepaid.skins || p.skins === 1,
+            mulligans: prepaid.mulligans || p.mulligans === 1,
+          },
+        ]),
+      ),
+    )
+  }
 
   async function refresh() {
     const res = await fetch(`/api/admin/check-in/teams/${team.registrationId}`)
     const data = (await res.json()) as { team?: Team }
-    if (data.team) {
-      setTeam(data.team)
-      setDrafts(
-        Object.fromEntries(
-          data.team.players.map((p) => [
-            p.id,
-            {
-              skins: p.skins === 1,
-              mulligans: p.mulligans === 1,
-            },
-          ]),
-        ),
-      )
-    }
+    if (data.team) applyTeam(data.team)
     const hRes = await fetch(
       `/api/admin/check-in/teams/${team.registrationId}/history`,
     )
@@ -153,6 +192,20 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
     }
   }
 
+  function setTeamMulligans(on: boolean) {
+    if (team.prepaid.mulligans) return
+    setDrafts((prev) => {
+      const next = { ...prev }
+      for (const p of team.players) {
+        next[p.id] = {
+          skins: next[p.id]?.skins ?? false,
+          mulligans: on,
+        }
+      }
+      return next
+    })
+  }
+
   async function saveAddons() {
     setSaving(true)
     setError(null)
@@ -165,7 +218,10 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
           body: JSON.stringify({
             players: team.players.map((p) => ({
               id: p.id,
-              ...drafts[p.id],
+              ...(drafts[p.id] ?? {
+                skins: false,
+                mulligans: teamMulligansOn,
+              }),
             })),
           }),
         },
@@ -175,7 +231,7 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
         setError(data.error || "Unable to save add-ons.")
         return
       }
-      setTeam(data.team)
+      applyTeam(data.team)
       setMessage("Add-ons saved.")
       await refresh()
     } finally {
@@ -190,7 +246,7 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
           <h1 className="font-display text-3xl">{team.teamName}</h1>
           <p className="mt-1 text-sm text-muted">
             {team.checkedInCount}/{team.players.length} checked in ·{" "}
-            {formatAddonMoney(team.teamAddonTotalCents)} add-ons
+            {formatAddonMoney(liveTotal)} day-of add-ons
           </p>
           <p className="mt-1 font-mono text-sm tracking-wide">
             Code {team.checkInCode}
@@ -232,12 +288,46 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
         </p>
       ) : null}
 
+      {(team.prepaid.skins || team.prepaid.mulligans) && (
+        <p className="border border-success/25 bg-success-soft px-4 py-3 text-sm">
+          Prepaid online:{" "}
+          {[
+            team.prepaid.skins ? "Skins (whole team)" : null,
+            team.prepaid.mulligans ? "Mulligans (whole team)" : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          . Already paid — do not collect again.
+        </p>
+      )}
+
+      <div className="border border-line bg-surface px-4 py-4">
+        <label className="flex min-h-11 items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={teamMulligansOn}
+            disabled={team.prepaid.mulligans}
+            onChange={(e) => setTeamMulligans(e.target.checked)}
+          />
+          <span>
+            Mulligans — whole team (
+            {formatAddonMoney(mulligansPrice(team.prices))})
+            {team.prepaid.mulligans ? " · Prepaid" : ""}
+          </span>
+        </label>
+      </div>
+
       <ul className="space-y-4">
         {team.players.map((player) => {
           const draft = drafts[player.id] ?? {
             skins: false,
-            mulligans: false,
+            mulligans: teamMulligansOn,
           }
+          const skinsDue = computePlayerAddonTotalCents(draft, team.prices, {
+            prepaid: team.prepaid,
+            chargeTeamMulligans: false,
+          })
           const inAlready = isPlayerCheckedIn(player)
           return (
             <li key={player.id} className="border border-line bg-surface px-4 py-4">
@@ -276,27 +366,28 @@ export function CheckInTeamDetail({ team: initial, history: initialHistory }: Pr
                 )}
               </div>
               <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                {team.prices.map((price) => (
-                  <label key={price.addon_key} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="size-5"
-                      checked={Boolean(
-                        draft[price.addon_key as keyof typeof draft],
-                      )}
-                      onChange={(e) =>
-                        setDrafts((prev) => ({
-                          ...prev,
-                          [player.id]: {
-                            ...draft,
-                            [price.addon_key]: e.target.checked,
-                          },
-                        }))
-                      }
-                    />
-                    {price.label}
-                  </label>
-                ))}
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="size-5"
+                    checked={draft.skins}
+                    disabled={team.prepaid.skins}
+                    onChange={(e) =>
+                      setDrafts((prev) => ({
+                        ...prev,
+                        [player.id]: {
+                          skins: e.target.checked,
+                          mulligans: draft.mulligans,
+                        },
+                      }))
+                    }
+                  />
+                  Skins ({formatAddonMoney(skinsPrice(team.prices))}/person)
+                  {team.prepaid.skins ? " · Prepaid" : ""}
+                  {!team.prepaid.skins && draft.skins
+                    ? ` · ${formatAddonMoney(skinsDue)}`
+                    : ""}
+                </label>
               </div>
             </li>
           )
