@@ -7,6 +7,7 @@ import {
   type EmailTemplateKind,
 } from "@/lib/email-templates"
 import { SAMPLE_PLAYER_CODE, SAMPLE_TEAM_CODE } from "@/lib/sample-ticket-codes"
+import { SAMPLE_SPONSOR_PAY_TOKEN } from "@/lib/sponsor-emails"
 
 type Props = {
   configured: boolean
@@ -101,6 +102,16 @@ export function EmailTestPanel({ configured, defaultTo, fromLabel }: Props) {
               rel="noopener noreferrer"
             >
               Player ticket ({SAMPLE_PLAYER_CODE})
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={`/sponsor/pay/${SAMPLE_SPONSOR_PAY_TOKEN}`}
+              className="text-accent-ink underline underline-offset-4"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Sponsor pay page (preview)
             </Link>
           </li>
         </ul>

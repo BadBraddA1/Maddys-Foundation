@@ -1,6 +1,7 @@
 import type Stripe from "stripe"
 import { audit } from "@/lib/events"
 import { formatUsdFromCents } from "@/lib/sponsor-levels"
+import { SAMPLE_SPONSOR_PAY_TOKEN } from "@/lib/sponsor-emails"
 import {
   getSponsor,
   getSponsorByPayToken,
@@ -104,6 +105,12 @@ export async function confirmSponsorFromCheckout(
 }
 
 export async function startCheckoutForPayToken(token: string) {
+  if (token === SAMPLE_SPONSOR_PAY_TOKEN) {
+    return {
+      error: "This is a preview pay page — checkout is disabled.",
+      status: 400 as const,
+    }
+  }
   const sponsor = await getSponsorByPayToken(token)
   if (!sponsor) return { error: "Pay link not found.", status: 404 as const }
   if (sponsor.payment_status === "paid") {

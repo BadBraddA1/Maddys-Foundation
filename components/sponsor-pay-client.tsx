@@ -11,6 +11,8 @@ type Props = {
   paidFlag: boolean
   canceledFlag: boolean
   stripeReady: boolean
+  /** Sample token preview — UI only, no Stripe. */
+  preview?: boolean
 }
 
 export function SponsorPayClient(props: Props) {
@@ -19,7 +21,7 @@ export function SponsorPayClient(props: Props) {
   const amount = formatUsdFromCents(props.amountCents)
 
   async function payCard() {
-    if (busy) return
+    if (busy || props.preview) return
     setBusy(true)
     setError(null)
     try {
@@ -73,13 +75,17 @@ export function SponsorPayClient(props: Props) {
       <div className="mt-8 space-y-3">
         <button
           type="button"
-          disabled={busy || !props.stripeReady}
+          disabled={busy || props.preview || !props.stripeReady}
           onClick={payCard}
           className="w-full rounded-full bg-[var(--deep)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
           {busy ? "Opening Stripe…" : `Pay ${amount} with card`}
         </button>
-        {!props.stripeReady ? (
+        {props.preview ? (
+          <p className="text-center text-xs text-[var(--muted)]">
+            This is a layout preview. Real pay links from admin email work with Stripe.
+          </p>
+        ) : !props.stripeReady ? (
           <p className="text-center text-xs text-[var(--muted)]">
             Card checkout is temporarily offline.
           </p>

@@ -10,13 +10,15 @@ import { publicSiteUrl } from "@/lib/stripe"
 
 export type SponsorEmailKind = "sponsor_pay_invite" | "sponsor_paid_thanks"
 
+/** Fixed token for /admin/email samples + public pay-page preview (no DB row). */
+export const SAMPLE_SPONSOR_PAY_TOKEN = "test-sponsor-pay-token"
+
 export function sponsorPayUrl(sponsor: Pick<Sponsor, "pay_token">): string {
   return `${publicSiteUrl()}/sponsor/pay/${sponsor.pay_token}`
 }
 
-/** Sample sponsor for /admin/email tests (no DB). */
+/** Sample sponsor for /admin/email tests and pay-page preview (no DB). */
 export function sampleSponsorForEmail(): Sponsor {
-  const token = "test-sponsor-pay-token"
   return {
     id: 0,
     name: "Oak Valley Partners",
@@ -33,7 +35,7 @@ export function sampleSponsorForEmail(): Sponsor {
     payment_status: "unpaid",
     level_key: "",
     level_label: "",
-    pay_token: token,
+    pay_token: SAMPLE_SPONSOR_PAY_TOKEN,
     stripe_checkout_session_id: "",
     paid_at: "",
     source: "admin",
