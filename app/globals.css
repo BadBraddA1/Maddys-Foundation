@@ -346,6 +346,19 @@ a {
   animation: check-in-row-flash 0.7s ease-in-out 5;
 }
 
+/* html5-qrcode: tall viewfinder + real square scan region on iPhone */
+.qr-reader-host {
+  position: relative;
+}
+.qr-reader-host video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+.qr-reader-host img {
+  display: none !important;
+}
+
 .animate-hero-drift {
   animation: hero-drift 1.8s var(--ease-out-quart) forwards;
 }

@@ -185,21 +185,17 @@ export function CheckInQrScanner({
           cameraConfig,
           {
             fps: 15,
-            // Dynamic box — fixed 180px boxes fail often in small iPhone viewfinders.
+            // Must stay within the real viewfinder. Forcing a min size larger than
+            // the video height collapses the guide into a thin strip on iPhone.
             qrbox: (viewfinderWidth, viewfinderHeight) => {
-              const edge = Math.floor(
-                Math.min(viewfinderWidth, viewfinderHeight) * 0.82,
+              const minEdge = Math.max(
+                1,
+                Math.min(viewfinderWidth, viewfinderHeight),
               )
-              const size = Math.max(160, Math.min(edge, 320))
+              const size = Math.floor(minEdge * 0.9)
               return { width: size, height: size }
             },
-            aspectRatio: 1,
             disableFlip: false,
-            videoConstraints: {
-              facingMode: { ideal: "environment" },
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
           },
           (decoded) => {
             if (cancelled) return
@@ -211,7 +207,7 @@ export function CheckInQrScanner({
             missCountRef.current += 1
             if (missCountRef.current === 45) {
               setHint(
-                "Still looking… hold steady, fill the square, or move slightly closer/farther.",
+                "Still looking… hold the QR inside the big square.",
               )
             }
           },
@@ -282,15 +278,15 @@ export function CheckInQrScanner({
         </p>
       ) : (
         <p className={`mt-1 text-[11px] ${mutedClass}`}>
-          Fill the square · hold steady · screen QRs work best a bit farther away
+          Hold the QR inside the large square
         </p>
       )}
       <div
         id={regionId}
-        className={`overflow-hidden bg-black [&_video]:object-cover ${
+        className={`qr-reader-host mt-2 w-full overflow-hidden bg-black ${
           compact
-            ? "mt-2 aspect-square w-full min-h-[220px]"
-            : "mt-4 min-h-[280px]"
+            ? "h-[min(58vh,440px)] min-h-[300px]"
+            : "h-[min(55vh,480px)] min-h-[320px]"
         }`}
       />
       {starting ? (
