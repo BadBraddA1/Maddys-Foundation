@@ -6,7 +6,6 @@ import { formatUsdFromCents } from "@/lib/sponsor-levels"
 type Props = {
   token: string
   name: string
-  levelLabel: string
   amountCents: number
   alreadyPaid: boolean
   paidFlag: boolean
@@ -65,7 +64,7 @@ export function SponsorPayClient(props: Props) {
       </p>
       <h1 className="mt-1 text-3xl font-semibold text-[var(--ink)]">{amount}</h1>
       <p className="mt-2 text-sm text-[var(--muted)]">
-        {props.levelLabel || "Sponsorship"} · {props.name}
+        Sponsor · {props.name}
       </p>
       {props.canceledFlag ? (
         <p className="mt-4 text-sm text-amber-800">Checkout canceled — you can try again below.</p>

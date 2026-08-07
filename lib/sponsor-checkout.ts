@@ -1,9 +1,6 @@
 import type Stripe from "stripe"
 import { audit } from "@/lib/events"
-import {
-  formatUsdFromCents,
-  getSponsorLevel,
-} from "@/lib/sponsor-levels"
+import { formatUsdFromCents } from "@/lib/sponsor-levels"
 import {
   getSponsor,
   getSponsorByPayToken,
@@ -23,10 +20,6 @@ export async function createSponsorCheckoutSession(opts: {
 
   const stripe = getStripe()
   const base = publicSiteUrl()
-  const level =
-    sponsor.level_label ||
-    getSponsorLevel(sponsor.level_key)?.label ||
-    "Sponsorship"
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -41,8 +34,8 @@ export async function createSponsorCheckoutSession(opts: {
           currency: "usd",
           unit_amount: sponsor.amount_cents,
           product_data: {
-            name: `${level} — ${sponsor.name}`,
-            description: `Sponsorship for Madalyn Robinson Foundation (${formatUsdFromCents(sponsor.amount_cents)})`,
+            name: `Sponsorship — ${sponsor.name}`,
+            description: `Sponsor gift for Madalyn Robinson Foundation (${formatUsdFromCents(sponsor.amount_cents)})`,
           },
         },
       },
@@ -52,7 +45,6 @@ export async function createSponsorCheckoutSession(opts: {
       sponsorId: String(sponsor.id),
       payToken: sponsor.pay_token || "",
       amountCents: String(sponsor.amount_cents),
-      levelKey: sponsor.level_key || "",
     },
     success_url: `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${base}/sponsor/pay/${sponsor.pay_token}?canceled=1`,

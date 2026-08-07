@@ -34,7 +34,6 @@ export default async function SponsorPayPage({ params, searchParams }: Props) {
       <SponsorPayClient
         token={sponsor.pay_token}
         name={sponsor.name}
-        levelLabel={sponsor.level_label}
         amountCents={sponsor.amount_cents}
         alreadyPaid={sponsor.payment_status === "paid"}
         paidFlag={q.paid === "1"}

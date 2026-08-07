@@ -31,8 +31,8 @@ export function sampleSponsorForEmail(): Sponsor {
     is_published: 0,
     amount_cents: 250_00,
     payment_status: "unpaid",
-    level_key: "custom",
-    level_label: "Gold Sponsor",
+    level_key: "",
+    level_label: "",
     pay_token: token,
     stripe_checkout_session_id: "",
     paid_at: "",
@@ -47,7 +47,6 @@ export function buildSponsorEmailBodies(
   sponsor: Sponsor = sampleSponsorForEmail(),
 ): { subject: string; html: string; text: string } {
   const amount = formatUsdFromCents(sponsor.amount_cents)
-  const level = sponsor.level_label || "Sponsorship"
   const payUrl = sponsorPayUrl(sponsor)
   const greeting = sponsor.contact_name || sponsor.name
 
@@ -73,14 +72,14 @@ export function buildSponsorEmailBodies(
 
   const subject = `Sponsorship payment — ${amount} for Madalyn’s Foundation`
   const html = wrapEmailHtml({
-    preheader: `You owe ${amount} for ${level}`,
+    preheader: `Please pay ${amount} to become a sponsor`,
     eyebrow: "Sponsorship",
     headline: `Thanks for supporting Madalyn’s Foundation`,
     bodyHtml: `
       <p style="margin:0 0 14px">Hi ${escapeEmailHtml(greeting)},</p>
       <p style="margin:0 0 14px">
-        We’re so grateful for <strong>${escapeEmailHtml(sponsor.name)}</strong>’s
-        <strong>${escapeEmailHtml(level)}</strong> commitment of
+        We’re so grateful for <strong>${escapeEmailHtml(sponsor.name)}</strong>
+        becoming a sponsor with a gift of
         <strong>${escapeEmailHtml(amount)}</strong>.
       </p>
       <p style="margin:0 0 14px">
@@ -96,7 +95,7 @@ export function buildSponsorEmailBodies(
     ctaUrl: payUrl,
     footerNote: "Questions? Just reply to this email.",
   })
-  const text = `Hi ${greeting},\n\nPlease pay ${amount} for your ${level} sponsorship by card:\n${payUrl}\n\nYour logo publishes automatically after payment.\n`
+  const text = `Hi ${greeting},\n\nPlease pay ${amount} to become a sponsor by card:\n${payUrl}\n\nYour logo publishes automatically after payment.\n`
   return { subject, html, text }
 }
 

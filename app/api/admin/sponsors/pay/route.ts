@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       paymentStatus: "unpaid",
       isPublished: false,
       ensurePayToken: true,
-      levelLabel: body?.levelLabel?.trim() || sponsor.level_label || "Sponsorship",
+      levelLabel: body?.levelLabel?.trim() || "",
     })
     return NextResponse.json({
       sponsor,
