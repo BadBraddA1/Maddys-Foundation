@@ -1,6 +1,5 @@
 import { emailConfigured, sendEmail } from "@/lib/email"
 import {
-  emailCta,
   escapeEmailHtml,
   wrapEmailHtml,
 } from "@/lib/email-layout"
@@ -87,10 +86,6 @@ export function buildSponsorEmailBodies(
       <p style="margin:0 0 14px">
         Pay securely by card with the button below. After Stripe confirms payment,
         your logo publishes on the site automatically — no follow-up needed.
-      </p>
-      ${emailCta(payUrl, `Pay ${amount}`)}
-      <p style="margin:16px 0 0;font-size:13px;color:#5a6b60">
-        Or open this link: ${escapeEmailHtml(payUrl)}
       </p>
     `,
     ctaLabel: `Pay ${amount}`,
