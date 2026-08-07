@@ -95,6 +95,7 @@ export function CheckInDesk({
   const [keepAwake, setKeepAwake] = useState(false)
   const [prefsReady, setPrefsReady] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
+  const [isPhone, setIsPhone] = useState(false)
   const [focusPlayerId, setFocusPlayerId] = useState<number | null>(null)
   const teamPanelRef = useRef<HTMLDivElement | null>(null)
   const focusClearTimer = useRef<number | null>(null)
@@ -127,8 +128,19 @@ export function CheckInDesk({
   }, [])
 
   useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)")
+    const sync = () => setIsPhone(mq.matches)
+    sync()
+    mq.addEventListener("change", sync)
+    return () => mq.removeEventListener("change", sync)
+  }, [])
+
+  useEffect(() => {
     setKeepAwake(readKeepAwakePreference())
-    setLiveScan(readLiveScanPreference())
+    // Phones use scan → check-in → Scan again (sticky live camera fights the roster).
+    if (!window.matchMedia("(max-width: 767px)").matches) {
+      setLiveScan(readLiveScanPreference())
+    }
     setPrefsReady(true)
   }, [])
 
@@ -140,15 +152,29 @@ export function CheckInDesk({
   }, [keepAwake, prefsReady])
 
   useEffect(() => {
-    if (!prefsReady) return
+    if (!prefsReady || isPhone) return
     writeLiveScanPreference(liveScan)
     if (liveScan) {
       setScannerOpen(false)
       setManualOpen(false)
     }
-  }, [liveScan, prefsReady])
+  }, [liveScan, prefsReady, isPhone])
 
-  const cameraOn = liveScan || scannerOpen
+  useEffect(() => {
+    if (isPhone && liveScan) setLiveScan(false)
+  }, [isPhone, liveScan])
+
+  function closeScannerForRoster() {
+    setScannerOpen(false)
+    setLiveScan(false)
+  }
+
+  function openScanner() {
+    setLiveScan(false)
+    setScannerOpen(true)
+  }
+
+  const cameraOn = !isPhone && liveScan
 
   const loadSuggestions = useCallback(
     async (q: string) => {
@@ -247,6 +273,10 @@ export function CheckInDesk({
         const id = Number(parsed.slice(5))
         if (Number.isFinite(id) && id > 0) {
           await loadTeam(id)
+          if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+            setScannerOpen(false)
+            setLiveScan(false)
+          }
           return
         }
       }
@@ -298,6 +328,11 @@ export function CheckInDesk({
         if (data.highlightPlayer && playerId) {
           // Wait a tick so the roster is painted, then scroll + flash.
           window.setTimeout(() => focusPlayerRow(playerId), 50)
+        }
+        // Phones: drop the camera so the roster/check-in controls are usable.
+        if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+          setScannerOpen(false)
+          setLiveScan(false)
         }
       } catch {
         setError("Could not look up code.")
@@ -501,25 +536,17 @@ export function CheckInDesk({
       </div>
       <p className="truncate text-xs text-muted md:hidden">{eventTitle}</p>
 
-      {/* Sticky scan controls — stays under admin header on phones */}
-      <div className="sticky top-[3.25rem] z-30 space-y-2 border border-line bg-surface p-2 shadow-sm md:static md:top-auto md:z-auto md:space-y-4 md:p-4 md:shadow-none">
-        <div className="flex gap-2">
-          <label className="flex min-h-10 flex-1 items-center gap-2 border border-line bg-bg px-2 text-sm">
-            <input
-              type="checkbox"
-              className="size-4 shrink-0"
-              checked={liveScan}
-              onChange={(e) => setLiveScan(e.target.checked)}
-            />
-            <span className="leading-tight">
-              Live scan
-              <span className="hidden text-xs text-muted sm:inline">
-                {" "}
-                · camera stays on
-              </span>
-            </span>
-          </label>
-          <label className="flex min-h-10 flex-1 items-center gap-2 border border-line bg-bg px-2 text-sm">
+      {/* Desktop: optional always-on live scan. Phones: scan → roster → Scan again. */}
+      <div className="space-y-2 border border-line bg-surface p-2 md:space-y-4 md:p-4">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-deep inline-flex min-h-12 flex-1 items-center justify-center px-4 text-sm font-semibold md:hidden"
+            onClick={() => openScanner()}
+          >
+            {team ? "Scan again" : "Scan QR"}
+          </button>
+          <label className="flex min-h-12 items-center gap-2 border border-line bg-bg px-3 text-sm md:min-h-10">
             <input
               type="checkbox"
               className="size-4 shrink-0"
@@ -528,7 +555,7 @@ export function CheckInDesk({
             />
             <span className="leading-tight">
               Stay awake
-              <span className="mt-0.5 block text-[10px] text-muted sm:hidden">
+              <span className="mt-0.5 block text-[10px] text-muted">
                 {keepAwake
                   ? wake.active
                     ? "On"
@@ -539,22 +566,23 @@ export function CheckInDesk({
                     ? "Off"
                     : "N/A"}
               </span>
-              <span className="hidden text-xs text-muted sm:inline">
-                {" "}
-                ·{" "}
-                {wake.supported
-                  ? keepAwake
-                    ? wake.active
-                      ? "screen on"
-                      : wake.error || "…"
-                    : "prevent sleep"
-                  : "not supported"}
-              </span>
+            </span>
+          </label>
+          <label className="hidden min-h-10 flex-1 items-center gap-2 border border-line bg-bg px-2 text-sm md:flex">
+            <input
+              type="checkbox"
+              className="size-4 shrink-0"
+              checked={liveScan}
+              onChange={(e) => setLiveScan(e.target.checked)}
+            />
+            <span className="leading-tight">
+              Live scan
+              <span className="text-xs text-muted"> · camera stays on</span>
             </span>
           </label>
         </div>
 
-        {liveScan ? (
+        {!isPhone && liveScan ? (
           <CheckInQrScanner
             open={cameraOn}
             continuous
@@ -568,7 +596,7 @@ export function CheckInDesk({
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          {!liveScan ? (
+          {!liveScan && !isPhone ? (
             <button
               type="button"
               className="inline-flex min-h-10 flex-1 items-center justify-center border border-line bg-bg px-3 text-sm font-medium text-ink md:flex-none"
@@ -579,7 +607,7 @@ export function CheckInDesk({
           ) : null}
           <button
             type="button"
-            className="inline-flex min-h-10 flex-1 items-center justify-center border border-line px-3 text-sm md:hidden"
+            className="inline-flex min-h-10 flex-1 items-center justify-center border border-line px-3 text-sm"
             onClick={() => setManualOpen((v) => !v)}
             aria-expanded={manualOpen}
           >
@@ -587,9 +615,7 @@ export function CheckInDesk({
           </button>
         </div>
 
-        <div
-          className={`space-y-3 ${manualOpen || !liveScan ? "block" : "hidden"} md:block`}
-        >
+        <div className={`space-y-3 ${manualOpen ? "block" : "hidden"}`}>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="check-in-code"
@@ -649,7 +675,7 @@ export function CheckInDesk({
               {loadingTeam ? "…" : "Team"}
             </button>
           </div>
-          {suggestions.length > 0 && (manualOpen || !liveScan || query.trim()) ? (
+          {suggestions.length > 0 && (manualOpen || query.trim()) ? (
             <ul className="max-h-36 divide-y divide-line overflow-y-auto border border-line md:max-h-none">
               {suggestions.slice(0, 6).map((t) => (
                 <li key={t.registrationId}>
@@ -671,12 +697,13 @@ export function CheckInDesk({
       </div>
 
       <CheckInQrScanner
-        open={!liveScan && scannerOpen}
-        continuous
+        open={scannerOpen}
+        continuous={!isPhone}
         variant="modal"
         onClose={() => setScannerOpen(false)}
         onCode={(code) => {
           void loadByCode(code)
+          if (isPhone) closeScannerForRoster()
         }}
       />
 
@@ -982,23 +1009,36 @@ export function CheckInDesk({
                 </table>
               </div>
 
-              {/* Sticky due/save on mobile */}
+              {/* Sticky actions on mobile: Scan again + save */}
               <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-3 py-2 md:static md:inset-auto md:mt-0 md:flex md:flex-wrap md:items-center md:justify-between md:gap-4 md:border md:px-4 md:py-4">
-                <div className="mb-1 md:mb-0">
+                <div className="mb-2 hidden md:mb-0 md:block">
                   <p className="text-sm font-medium tabular-nums md:text-base">
                     {liveTeamTotal > 0
                       ? `Due: ${money(liveTeamTotal)}`
                       : "Due: $0"}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={savingAddons}
-                  className="btn-deep inline-flex min-h-11 w-full items-center justify-center px-6 text-sm font-medium disabled:opacity-60 md:w-auto"
-                  onClick={() => void onSaveAddons()}
-                >
-                  {savingAddons ? "Saving…" : "Save add-ons"}
-                </button>
+                <div className="flex gap-2 md:contents">
+                  <button
+                    type="button"
+                    className="btn-deep inline-flex min-h-11 flex-1 items-center justify-center px-4 text-sm font-semibold md:hidden"
+                    onClick={() => openScanner()}
+                  >
+                    Scan again
+                  </button>
+                  <button
+                    type="button"
+                    disabled={savingAddons}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center border border-line px-4 text-sm font-medium disabled:opacity-60 md:btn-deep md:w-auto md:border-0 md:bg-deep md:px-6 md:text-on-deep"
+                    onClick={() => void onSaveAddons()}
+                  >
+                    {savingAddons
+                      ? "Saving…"
+                      : liveTeamTotal > 0
+                        ? `Save · ${money(liveTeamTotal)}`
+                        : "Save add-ons"}
+                  </button>
+                </div>
               </div>
             </>
           )}
