@@ -56,9 +56,10 @@ export function EmailTestPanel({ configured, defaultTo, fromLabel }: Props) {
       <div>
         <h1 className="font-display text-3xl">Email templates</h1>
         <p className="mt-2 max-w-2xl text-muted">
-          Send a sample of each transactional email to yourself. Subjects are
-          prefixed with <span className="font-medium text-ink">[TEST]</span> and
-          do not touch real registration records.
+          Send a sample of each transactional email to yourself (registration +
+          sponsor). Subjects are prefixed with{" "}
+          <span className="font-medium text-ink">[TEST]</span> and do not touch
+          real records.
         </p>
         <p className="mt-2 text-sm text-muted">
           From:{" "}

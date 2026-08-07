@@ -79,7 +79,6 @@ function mapPublicSponsor(row: Record<string, unknown>): PublicSponsor {
 export function revalidateSponsors() {
   revalidatePath("/", "layout")
   revalidatePath("/admin/sponsors")
-  revalidatePath("/sponsor")
 }
 
 export function newPayToken(): string {

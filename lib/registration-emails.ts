@@ -7,7 +7,6 @@ import { ensureEventPlayerTicketColumns } from "@/lib/check-in"
 import { sql } from "@/lib/db"
 import { formatEventDate, toEventIso } from "@/lib/events"
 import { emailConfigured, sendEmail } from "@/lib/email"
-import type { EmailTemplateKind } from "@/lib/email-templates"
 import {
   EMAIL_COLORS,
   emailCodeBlock,
@@ -176,9 +175,11 @@ function buildPlayerTicketBodies(opts: {
   return { subject, html, text }
 }
 
+type RegistrationEmailKind = "confirmation" | "reminder" | "player_ticket"
+
 /** Build sample email bodies for admin template testing (no DB writes). */
 export function buildSampleEmail(
-  kind: EmailTemplateKind,
+  kind: RegistrationEmailKind,
 ): { subject: string; html: string; text: string } {
   const reg = sampleRegRow()
   const code = reg.check_in_code || SAMPLE_TEAM_CODE
@@ -209,7 +210,7 @@ export function buildSampleEmail(
 
 /** Send a sample template to an address (admin test). Does not update registration flags. */
 export async function sendTestTemplateEmail(opts: {
-  kind: EmailTemplateKind
+  kind: RegistrationEmailKind
   to: string
 }): Promise<{ ok: true; id?: string } | { ok: false; error: string }> {
   const to = opts.to.trim().toLowerCase()

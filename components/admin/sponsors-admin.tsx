@@ -266,9 +266,13 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
         <h2 className="font-display text-xl">Add sponsor</h2>
         <p className="text-sm text-muted">
           Logo shows in the footer after publish / payment. Contact details stay
-          staff-only. Public signup:{" "}
-          <a href="/sponsor" className="text-accent-ink underline underline-offset-4">
-            /sponsor
+          staff-only. After create, set amount owed and use{" "}
+          <strong>Email pay link</strong> — or test templates at{" "}
+          <a
+            href="/admin/email"
+            className="text-accent-ink underline underline-offset-4"
+          >
+            /admin/email
           </a>
           .
         </p>

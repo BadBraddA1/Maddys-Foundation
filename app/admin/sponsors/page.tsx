@@ -28,11 +28,12 @@ export default async function AdminSponsorsPage() {
         </Link>
         <h1 className="mt-4 font-display text-3xl">Sponsors</h1>
         <p className="mt-1 text-sm text-muted">
-          Logos scroll above the site footer. Set an amount owed to email a custom
-          Stripe/Venmo pay link — logo publishes after payment. Public levels page:{" "}
-          <a href="/sponsor" className="underline underline-offset-4">
-            /sponsor
-          </a>
+          Logos scroll above the site footer. Set an amount owed, email the
+          Stripe/Venmo pay link — logo publishes after payment. Test sponsor emails
+          at{" "}
+          <Link href="/admin/email" className="underline underline-offset-4">
+            /admin/email
+          </Link>
           .
         </p>
       </div>
