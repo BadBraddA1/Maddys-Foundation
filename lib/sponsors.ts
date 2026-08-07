@@ -306,7 +306,7 @@ export async function updateSponsor(
   return updated
 }
 
-/** Mark paid (Stripe webhook or admin Venmo confirm) and publish logo. */
+/** Mark paid (Stripe webhook or admin manual) and publish logo. */
 export async function markSponsorPaid(
   id: number,
   opts?: { stripeSessionId?: string; via?: string },

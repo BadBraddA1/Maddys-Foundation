@@ -69,22 +69,3 @@ export function parseUsdToCents(raw: string): number | null {
   if (!Number.isFinite(n) || n <= 0) return null
   return Math.round(n * 100)
 }
-
-export function venmoHandle(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_DONATE_URL?.trim() || ""
-  const match = fromEnv.match(/venmo\.com\/u\/([^/?#]+)/i) || fromEnv.match(/@([\w.-]+)/)
-  if (match?.[1]) return match[1].replace(/^@/, "")
-  if (fromEnv.startsWith("@")) return fromEnv.slice(1)
-  return "MadalynRobinsonFoundation"
-}
-
-export function venmoPayUrl(amountDollars: number, note: string): string {
-  const handle = venmoHandle()
-  const params = new URLSearchParams({
-    txn: "pay",
-    audience: "public",
-    amount: amountDollars.toFixed(2),
-    note: note.slice(0, 50),
-  })
-  return `https://venmo.com/u/${encodeURIComponent(handle)}?${params.toString()}`
-}

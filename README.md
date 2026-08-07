@@ -154,7 +154,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Admin events: create / edit / **delete** + optional cover image URL for event OG cards
 - Admin roster: **Add registration**, **Edit roster** (captain + player names/emails), **Delete registration** on `/admin/events/[id]/registrations`
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
-- **Sponsor payments (Option 2 only):** `/admin/sponsors` set amount owed → **Email pay link** (`/sponsor/pay/[token]`, Stripe card + Venmo). Logo publishes after Stripe webhook or **Mark paid**. Test invite + thanks templates at `/admin/email` (Sponsor pay link / Sponsor paid). Public `/sponsor` levels page removed. See `scripts/migrate-sponsor-payments.sql` (also auto-applied via `ensureSponsorPaymentColumns`)
+- **Sponsor payments (Option 2 only):** `/admin/sponsors` set amount owed → **Email pay link** (`/sponsor/pay/[token]`, Stripe card). Logo publishes automatically after Stripe webhook (admin **Mark paid (manual)** only for comps). Test invite + thanks at `/admin/email`. Public `/sponsor` removed (redirects home). See `scripts/migrate-sponsor-payments.sql`
 - Gallery: `/admin/gallery` creates freeform **tags**, bulk-uploads photos to R2 (shared tags + caption; progress + per-file errors); public `/gallery` filters by `?tag=slug` and shows tags/captions only (no filenames/titles under photos)
 - Event detail: **Register** CTA above the capacity banner and again below the description
 - Site palette: fairway green hero/footer + soft gold accent (warm off-white page)

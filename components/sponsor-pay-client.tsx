@@ -1,11 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  formatUsdFromCents,
-  venmoHandle,
-  venmoPayUrl,
-} from "@/lib/sponsor-levels"
+import { formatUsdFromCents } from "@/lib/sponsor-levels"
 
 type Props = {
   token: string
@@ -22,8 +18,6 @@ export function SponsorPayClient(props: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const amount = formatUsdFromCents(props.amountCents)
-  const venmo = venmoHandle()
-  const venmoUrl = venmoPayUrl(props.amountCents / 100, props.name.slice(0, 40))
 
   async function payCard() {
     if (busy) return
@@ -37,12 +31,12 @@ export function SponsorPayClient(props: Props) {
       })
       const data = (await res.json()) as { error?: string; url?: string }
       if (!res.ok || !data.url) {
-        setError(data.error || "Could not start card checkout.")
+        setError(data.error || "Could not start checkout.")
         return
       }
       window.location.href = data.url
     } catch {
-      setError("Could not start card checkout.")
+      setError("Could not start checkout.")
     } finally {
       setBusy(false)
     }
@@ -54,8 +48,8 @@ export function SponsorPayClient(props: Props) {
         <h1 className="text-2xl font-semibold text-[var(--ink)]">Thank you!</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">
           {props.name}’s sponsorship is paid
-          {props.paidFlag ? " (or confirming now)" : ""}. Your logo will appear on the site
-          once payment is confirmed.
+          {props.paidFlag ? " (confirming now)" : ""}. Your logo publishes on the
+          site automatically once Stripe confirms payment.
         </p>
         <a href="/" className="mt-6 inline-block text-sm font-semibold text-[var(--deep)]">
           Back to home →
@@ -84,26 +78,17 @@ export function SponsorPayClient(props: Props) {
           onClick={payCard}
           className="w-full rounded-full bg-[var(--deep)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
         >
-          {busy ? "Opening Stripe…" : "Pay with card (Stripe)"}
+          {busy ? "Opening Stripe…" : `Pay ${amount} with card`}
         </button>
         {!props.stripeReady ? (
           <p className="text-center text-xs text-[var(--muted)]">
             Card checkout is temporarily offline.
           </p>
-        ) : null}
-
-        <a
-          href={venmoUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="flex w-full items-center justify-center rounded-full border border-[var(--line)] px-5 py-3 text-sm font-semibold text-[var(--ink)] hover:bg-[var(--bg)]"
-        >
-          Pay {amount} with Venmo (@{venmo})
-        </a>
-        <p className="text-xs text-[var(--muted)]">
-          After Venmo, include your business name in the note. We’ll confirm and publish your logo
-          — or reply to the invite email so staff can mark you paid.
-        </p>
+        ) : (
+          <p className="text-center text-xs text-[var(--muted)]">
+            Secure Stripe checkout. Your logo goes live automatically after payment.
+          </p>
+        )}
       </div>
       {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
     </div>

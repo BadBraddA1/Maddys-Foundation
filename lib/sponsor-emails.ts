@@ -4,10 +4,7 @@ import {
   escapeEmailHtml,
   wrapEmailHtml,
 } from "@/lib/email-layout"
-import {
-  formatUsdFromCents,
-  venmoHandle,
-} from "@/lib/sponsor-levels"
+import { formatUsdFromCents } from "@/lib/sponsor-levels"
 import type { Sponsor } from "@/lib/sponsors"
 import { publicSiteUrl } from "@/lib/stripe"
 
@@ -52,7 +49,6 @@ export function buildSponsorEmailBodies(
   const amount = formatUsdFromCents(sponsor.amount_cents)
   const level = sponsor.level_label || "Sponsorship"
   const payUrl = sponsorPayUrl(sponsor)
-  const venmo = venmoHandle()
   const greeting = sponsor.contact_name || sponsor.name
 
   if (kind === "sponsor_paid_thanks") {
@@ -88,10 +84,8 @@ export function buildSponsorEmailBodies(
         <strong>${escapeEmailHtml(amount)}</strong>.
       </p>
       <p style="margin:0 0 14px">
-        Pay securely by card with the button below. Prefer Venmo? Send
-        <strong>${escapeEmailHtml(amount)}</strong> to
-        <strong>@${escapeEmailHtml(venmo)}</strong> with your business name in the note —
-        then reply to this email so we can confirm and publish your logo.
+        Pay securely by card with the button below. After Stripe confirms payment,
+        your logo publishes on the site automatically — no follow-up needed.
       </p>
       ${emailCta(payUrl, `Pay ${amount}`)}
       <p style="margin:16px 0 0;font-size:13px;color:#5a6b60">
@@ -102,7 +96,7 @@ export function buildSponsorEmailBodies(
     ctaUrl: payUrl,
     footerNote: "Questions? Just reply to this email.",
   })
-  const text = `Hi ${greeting},\n\nPlease pay ${amount} for your ${level} sponsorship:\n${payUrl}\n\nVenmo: @${venmo} (include your business name in the note).\n`
+  const text = `Hi ${greeting},\n\nPlease pay ${amount} for your ${level} sponsorship by card:\n${payUrl}\n\nYour logo publishes automatically after payment.\n`
   return { subject, html, text }
 }
 

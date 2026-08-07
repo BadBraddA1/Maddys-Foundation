@@ -32,7 +32,7 @@ export async function createSponsorCheckoutSession(opts: {
     mode: "payment",
     customer_email: sponsor.contact_email || undefined,
     client_reference_id: String(sponsor.id),
-    // Card always; Venmo appears when enabled on the Stripe account (US).
+    // Card only — logo publishes via Stripe webhook after payment.
     payment_method_types: ["card"],
     line_items: [
       {

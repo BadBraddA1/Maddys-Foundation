@@ -13,7 +13,7 @@ import { publicSiteUrl } from "@/lib/stripe"
 
 export const runtime = "nodejs"
 
-/** Admin: set amount, send pay email, mark Venmo paid, or open Stripe. */
+/** Admin: set amount, send Stripe pay email, mark paid (manual), or open Stripe. */
 export async function POST(req: Request) {
   try {
     await requireAdmin()
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
   }
 
   if (action === "mark_paid") {
-    sponsor = (await markSponsorPaid(sponsorId, { via: "admin_venmo" }))!
+    sponsor = (await markSponsorPaid(sponsorId, { via: "admin_manual" }))!
     return NextResponse.json({ sponsor })
   }
 

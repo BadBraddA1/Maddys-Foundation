@@ -30,11 +30,11 @@ export const EMAIL_TEMPLATE_OPTIONS: Array<{
   {
     kind: "sponsor_pay_invite",
     label: "Sponsor pay link",
-    description: "Custom amount owed — card + Venmo instructions (admin Option 2).",
+    description: "Custom amount owed — Stripe card pay link (admin Option 2).",
   },
   {
     kind: "sponsor_paid_thanks",
     label: "Sponsor paid / logo live",
-    description: "Thanks email after Stripe or Mark paid.",
+    description: "Thanks email after Stripe confirms payment (logo auto-publishes).",
   },
 ]

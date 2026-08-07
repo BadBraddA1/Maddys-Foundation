@@ -394,7 +394,8 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
             placeholder="500 — leave blank to publish now"
           />
           <p className="mt-1 text-xs text-muted">
-            If set, sponsor stays hidden until they pay (Stripe/Venmo) or you mark paid.
+            If set, sponsor stays hidden until Stripe payment confirms (logo
+            publishes automatically).
           </p>
         </div>
         <button
@@ -672,7 +673,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                       className="btn-deep inline-flex min-h-10 items-center px-3 text-sm"
                       onClick={() => void payAction(s.id, "mark_paid")}
                     >
-                      Mark paid (Venmo/check)
+                      Mark paid (manual)
                     </button>
                   ) : null}
                   {s.pay_token ? (
