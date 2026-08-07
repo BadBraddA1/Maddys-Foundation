@@ -1,7 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Html5Qrcode } from "html5-qrcode"
+import {
+  Html5Qrcode,
+  Html5QrcodeSupportedFormats,
+} from "html5-qrcode"
 
 type Props = {
   /** When true, camera is running. */
@@ -17,7 +20,7 @@ type Props = {
   cooldownMs?: number
   /** Docked under desk controls vs fullscreen overlay. */
   variant?: "modal" | "docked"
-  /** Smaller camera + less chrome (mobile day-of). */
+  /** Smaller chrome (mobile day-of) — camera still needs a decent viewfinder. */
   compact?: boolean
 }
 
@@ -54,6 +57,36 @@ export function parseScannedCheckInPayload(raw: string): string | null {
   return null
 }
 
+async function tuneIosCamera(scanner: Html5Qrcode) {
+  try {
+    const caps = scanner.getRunningTrackCapabilities() as MediaTrackCapabilities & {
+      zoom?: number | { max?: number; min?: number }
+      focusMode?: string | string[]
+      focusDistance?: { min?: number; max?: number }
+    }
+
+    const advanced: Record<string, unknown>[] = [{ focusMode: "continuous" }]
+    const zoomCap = caps.zoom
+    if (typeof zoomCap === "number" && zoomCap > 1) {
+      advanced.push({ zoom: Math.min(2, zoomCap) })
+    } else if (zoomCap && typeof zoomCap === "object" && zoomCap.max) {
+      advanced.push({ zoom: Math.min(2, zoomCap.max) })
+    }
+    if (caps.focusDistance) {
+      advanced.push({ focusDistance: 1 })
+    }
+
+    await scanner.applyVideoConstraints({
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
+      // Cast: Safari accepts advanced focus/zoom constraints not in all TS libs.
+      advanced,
+    } as MediaTrackConstraints)
+  } catch {
+    // Capabilities vary widely on iPhone — ignore failures.
+  }
+}
+
 export function CheckInQrScanner({
   open,
   onClose,
@@ -67,6 +100,7 @@ export function CheckInQrScanner({
   const [starting, setStarting] = useState(false)
   const [lastScanned, setLastScanned] = useState<string | null>(null)
   const [coolingDown, setCoolingDown] = useState(false)
+  const [hint, setHint] = useState<string | null>(null)
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const onCodeRef = useRef(onCode)
   const onCloseRef = useRef(onClose)
@@ -74,6 +108,7 @@ export function CheckInQrScanner({
   const cooldownMsRef = useRef(cooldownMs)
   const lockedUntilRef = useRef(0)
   const lastCodeRef = useRef<string | null>(null)
+  const missCountRef = useRef(0)
   const regionIdRef = useRef(
     `check-in-qr-reader-${variant}-${Math.random().toString(36).slice(2, 9)}`,
   )
@@ -86,12 +121,17 @@ export function CheckInQrScanner({
 
   const handleDecoded = useCallback((decoded: string) => {
     const parsed = parseScannedCheckInPayload(decoded)
-    if (!parsed) return
+    if (!parsed) {
+      setHint("QR read, but not a check-in code. Use a team/player ticket QR.")
+      return
+    }
     const now = Date.now()
     if (now < lockedUntilRef.current) return
     lockedUntilRef.current = now + cooldownMsRef.current
     lastCodeRef.current = parsed
     setLastScanned(parsed)
+    setHint(null)
+    setError(null)
     setCoolingDown(true)
     window.setTimeout(() => setCoolingDown(false), cooldownMsRef.current)
     onCodeRef.current(parsed)
@@ -104,30 +144,87 @@ export function CheckInQrScanner({
     if (!open) {
       setLastScanned(null)
       setCoolingDown(false)
+      setHint(null)
       lockedUntilRef.current = 0
       lastCodeRef.current = null
+      missCountRef.current = 0
       return
     }
     setError(null)
+    setHint(null)
     setStarting(true)
 
     let cancelled = false
-    const scanner = new Html5Qrcode(regionId)
+    const scanner = new Html5Qrcode(regionId, {
+      verbose: false,
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+      useBarCodeDetectorIfSupported: true,
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true,
+      },
+    })
     scannerRef.current = scanner
-    const box = compact ? 180 : 240
 
     void (async () => {
       try {
+        // Prefer back camera by id when possible — more reliable than facingMode alone on iOS.
+        let cameraConfig: string | MediaTrackConstraints = {
+          facingMode: { ideal: "environment" },
+        }
+        try {
+          const cams = await Html5Qrcode.getCameras()
+          const back =
+            cams.find((c) => /back|rear|environment/i.test(c.label)) ||
+            cams[cams.length - 1]
+          if (back?.id) cameraConfig = back.id
+        } catch {
+          // fall through to facingMode
+        }
+
         await scanner.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: box, height: box } },
+          cameraConfig,
+          {
+            fps: 15,
+            // Dynamic box — fixed 180px boxes fail often in small iPhone viewfinders.
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              const edge = Math.floor(
+                Math.min(viewfinderWidth, viewfinderHeight) * 0.82,
+              )
+              const size = Math.max(160, Math.min(edge, 320))
+              return { width: size, height: size }
+            },
+            aspectRatio: 1,
+            disableFlip: false,
+            videoConstraints: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          },
           (decoded) => {
             if (cancelled) return
+            missCountRef.current = 0
             handleDecoded(decoded)
           },
-          () => undefined,
+          () => {
+            // Periodic nudge so staff know the camera is trying.
+            missCountRef.current += 1
+            if (missCountRef.current === 45) {
+              setHint(
+                "Still looking… hold steady, fill the square, or move slightly closer/farther.",
+              )
+            }
+          },
         )
-        if (!cancelled) setStarting(false)
+
+        if (cancelled) return
+        setStarting(false)
+        // Give Safari a moment, then bump resolution / continuous focus.
+        window.setTimeout(() => {
+          if (!cancelled && scannerRef.current) {
+            void tuneIosCamera(scannerRef.current)
+          }
+        }, 400)
       } catch (err) {
         if (cancelled) return
         setStarting(false)
@@ -154,7 +251,7 @@ export function CheckInQrScanner({
         }
       }
     }
-  }, [open, regionId, handleDecoded, compact])
+  }, [open, regionId, handleDecoded])
 
   if (!open) return null
 
@@ -180,14 +277,20 @@ export function CheckInQrScanner({
       {!compact ? (
         <p className={`mt-2 text-sm ${mutedClass}`}>
           {continuous
-            ? "Camera stays on — point at the next QR. Same code ignored briefly."
-            : "Point the camera at a player or team QR. Player codes check in automatically."}
+            ? "Camera stays on — fill the square with the QR and hold steady."
+            : "Point the camera at a player or team QR."}
         </p>
-      ) : null}
+      ) : (
+        <p className={`mt-1 text-[11px] ${mutedClass}`}>
+          Fill the square · hold steady · screen QRs work best a bit farther away
+        </p>
+      )}
       <div
         id={regionId}
-        className={`overflow-hidden bg-black ${
-          compact ? "mt-2 min-h-[160px] max-h-[28vh]" : "mt-4 min-h-[280px]"
+        className={`overflow-hidden bg-black [&_video]:object-cover ${
+          compact
+            ? "mt-2 aspect-square w-full min-h-[220px]"
+            : "mt-4 min-h-[280px]"
         }`}
       />
       {starting ? (
@@ -200,6 +303,11 @@ export function CheckInQrScanner({
         >
           {lastScanned}
           {coolingDown ? " · wait…" : " · ready"}
+        </p>
+      ) : null}
+      {hint && !lastScanned ? (
+        <p className={`mt-2 text-xs ${mutedClass}`} role="status">
+          {hint}
         </p>
       ) : null}
       {error ? (
