@@ -166,8 +166,8 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 4. **Scan QR** on iPhone (Safari, staff already logged in):
    - Turn on **Live scan** so the camera stays live (sticky, compact on phones). Optional **Stay awake** keeps the phone from sleeping.
    - Code/search is tucked behind **Code / search** on mobile while live scanning to cut scrolling.
-   - **Player QR** (`/ticket/p/OV-P-……`) → checks that person in automatically, then opens the team for add-ons / undo.
-   - **Team QR** (`/ticket/OV-……`) → loads the roster only (no bulk auto check-in).
+   - **Player QR** (`/ticket/p/OV-P-……`) → loads that team, scrolls to the player, and **flashes their Check In button** (tap to check in). Already-checked-in players flash the “In” badge.
+   - **Team QR** (`/ticket/OV-……`) → loads the roster only (no player highlight).
    - Or type a code / search by team name → Load → tap check-in; **Save add-ons** separately (**Skins** $5/person day-of; **Mulligans** whole-team only at $20 — Golf Cannon / Golf Pro removed).
 5. Each registration gets a team `check_in_code`; each `event_players` row gets its own `check_in_code`. Captains use `/ticket/CODE` to email personal tickets.
 6. Dashboard for live totals and CSV export.

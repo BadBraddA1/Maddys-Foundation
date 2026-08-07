@@ -95,7 +95,36 @@ export function CheckInDesk({
   const [keepAwake, setKeepAwake] = useState(false)
   const [prefsReady, setPrefsReady] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
+  const [focusPlayerId, setFocusPlayerId] = useState<number | null>(null)
   const teamPanelRef = useRef<HTMLDivElement | null>(null)
+  const focusClearTimer = useRef<number | null>(null)
+
+  const focusPlayerRow = useCallback((playerId: number) => {
+    setFocusPlayerId(playerId)
+    if (focusClearTimer.current) window.clearTimeout(focusClearTimer.current)
+    focusClearTimer.current = window.setTimeout(() => {
+      setFocusPlayerId(null)
+      focusClearTimer.current = null
+    }, 4000)
+    window.requestAnimationFrame(() => {
+      const nodes = document.querySelectorAll<HTMLElement>(
+        `[data-player-row="${playerId}"]`,
+      )
+      for (const el of nodes) {
+        // Prefer the visible layout (mobile list or desktop table).
+        if (el.getClientRects().length > 0) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" })
+          break
+        }
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (focusClearTimer.current) window.clearTimeout(focusClearTimer.current)
+    }
+  }, [])
 
   useEffect(() => {
     setKeepAwake(readKeepAwakePreference())
@@ -150,21 +179,29 @@ export function CheckInDesk({
     return () => window.clearTimeout(t)
   }, [query, loadSuggestions])
 
-  const applyTeam = useCallback((next: CheckInTeam) => {
-    const prepaid = next.prepaid ?? { skins: false, mulligans: false }
-    setTeam({ ...next, prepaid })
-    const nextDrafts: Record<number, PlayerDraft> = {}
-    for (const p of next.players) {
-      nextDrafts[p.id] = {
-        skins: prepaid.skins || p.skins === 1,
-        mulligans: prepaid.mulligans || p.mulligans === 1,
+  const applyTeam = useCallback(
+    (next: CheckInTeam, opts?: { scrollTeam?: boolean }) => {
+      const prepaid = next.prepaid ?? { skins: false, mulligans: false }
+      setTeam({ ...next, prepaid })
+      const nextDrafts: Record<number, PlayerDraft> = {}
+      for (const p of next.players) {
+        nextDrafts[p.id] = {
+          skins: prepaid.skins || p.skins === 1,
+          mulligans: prepaid.mulligans || p.mulligans === 1,
+        }
       }
-    }
-    setDrafts(nextDrafts)
-    window.requestAnimationFrame(() => {
-      teamPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-    })
-  }, [])
+      setDrafts(nextDrafts)
+      if (opts?.scrollTeam !== false) {
+        window.requestAnimationFrame(() => {
+          teamPanelRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          })
+        })
+      }
+    },
+    [],
+  )
 
   const loadTeam = useCallback(
     async (registrationId: number) => {
@@ -229,6 +266,8 @@ export function CheckInDesk({
           team?: CheckInTeam
           autoCheckedIn?: boolean
           alreadyCheckedIn?: boolean
+          highlightPlayer?: boolean
+          kind?: string
           player?: EventPlayer
         }
         if (!res.ok) {
@@ -236,8 +275,11 @@ export function CheckInDesk({
           return
         }
         setCodeInput(parsed)
+        const playerId = data.player?.id
         if (data.team) {
-          applyTeam(data.team)
+          applyTeam(data.team, {
+            scrollTeam: !(data.highlightPlayer && playerId),
+          })
           setQuery(data.team.teamName)
           const qrRes = await fetch(
             `/api/admin/check-in/teams/${data.team.registrationId}/qr`,
@@ -253,13 +295,17 @@ export function CheckInDesk({
           await loadTeam(data.registrationId)
         }
         setMessage(data.message || `Loaded code ${parsed}.`)
+        if (data.highlightPlayer && playerId) {
+          // Wait a tick so the roster is painted, then scroll + flash.
+          window.setTimeout(() => focusPlayerRow(playerId), 50)
+        }
       } catch {
         setError("Could not look up code.")
       } finally {
         setLoadingTeam(false)
       }
     },
-    [eventId, loadTeam, applyTeam],
+    [eventId, loadTeam, applyTeam, focusPlayerRow],
   )
 
   useEffect(() => {
@@ -758,8 +804,15 @@ export function CheckInDesk({
                     },
                   )
                   const inAlready = isPlayerCheckedIn(player)
+                  const focused = focusPlayerId === player.id
                   return (
-                    <li key={player.id} className="bg-surface px-3 py-2">
+                    <li
+                      key={player.id}
+                      data-player-row={player.id}
+                      className={`bg-surface px-3 py-2 scroll-mt-40 ${
+                        focused ? "animate-check-in-row" : ""
+                      }`}
+                    >
                       <div className="flex items-center gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-ink">
@@ -787,7 +840,11 @@ export function CheckInDesk({
                         </div>
                         {inAlready ? (
                           <div className="flex shrink-0 flex-col gap-1">
-                            <span className="inline-flex min-h-9 items-center justify-center bg-accent px-2 text-xs font-semibold text-accent-ink">
+                            <span
+                              className={`inline-flex min-h-9 items-center justify-center bg-accent px-2 text-xs font-semibold text-accent-ink ${
+                                focused ? "animate-check-in-flash" : ""
+                              }`}
+                            >
                               In
                             </span>
                             <button
@@ -803,7 +860,9 @@ export function CheckInDesk({
                           <button
                             type="button"
                             disabled={busyPlayerId === player.id}
-                            className="inline-flex min-h-11 shrink-0 items-center justify-center bg-success px-3 text-sm font-semibold text-white disabled:opacity-60"
+                            className={`inline-flex min-h-11 shrink-0 items-center justify-center bg-success px-3 text-sm font-semibold text-white disabled:opacity-60 ${
+                              focused ? "animate-check-in-flash ring-2 ring-success" : ""
+                            }`}
                             onClick={() => void onCheckIn(player)}
                           >
                             {busyPlayerId === player.id ? "…" : "Check in"}
@@ -847,8 +906,13 @@ export function CheckInDesk({
                         },
                       )
                       const inAlready = isPlayerCheckedIn(player)
+                      const focused = focusPlayerId === player.id
                       return (
-                        <tr key={player.id}>
+                        <tr
+                          key={player.id}
+                          data-player-row={player.id}
+                          className={focused ? "animate-check-in-row" : undefined}
+                        >
                           <td className="py-3 pr-3 font-medium text-ink">
                             {player.display_name}
                           </td>
@@ -858,7 +922,11 @@ export function CheckInDesk({
                           <td className="py-3 pr-3">
                             {inAlready ? (
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="inline-flex min-h-12 items-center bg-accent px-3 text-sm font-semibold text-accent-ink">
+                                <span
+                                  className={`inline-flex min-h-12 items-center bg-accent px-3 text-sm font-semibold text-accent-ink ${
+                                    focused ? "animate-check-in-flash" : ""
+                                  }`}
+                                >
                                   Checked in
                                 </span>
                                 <button
@@ -874,7 +942,11 @@ export function CheckInDesk({
                               <button
                                 type="button"
                                 disabled={busyPlayerId === player.id}
-                                className="inline-flex min-h-12 min-w-[10rem] items-center justify-center bg-success px-4 text-sm font-semibold text-white disabled:opacity-60"
+                                className={`inline-flex min-h-12 min-w-[10rem] items-center justify-center bg-success px-4 text-sm font-semibold text-white disabled:opacity-60 ${
+                                  focused
+                                    ? "animate-check-in-flash ring-2 ring-success"
+                                    : ""
+                                }`}
                                 onClick={() => void onCheckIn(player)}
                               >
                                 {busyPlayerId === player.id ? "…" : "Check In"}

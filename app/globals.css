@@ -316,6 +316,36 @@ a {
   }
 }
 
+@keyframes check-in-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 0%, transparent);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--success) 55%, transparent);
+    filter: brightness(1.15);
+  }
+}
+
+@keyframes check-in-row-flash {
+  0%,
+  100% {
+    background-color: var(--surface);
+  }
+  50% {
+    background-color: var(--success-soft);
+  }
+}
+
+.animate-check-in-flash {
+  animation: check-in-flash 0.7s ease-in-out 5;
+}
+
+.animate-check-in-row {
+  animation: check-in-row-flash 0.7s ease-in-out 5;
+}
+
 .animate-hero-drift {
   animation: hero-drift 1.8s var(--ease-out-quart) forwards;
 }

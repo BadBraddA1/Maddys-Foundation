@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth"
-import { checkInPlayer, getCheckInTeam } from "@/lib/check-in"
+import { getCheckInTeam, listPlayersForRegistration } from "@/lib/check-in"
 import {
   findPlayerIdByCheckInCode,
   findRegistrationIdByCheckInCode,
@@ -21,12 +21,12 @@ async function registrationIdForPlayer(
 
 /**
  * Resolve a scanned/typed code.
- * Player codes auto check-in; team codes only load the team.
+ * Player codes load the team and highlight that player (desk flashes Check In).
+ * Team codes only load the team.
  */
 export async function POST(req: Request) {
-  let admin
   try {
-    admin = await requireAdmin()
+    await requireAdmin()
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -58,39 +58,34 @@ export async function POST(req: Request) {
     }
 
     const registrationId = await registrationIdForPlayer(playerId)
-    const result = await checkInPlayer(playerId, admin.email)
-    const team = registrationId ? await getCheckInTeam(registrationId) : null
-
-    if (result.ok) {
-      return NextResponse.json({
-        ok: true,
-        kind: "player",
-        autoCheckedIn: true,
-        alreadyCheckedIn: false,
-        player: result.player,
-        registrationId,
-        team,
-        message: `${result.player.display_name} checked in.`,
-      })
+    if (!registrationId) {
+      return NextResponse.json(
+        { error: "Player registration not found." },
+        { status: 404 },
+      )
     }
 
-    if (result.status === 409) {
-      return NextResponse.json({
-        ok: true,
-        kind: "player",
-        autoCheckedIn: false,
-        alreadyCheckedIn: true,
-        player: result.player,
-        registrationId,
-        team,
-        message: result.error,
-      })
-    }
+    const team = await getCheckInTeam(registrationId)
+    const players =
+      team?.players ?? (await listPlayersForRegistration(registrationId))
+    const player = players.find((p) => p.id === playerId) ?? null
+    const alreadyCheckedIn = player ? player.checked_in === 1 : false
 
-    return NextResponse.json(
-      { error: result.error, player: result.player },
-      { status: result.status },
-    )
+    return NextResponse.json({
+      ok: true,
+      kind: "player",
+      autoCheckedIn: false,
+      alreadyCheckedIn,
+      highlightPlayer: true,
+      player,
+      registrationId,
+      team,
+      message: player
+        ? alreadyCheckedIn
+          ? `${player.display_name} is already checked in.`
+          : `${player.display_name} — tap Check In.`
+        : `Loaded player code ${code}.`,
+    })
   }
 
   const registrationId = await findRegistrationIdByCheckInCode(code, eventId)
@@ -104,6 +99,7 @@ export async function POST(req: Request) {
     kind: "team",
     autoCheckedIn: false,
     alreadyCheckedIn: false,
+    highlightPlayer: false,
     registrationId,
     team,
     message: `Loaded team for code ${code}.`,
