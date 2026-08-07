@@ -16,6 +16,8 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+  const { ensureSponsorPaymentColumns } = await import("@/lib/sponsors")
+  await ensureSponsorPaymentColumns().catch(() => undefined)
   const sponsors = await listSponsors()
   return NextResponse.json({ sponsors, r2Configured: r2Configured() })
 }

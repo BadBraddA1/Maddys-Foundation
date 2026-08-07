@@ -16,6 +16,7 @@ const emptyForm = {
   contactEmail: "",
   contactPhone: "",
   contactNotes: "",
+  amountUsd: "",
 }
 
 export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
@@ -25,6 +26,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
   const [file, setFile] = useState<File | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editDraft, setEditDraft] = useState(emptyForm)
+  const [amountDrafts, setAmountDrafts] = useState<Record<number, string>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -52,14 +54,29 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
       body.set("contactNotes", form.contactNotes)
       body.set("logo", file)
       const res = await fetch("/api/admin/sponsors", { method: "POST", body })
-      const data = (await res.json()) as { error?: string }
+      const data = (await res.json()) as { error?: string; sponsor?: { id: number } }
       if (!res.ok) {
         setError(data.error || "Could not add sponsor.")
         return
       }
+      if (form.amountUsd.trim() && data.sponsor?.id) {
+        await fetch("/api/admin/sponsors/pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "set_amount",
+            sponsorId: data.sponsor.id,
+            amountUsd: form.amountUsd,
+          }),
+        })
+      }
       setForm(emptyForm)
       setFile(null)
-      setMessage("Sponsor added.")
+      setMessage(
+        form.amountUsd.trim()
+          ? "Sponsor added as unpaid draft — send pay link when ready."
+          : "Sponsor added.",
+      )
       await refresh()
     } catch {
       setError("Could not add sponsor.")
@@ -77,6 +94,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
       contactEmail: sponsor.contact_email,
       contactPhone: sponsor.contact_phone,
       contactNotes: sponsor.contact_notes,
+      amountUsd: "",
     })
     setError(null)
     setMessage(null)
@@ -154,6 +172,53 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
     }
   }
 
+  async function payAction(
+    sponsorId: number,
+    action: "set_amount" | "send_invite" | "mark_paid",
+    amountUsd?: string,
+  ) {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const res = await fetch("/api/admin/sponsors/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, sponsorId, amountUsd }),
+      })
+      const data = (await res.json()) as {
+        error?: string
+        payUrl?: string
+        ok?: boolean
+      }
+      if (!res.ok) {
+        setError(data.error || "Payment action failed.")
+        return
+      }
+      if (action === "send_invite") {
+        setMessage(
+          data.payUrl
+            ? `Pay email sent. Link: ${data.payUrl}`
+            : "Pay email sent.",
+        )
+      } else if (action === "set_amount") {
+        setMessage(
+          data.payUrl
+            ? `Amount saved. Pay link: ${data.payUrl}`
+            : "Amount saved.",
+        )
+      } else {
+        setMessage("Marked paid — logo published.")
+      }
+      await refresh()
+    } catch {
+      setError("Payment action failed.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function onDelete(sponsor: Sponsor) {
     if (!window.confirm(`Remove ${sponsor.name}?`)) return
     setBusy(true)
@@ -200,8 +265,12 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
       <form onSubmit={(e) => void onCreate(e)} className="border border-line bg-surface p-5 space-y-4">
         <h2 className="font-display text-xl">Add sponsor</h2>
         <p className="text-sm text-muted">
-          Logo shows in the footer. Contact details stay staff-only for outreach
-          later.
+          Logo shows in the footer after publish / payment. Contact details stay
+          staff-only. Public signup:{" "}
+          <a href="/sponsor" className="text-accent-ink underline underline-offset-4">
+            /sponsor
+          </a>
+          .
         </p>
         <div>
           <label htmlFor="sponsor-name" className="block text-sm font-medium">
@@ -308,6 +377,22 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
             placeholder="Package level, last event, follow-up reminders…"
           />
         </div>
+        <div>
+          <label htmlFor="sponsor-amount" className="block text-sm font-medium">
+            Amount owed (optional)
+          </label>
+          <input
+            id="sponsor-amount"
+            inputMode="decimal"
+            className="field-control mt-1.5 min-h-11 w-full max-w-xs"
+            value={form.amountUsd}
+            onChange={(e) => setForm((f) => ({ ...f, amountUsd: e.target.value }))}
+            placeholder="500 — leave blank to publish now"
+          />
+          <p className="mt-1 text-xs text-muted">
+            If set, sponsor stays hidden until they pay (Stripe/Venmo) or you mark paid.
+          </p>
+        </div>
         <button
           type="submit"
           disabled={busy || !r2Ready}
@@ -337,6 +422,15 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                       <p className="font-medium text-ink">{s.name}</p>
                       <p className="text-sm text-muted">
                         {s.is_published ? "Published" : "Hidden"}
+                        {s.payment_status
+                          ? ` · ${s.payment_status}${
+                              s.amount_cents
+                                ? ` · $${(s.amount_cents / 100).toFixed(
+                                    s.amount_cents % 100 === 0 ? 0 : 2,
+                                  )}`
+                                : ""
+                            }`
+                          : ""}
                         {s.website_url ? ` · ${s.website_url}` : ""}
                       </p>
                       {editingId !== s.id ? (
@@ -523,6 +617,71 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                 ) : s.contact_notes ? (
                   <p className="text-sm text-muted">{s.contact_notes}</p>
                 ) : null}
+
+                <div className="flex flex-wrap items-end gap-2 border border-line bg-bg p-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted">
+                      Amount owed ($)
+                    </label>
+                    <input
+                      className="field-control mt-1 min-h-10 w-28"
+                      inputMode="decimal"
+                      placeholder={
+                        s.amount_cents ? String(s.amount_cents / 100) : "250"
+                      }
+                      value={amountDrafts[s.id] ?? ""}
+                      onChange={(e) =>
+                        setAmountDrafts((d) => ({
+                          ...d,
+                          [s.id]: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="inline-flex min-h-10 items-center border border-line px-3 text-sm"
+                    onClick={() =>
+                      void payAction(
+                        s.id,
+                        "set_amount",
+                        amountDrafts[s.id] || String(s.amount_cents / 100 || ""),
+                      )
+                    }
+                  >
+                    Save amount / hide until paid
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy || !s.contact_email}
+                    className="inline-flex min-h-10 items-center border border-line px-3 text-sm disabled:opacity-40"
+                    onClick={() => void payAction(s.id, "send_invite")}
+                    title={!s.contact_email ? "Add contact email first" : undefined}
+                  >
+                    Email pay link
+                  </button>
+                  {s.payment_status === "unpaid" ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="btn-deep inline-flex min-h-10 items-center px-3 text-sm"
+                      onClick={() => void payAction(s.id, "mark_paid")}
+                    >
+                      Mark paid (Venmo/check)
+                    </button>
+                  ) : null}
+                  {s.pay_token ? (
+                    <a
+                      href={`/sponsor/pay/${s.pay_token}`}
+                      className="inline-flex min-h-10 items-center text-sm text-accent-ink underline underline-offset-4"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open pay page
+                    </a>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>

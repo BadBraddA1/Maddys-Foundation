@@ -38,10 +38,17 @@ export async function POST(req: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object
-      const { confirmRegistrationFromCheckout } = await import(
-        "@/lib/stripe-checkout"
-      )
-      await confirmRegistrationFromCheckout(session)
+      if (session.metadata?.kind === "sponsor_payment") {
+        const { confirmSponsorFromCheckout } = await import(
+          "@/lib/sponsor-checkout"
+        )
+        await confirmSponsorFromCheckout(session)
+      } else {
+        const { confirmRegistrationFromCheckout } = await import(
+          "@/lib/stripe-checkout"
+        )
+        await confirmRegistrationFromCheckout(session)
+      }
     }
 
     if (
@@ -49,10 +56,12 @@ export async function POST(req: Request) {
       event.type === "checkout.session.async_payment_failed"
     ) {
       const session = event.data.object
-      const { dropPendingRegistrationFromSession } = await import(
-        "@/lib/stripe-checkout"
-      )
-      await dropPendingRegistrationFromSession(session)
+      if (session.metadata?.kind !== "sponsor_payment") {
+        const { dropPendingRegistrationFromSession } = await import(
+          "@/lib/stripe-checkout"
+        )
+        await dropPendingRegistrationFromSession(session)
+      }
     }
   } catch (err) {
     console.error("[stripe webhook] handler", err)
