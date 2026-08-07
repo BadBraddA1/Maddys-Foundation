@@ -1,12 +1,22 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Html5Qrcode } from "html5-qrcode"
 
 type Props = {
+  /** When true, camera is running. */
   open: boolean
   onClose: () => void
   onCode: (code: string) => void
+  /**
+   * Keep scanning after each successful read (re-arms after cooldown).
+   * Default true for day-of desk use.
+   */
+  continuous?: boolean
+  /** ms before the same or next code can fire again. */
+  cooldownMs?: number
+  /** Docked under desk controls vs fullscreen overlay. */
+  variant?: "modal" | "docked"
 }
 
 /** Pull check-in code from a scanned URL or raw code string. */
@@ -42,16 +52,59 @@ export function parseScannedCheckInPayload(raw: string): string | null {
   return null
 }
 
-export function CheckInQrScanner({ open, onClose, onCode }: Props) {
+export function CheckInQrScanner({
+  open,
+  onClose,
+  onCode,
+  continuous = true,
+  cooldownMs = 2500,
+  variant = "modal",
+}: Props) {
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
+  const [lastScanned, setLastScanned] = useState<string | null>(null)
+  const [coolingDown, setCoolingDown] = useState(false)
   const scannerRef = useRef<Html5Qrcode | null>(null)
-  const handledRef = useRef(false)
-  const regionId = "check-in-qr-reader"
+  const onCodeRef = useRef(onCode)
+  const onCloseRef = useRef(onClose)
+  const continuousRef = useRef(continuous)
+  const cooldownMsRef = useRef(cooldownMs)
+  const lockedUntilRef = useRef(0)
+  const lastCodeRef = useRef<string | null>(null)
+  const regionIdRef = useRef(
+    `check-in-qr-reader-${variant}-${Math.random().toString(36).slice(2, 9)}`,
+  )
+  const regionId = regionIdRef.current
+
+  onCodeRef.current = onCode
+  onCloseRef.current = onClose
+  continuousRef.current = continuous
+  cooldownMsRef.current = cooldownMs
+
+  const handleDecoded = useCallback((decoded: string) => {
+    const parsed = parseScannedCheckInPayload(decoded)
+    if (!parsed) return
+    const now = Date.now()
+    if (now < lockedUntilRef.current) return
+    lockedUntilRef.current = now + cooldownMsRef.current
+    lastCodeRef.current = parsed
+    setLastScanned(parsed)
+    setCoolingDown(true)
+    window.setTimeout(() => setCoolingDown(false), cooldownMsRef.current)
+    onCodeRef.current(parsed)
+    if (!continuousRef.current) {
+      onCloseRef.current()
+    }
+  }, [])
 
   useEffect(() => {
-    if (!open) return
-    handledRef.current = false
+    if (!open) {
+      setLastScanned(null)
+      setCoolingDown(false)
+      lockedUntilRef.current = 0
+      lastCodeRef.current = null
+      return
+    }
     setError(null)
     setStarting(true)
 
@@ -63,14 +116,10 @@ export function CheckInQrScanner({ open, onClose, onCode }: Props) {
       try {
         await scanner.start(
           { facingMode: "environment" },
-          { fps: 8, qrbox: { width: 240, height: 240 } },
+          { fps: 10, qrbox: { width: 240, height: 240 } },
           (decoded) => {
-            if (handledRef.current || cancelled) return
-            const parsed = parseScannedCheckInPayload(decoded)
-            if (!parsed) return
-            handledRef.current = true
-            onCode(parsed)
-            onClose()
+            if (cancelled) return
+            handleDecoded(decoded)
           },
           () => undefined,
         )
@@ -101,9 +150,77 @@ export function CheckInQrScanner({ open, onClose, onCode }: Props) {
         }
       }
     }
-  }, [open, onClose, onCode])
+  }, [open, regionId, handleDecoded])
 
   if (!open) return null
+
+  const body = (
+    <>
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          className={`font-display text-xl ${variant === "modal" ? "text-white" : "text-ink"}`}
+        >
+          {continuous ? "Live scan" : "Scan QR"}
+        </h2>
+        <button
+          type="button"
+          className={`inline-flex min-h-11 items-center px-3 text-sm underline underline-offset-4 ${
+            variant === "modal" ? "text-white" : "text-ink"
+          }`}
+          onClick={onClose}
+        >
+          {variant === "docked" ? "Stop camera" : "Close"}
+        </button>
+      </div>
+      <p
+        className={`mt-2 text-sm ${variant === "modal" ? "text-white/80" : "text-muted"}`}
+      >
+        {continuous
+          ? "Camera stays on — point at the next QR after each beep. Same code is ignored for a couple seconds."
+          : "Point the camera at a player or team QR. Player codes check in automatically."}
+      </p>
+      <div
+        id={regionId}
+        className="mt-4 min-h-[280px] overflow-hidden bg-black"
+      />
+      {starting ? (
+        <p
+          className={`mt-3 text-sm ${variant === "modal" ? "text-white/80" : "text-muted"}`}
+        >
+          Starting camera…
+        </p>
+      ) : null}
+      {lastScanned ? (
+        <p
+          className={`mt-3 text-sm font-medium ${variant === "modal" ? "text-accent" : "text-ink"}`}
+          role="status"
+        >
+          Scanned {lastScanned}
+          {coolingDown ? " · Ready again in a moment…" : " · Ready for next"}
+        </p>
+      ) : null}
+      {error ? (
+        <p
+          className={`mt-3 text-sm ${variant === "modal" ? "text-accent" : "text-danger"}`}
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+    </>
+  )
+
+  if (variant === "docked") {
+    return (
+      <div
+        className="border border-line bg-surface p-4"
+        role="region"
+        aria-label="Live check-in QR scanner"
+      >
+        {body}
+      </div>
+    )
+  }
 
   return (
     <div
@@ -112,34 +229,7 @@ export function CheckInQrScanner({ open, onClose, onCode }: Props) {
       aria-modal="true"
       aria-label="Scan check-in QR code"
     >
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-        <div className="flex items-center justify-between gap-3 text-white">
-          <h2 className="font-display text-xl">Scan QR</h2>
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center px-3 text-sm underline underline-offset-4"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
-        <p className="mt-2 text-sm text-white/80">
-          Point the camera at a player or team QR. Player codes check in
-          automatically. Works on iPhone Safari when camera access is allowed.
-        </p>
-        <div
-          id={regionId}
-          className="mt-4 min-h-[280px] overflow-hidden rounded-sm bg-black"
-        />
-        {starting ? (
-          <p className="mt-3 text-sm text-white/80">Starting camera…</p>
-        ) : null}
-        {error ? (
-          <p className="mt-3 text-sm text-accent" role="alert">
-            {error}
-          </p>
-        ) : null}
-      </div>
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{body}</div>
     </div>
   )
 }

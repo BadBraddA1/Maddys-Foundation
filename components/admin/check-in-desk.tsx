@@ -8,6 +8,13 @@ import {
 } from "@/components/admin/check-in-qr-scanner"
 import { PrepaidBadge, PrepaidTabs } from "@/components/admin/prepaid-badge"
 import {
+  readKeepAwakePreference,
+  readLiveScanPreference,
+  useKeepAwake,
+  writeKeepAwakePreference,
+  writeLiveScanPreference,
+} from "@/components/admin/use-keep-awake"
+import {
   computePlayerAddonTotalCents,
   computeTeamDeskAddonTotalCents,
   formatAddonMoney,
@@ -84,6 +91,30 @@ export function CheckInDesk({
   const [savingAddons, setSavingAddons] = useState(false)
   const [qr, setQr] = useState<{ url: string; dataUrl: string } | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [liveScan, setLiveScan] = useState(false)
+  const [keepAwake, setKeepAwake] = useState(false)
+  const [prefsReady, setPrefsReady] = useState(false)
+
+  useEffect(() => {
+    setKeepAwake(readKeepAwakePreference())
+    setLiveScan(readLiveScanPreference())
+    setPrefsReady(true)
+  }, [])
+
+  const wake = useKeepAwake(keepAwake)
+
+  useEffect(() => {
+    if (!prefsReady) return
+    writeKeepAwakePreference(keepAwake)
+  }, [keepAwake, prefsReady])
+
+  useEffect(() => {
+    if (!prefsReady) return
+    writeLiveScanPreference(liveScan)
+    if (liveScan) setScannerOpen(false)
+  }, [liveScan, prefsReady])
+
+  const cameraOn = liveScan || scannerOpen
 
   const loadSuggestions = useCallback(
     async (q: string) => {
@@ -445,19 +476,70 @@ export function CheckInDesk({
             >
               Load code
             </button>
-            <button
-              type="button"
-              className="inline-flex min-h-12 items-center justify-center border border-line bg-bg px-5 text-sm font-medium text-ink"
-              onClick={() => setScannerOpen(true)}
-            >
-              Scan QR
-            </button>
+            {!liveScan ? (
+              <button
+                type="button"
+                className="inline-flex min-h-12 items-center justify-center border border-line bg-bg px-5 text-sm font-medium text-ink"
+                onClick={() => setScannerOpen(true)}
+              >
+                Scan once
+              </button>
+            ) : null}
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <label className="flex min-h-11 items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="size-5"
+                checked={liveScan}
+                onChange={(e) => setLiveScan(e.target.checked)}
+              />
+              <span>
+                Always ready to scan
+                <span className="mt-0.5 block text-xs text-muted">
+                  Camera stays on — no need to tap Scan for each QR
+                </span>
+              </span>
+            </label>
+            <label className="flex min-h-11 items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="size-5"
+                checked={keepAwake}
+                onChange={(e) => setKeepAwake(e.target.checked)}
+              />
+              <span>
+                Keep screen awake
+                <span className="mt-0.5 block text-xs text-muted">
+                  {wake.supported
+                    ? keepAwake
+                      ? wake.active
+                        ? "Screen will stay on while this page is open"
+                        : wake.error || "Requesting wake lock…"
+                      : "Stops the phone from sleeping during check-in"
+                    : "Not supported in this browser — use Low Power Off / Auto-Lock Never"}
+                </span>
+              </span>
+            </label>
           </div>
           <p className="mt-2 text-xs text-muted">
-            On iPhone: open this page in Safari while staff-logged-in, tap Scan QR,
-            allow camera.
+            On iPhone: open this page in Safari while staff-logged-in, allow
+            camera, turn on Always ready to scan.
           </p>
         </div>
+
+        {liveScan ? (
+          <CheckInQrScanner
+            open={cameraOn}
+            continuous
+            variant="docked"
+            onClose={() => setLiveScan(false)}
+            onCode={(code) => {
+              void loadByCode(code)
+            }}
+          />
+        ) : null}
 
         <div>
           <label className="block text-sm font-medium text-ink" htmlFor="team-search">
@@ -517,7 +599,9 @@ export function CheckInDesk({
       </div>
 
       <CheckInQrScanner
-        open={scannerOpen}
+        open={!liveScan && scannerOpen}
+        continuous
+        variant="modal"
         onClose={() => setScannerOpen(false)}
         onCode={(code) => {
           void loadByCode(code)
