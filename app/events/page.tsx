@@ -46,7 +46,28 @@ export default async function EventsPage() {
         {loadFailed ? (
           <LoadError title="Events unavailable" />
         ) : upcoming.length === 0 ? (
-          <EmptyEvents />
+          <>
+            <EmptyEvents />
+            <div className="mt-10 border-t border-line">
+              <Link
+                href="/sponsor"
+                className="group flex flex-col gap-2 py-8 transition md:flex-row md:items-start md:justify-between"
+              >
+                <div className="min-w-0 max-w-2xl">
+                  <h2 className="break-words font-display text-2xl group-hover:text-accent-ink md:text-3xl">
+                    Golf Tournament Sponsorships
+                  </h2>
+                  <p className="mt-3 text-muted">
+                    Hole, contest, flight, and meal packages for the Oak Valley
+                    Golf Scramble.
+                  </p>
+                </div>
+                <span className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-accent px-5 text-center text-sm font-medium text-accent-ink sm:w-auto">
+                  Become a sponsor
+                </span>
+              </Link>
+            </div>
+          </>
         ) : (
           <ul className="mt-12 divide-y divide-line border-t border-line">
             {upcoming.map((event) => {
@@ -87,6 +108,31 @@ export default async function EventsPage() {
                 </li>
               )
             })}
+            <li className="py-8">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0 max-w-2xl">
+                  <Link
+                    href="/sponsor"
+                    className="break-words font-display text-2xl hover:text-accent-ink md:text-3xl"
+                  >
+                    Golf Tournament Sponsorships
+                  </Link>
+                  <p className="mt-2 text-sm font-medium text-muted">
+                    Oak Valley Golf Scramble
+                  </p>
+                  <p className="mt-3 text-muted">
+                    Hole, contest, flight, and meal packages — your logo goes
+                    live after checkout.
+                  </p>
+                </div>
+                <Link
+                  href="/sponsor"
+                  className="motion-press inline-flex min-h-11 w-full shrink-0 items-center justify-center bg-accent px-5 text-center text-sm font-medium text-accent-ink sm:w-auto"
+                >
+                  Become a sponsor
+                </Link>
+              </div>
+            </li>
           </ul>
         )}
 

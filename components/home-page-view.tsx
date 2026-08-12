@@ -150,36 +150,60 @@ export async function HomePageView() {
                 </Link>
                 .
               </p>
-            ) : upcoming.length === 0 ? (
-              <p className="mt-8 max-w-lg text-muted">
-                New gatherings are on the way. Check back soon — or follow along
-                as we open registration for the next event.
-              </p>
             ) : (
-              <ul className="mt-10 divide-y divide-line">
-                {upcoming.map((event) => (
-                  <li key={event.id}>
+              <>
+                {upcoming.length === 0 ? (
+                  <p className="mt-8 max-w-lg text-muted">
+                    New gatherings are on the way. Check back soon — or follow
+                    along as we open registration for the next event.
+                  </p>
+                ) : null}
+                <ul
+                  className={`${upcoming.length === 0 ? "mt-8" : "mt-10"} divide-y divide-line`}
+                >
+                  {upcoming.map((event) => (
+                    <li key={event.id}>
+                      <Link
+                        href={`/events/${event.slug}`}
+                        className="group flex flex-col gap-2 py-6 transition md:flex-row md:items-baseline md:justify-between"
+                      >
+                        <div className="min-w-0">
+                          <h3 className="break-words font-display text-2xl group-hover:text-accent-ink">
+                            {event.title}
+                          </h3>
+                          {event.summary ? (
+                            <p className="mt-1 line-clamp-2 text-muted">
+                              {event.summary}
+                            </p>
+                          ) : null}
+                        </div>
+                        <p className="shrink-0 text-sm font-medium text-muted">
+                          {formatEventDate(event.starts_at)}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                  <li>
                     <Link
-                      href={`/events/${event.slug}`}
+                      href="/sponsor"
                       className="group flex flex-col gap-2 py-6 transition md:flex-row md:items-baseline md:justify-between"
                     >
                       <div className="min-w-0">
                         <h3 className="break-words font-display text-2xl group-hover:text-accent-ink">
-                          {event.title}
+                          Golf Tournament Sponsorships
                         </h3>
-                        {event.summary ? (
-                          <p className="mt-1 line-clamp-2 text-muted">
-                            {event.summary}
-                          </p>
-                        ) : null}
+                        <p className="mt-1 line-clamp-2 text-muted">
+                          Hole, contest, flight, and meal packages for the Oak
+                          Valley Golf Scramble — logos go live after checkout.
+                        </p>
                       </div>
-                      <p className="shrink-0 text-sm font-medium text-muted">
-                        {formatEventDate(event.starts_at)}
+                      <p className="shrink-0 text-sm font-medium text-accent-ink">
+                        Become a sponsor →
                       </p>
                     </Link>
                   </li>
-                ))}
-              </ul>
+                </ul>
+              </>
             )}
           </div>
         </section>
