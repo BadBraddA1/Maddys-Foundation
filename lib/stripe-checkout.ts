@@ -33,8 +33,11 @@ export async function createEventCheckoutSession(opts: {
   coverCardFees?: boolean
   /** Unix seconds — usually from when the register form opened. */
   holdExpiresAt?: number
+  /** embedded = stay on register page; hosted = Stripe-hosted redirect. */
+  uiMode?: "embedded" | "hosted"
 }): Promise<{
-  url: string
+  url: string | null
+  clientSecret: string | null
   sessionId: string
   totalCents: number
   holdExpiresAt: number
@@ -45,6 +48,7 @@ export async function createEventCheckoutSession(opts: {
 
   const stripe = getStripe()
   const base = publicSiteUrl()
+  const uiMode = opts.uiMode ?? "hosted"
   const productName = opts.teamName
     ? `${opts.eventTitle} — ${opts.teamName}`
     : `${opts.eventTitle} registration`
@@ -107,10 +111,11 @@ export async function createEventCheckoutSession(opts: {
     })
   }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
+  const common = {
+    mode: "payment" as const,
     customer_email: opts.customerEmail,
     client_reference_id: String(opts.registrationId),
+    payment_method_types: ["card" as const],
     line_items,
     metadata: {
       registrationId: String(opts.registrationId),
@@ -124,13 +129,42 @@ export async function createEventCheckoutSession(opts: {
       feeCoverCents: String(totals.feeCoverCents),
       totalCents: String(totals.totalCents),
     },
-    success_url: `${base}/events/${opts.eventSlug}/register?paid=1&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${base}/events/${opts.eventSlug}/register?canceled=1&session_id={CHECKOUT_SESSION_ID}`,
     // Stripe minimum is 30m; we expire the session ourselves at CHECKOUT_HOLD_MINUTES.
     expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_EXPIRE_SECONDS,
-  })
+  }
 
-  if (!session.url) return null
+  let session: Stripe.Checkout.Session
+  try {
+    session =
+      uiMode === "embedded"
+        ? await stripe.checkout.sessions.create({
+            ...common,
+            ui_mode: "embedded_page",
+            return_url: `${base}/events/${opts.eventSlug}/register?paid=1&session_id={CHECKOUT_SESSION_ID}`,
+          })
+        : await stripe.checkout.sessions.create({
+            ...common,
+            ui_mode: "hosted_page",
+            success_url: `${base}/events/${opts.eventSlug}/register?paid=1&session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${base}/events/${opts.eventSlug}/register?canceled=1&session_id={CHECKOUT_SESSION_ID}`,
+          })
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Stripe checkout failed"
+    console.error("createEventCheckoutSession", message)
+    throw new Error(
+      message.startsWith("Could not")
+        ? message
+        : `Could not open checkout: ${message}`,
+    )
+  }
+
+  const clientSecret =
+    uiMode === "embedded" ? session.client_secret ?? null : null
+  const url = uiMode === "hosted" ? session.url ?? null : null
+
+  if (uiMode === "embedded" && !clientSecret) return null
+  if (uiMode === "hosted" && !url) return null
 
   const holdUntil =
     opts.holdExpiresAt && opts.holdExpiresAt > Math.floor(Date.now() / 1000)
@@ -144,7 +178,8 @@ export async function createEventCheckoutSession(opts: {
   )
 
   return {
-    url: session.url,
+    url,
+    clientSecret,
     sessionId: session.id,
     totalCents: totals.totalCents,
     holdExpiresAt: holdUntil,
