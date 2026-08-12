@@ -92,7 +92,7 @@ export function resolveHoldExpiresAt(
   if (hold <= nowSec) {
     return {
       ok: false,
-      error: `Your ${CHECKOUT_HOLD_MINUTES}-minute registration timer ran out. Refresh the page and start again.`,
+      error: `Your ${CHECKOUT_HOLD_MINUTES}-minute hold ran out. Refresh the page and start again.`,
     }
   }
   return { ok: true, holdExpiresAt: hold }

@@ -56,7 +56,12 @@ export async function POST(req: Request) {
       event.type === "checkout.session.async_payment_failed"
     ) {
       const session = event.data.object
-      if (session.metadata?.kind !== "sponsor_payment") {
+      if (session.metadata?.kind === "sponsor_payment") {
+        const { dropPendingSponsorFromSession } = await import(
+          "@/lib/sponsor-checkout"
+        )
+        await dropPendingSponsorFromSession(session)
+      } else {
         const { dropPendingRegistrationFromSession } = await import(
           "@/lib/stripe-checkout"
         )

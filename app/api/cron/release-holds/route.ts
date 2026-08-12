@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { releaseExpiredHolds } from "@/lib/registration-hold"
+import { releaseExpiredSponsorHolds } from "@/lib/sponsor-hold"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic"
 /**
  * Optional cron: GET /api/cron/release-holds
  * Auth: Authorization: Bearer $CRON_SECRET (or ?secret=)
+ * Releases expired registration + sponsor package holds.
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET?.trim()
@@ -19,6 +21,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const released = await releaseExpiredHolds()
-  return NextResponse.json({ ok: true, released })
+  const [registrations, sponsors] = await Promise.all([
+    releaseExpiredHolds(),
+    releaseExpiredSponsorHolds(),
+  ])
+  return NextResponse.json({
+    ok: true,
+    released: registrations + sponsors,
+    registrations,
+    sponsors,
+  })
 }

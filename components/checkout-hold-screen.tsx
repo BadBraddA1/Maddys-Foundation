@@ -8,6 +8,8 @@ type Props = {
   holdExpiresAt: number
   eventTitle: string
   isTeam: boolean
+  /** e.g. "team spot" / "sponsorship" — defaults from isTeam */
+  spotLabel?: string
 }
 
 export function CheckoutHoldScreen({
@@ -15,6 +17,7 @@ export function CheckoutHoldScreen({
   holdExpiresAt,
   eventTitle,
   isTeam,
+  spotLabel,
 }: Props) {
   const [remaining, setRemaining] = useState(() =>
     Math.max(0, holdExpiresAt - Math.floor(Date.now() / 1000)),
@@ -41,7 +44,7 @@ export function CheckoutHoldScreen({
   }, [checkoutUrl])
 
   const expired = remaining <= 0
-  const spot = isTeam ? "team spot" : "spot"
+  const spot = spotLabel ?? (isTeam ? "team spot" : "spot")
 
   return (
     <div
@@ -57,11 +60,11 @@ export function CheckoutHoldScreen({
               <>
                 Time ran out for{" "}
                 <span className="font-medium text-ink">{eventTitle}</span>. Refresh
-                and register again if a {spot} is still open.
+                and start again if a {spot} is still open.
               </>
             ) : (
               <>
-                Same timer from when you started registering for{" "}
+                Same timer from when you started for{" "}
                 <span className="font-medium text-ink">{eventTitle}</span> — finish
                 payment before it hits zero or your {spot} goes back in the pool.
               </>

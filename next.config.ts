@@ -35,15 +35,6 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-  async redirects() {
-    return [
-      {
-        source: "/sponsor",
-        destination: "/",
-        permanent: true,
-      },
-    ]
-  },
 }
 
 export default nextConfig

@@ -1,0 +1,407 @@
+"use client"
+
+import { useCallback, useEffect, useId, useState } from "react"
+import { CheckoutHoldScreen } from "@/components/checkout-hold-screen"
+import {
+  CHECKOUT_HOLD_MINUTES,
+  clearStoredSponsorHold,
+  formatHoldCountdown,
+  readStoredSponsorHold,
+  writeStoredSponsorHold,
+} from "@/lib/sponsor-hold-shared"
+import {
+  formatUsdFromCents,
+  packageQuantityLabel,
+  type PublicPackageAvailability,
+} from "@/lib/sponsor-packages"
+
+type Props = {
+  packages: PublicPackageAvailability[]
+  stripeReady: boolean
+  canceled?: boolean
+}
+
+type CheckoutState = {
+  checkoutUrl: string
+  holdExpiresAt: number
+  label: string
+}
+
+export function SponsorOnboardForm({
+  packages: initialPackages,
+  stripeReady,
+  canceled,
+}: Props) {
+  const formId = useId()
+  const [packages, setPackages] = useState(initialPackages)
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [holdToken, setHoldToken] = useState<string | null>(null)
+  const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null)
+  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000))
+  const [holdLoading, setHoldLoading] = useState(false)
+  const [holdError, setHoldError] = useState<string | null>(null)
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [checkout, setCheckout] = useState<CheckoutState | null>(null)
+
+  const selected = packages.find((p) => p.key === selectedKey) ?? null
+  const remainingSec =
+    holdExpiresAt == null ? null : Math.max(0, holdExpiresAt - nowSec)
+  const holdExpired =
+    remainingSec != null && remainingSec <= 0 && Boolean(holdToken)
+
+  const releaseHold = useCallback(async (token: string, packageKey: string) => {
+    clearStoredSponsorHold(packageKey)
+    try {
+      await fetch(
+        `/api/sponsor/hold?token=${encodeURIComponent(token)}`,
+        { method: "DELETE" },
+      )
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const startHold = useCallback(
+    async (packageKey: string, forceNew = false) => {
+      setHoldLoading(true)
+      setHoldError(null)
+      setFormError(null)
+      try {
+        const prev = forceNew ? null : readStoredSponsorHold(packageKey)
+        const res = await fetch("/api/sponsor/hold", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            packageKey,
+            token: prev?.token,
+          }),
+        })
+        const data = (await res.json()) as {
+          error?: string
+          token?: string
+          holdExpiresAt?: number
+          remaining?: number | null
+        }
+        if (!res.ok || !data.token || !data.holdExpiresAt) {
+          setHoldError(data.error || "Could not reserve this sponsorship.")
+          setHoldToken(null)
+          setHoldExpiresAt(null)
+          clearStoredSponsorHold(packageKey)
+          return
+        }
+        writeStoredSponsorHold({
+          token: data.token,
+          holdExpiresAt: data.holdExpiresAt,
+          packageKey,
+        })
+        setHoldToken(data.token)
+        setHoldExpiresAt(data.holdExpiresAt)
+        setPackages((prevPkgs) =>
+          prevPkgs.map((p) =>
+            p.key === packageKey && p.quantity != null
+              ? {
+                  ...p,
+                  remaining:
+                    data.remaining ??
+                    Math.max(0, (p.remaining ?? p.quantity) - 1),
+                  soldOut:
+                    (data.remaining ??
+                      Math.max(0, (p.remaining ?? p.quantity) - 1)) <= 0,
+                }
+              : p,
+          ),
+        )
+      } catch {
+        setHoldError("Could not reserve this sponsorship.")
+      } finally {
+        setHoldLoading(false)
+      }
+    },
+    [],
+  )
+
+  async function selectPackage(pkg: PublicPackageAvailability) {
+    if (pkg.soldOut) return
+    if (selectedKey && holdToken && selectedKey !== pkg.key) {
+      await releaseHold(holdToken, selectedKey)
+      setHoldToken(null)
+      setHoldExpiresAt(null)
+    }
+    setSelectedKey(pkg.key)
+    await startHold(pkg.key)
+  }
+
+  useEffect(() => {
+    if (holdExpiresAt == null) return
+    const tick = () => setNowSec(Math.floor(Date.now() / 1000))
+    tick()
+    const id = window.setInterval(tick, 250)
+    return () => window.clearInterval(id)
+  }, [holdExpiresAt])
+
+  useEffect(() => {
+    if (!holdExpired || !holdToken || !selectedKey) return
+    void releaseHold(holdToken, selectedKey)
+  }, [holdExpired, holdToken, selectedKey, releaseHold])
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (busy || !selected || !holdToken || holdExpired) return
+    setBusy(true)
+    setFormError(null)
+    try {
+      const res = await fetch("/api/sponsor/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageKey: selected.key,
+          holdToken,
+          holdExpiresAt,
+          name,
+          email,
+        }),
+      })
+      const data = (await res.json()) as {
+        error?: string
+        checkoutUrl?: string
+        holdExpiresAt?: number
+      }
+      if (!res.ok || !data.checkoutUrl || !data.holdExpiresAt) {
+        setFormError(data.error || "Could not start checkout.")
+        if (res.status === 409) {
+          clearStoredSponsorHold(selected.key)
+          setHoldToken(null)
+          setHoldExpiresAt(null)
+        }
+        return
+      }
+      clearStoredSponsorHold(selected.key)
+      setCheckout({
+        checkoutUrl: data.checkoutUrl,
+        holdExpiresAt: data.holdExpiresAt,
+        label: selected.label,
+      })
+    } catch {
+      setFormError("Could not start checkout.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (checkout) {
+    return (
+      <CheckoutHoldScreen
+        checkoutUrl={checkout.checkoutUrl}
+        holdExpiresAt={checkout.holdExpiresAt}
+        eventTitle={checkout.label}
+        isTeam={false}
+        spotLabel="sponsorship"
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-10">
+      {canceled ? (
+        <p
+          className="border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950"
+          role="status"
+        >
+          Checkout was canceled and your hold was released. Pick a package again
+          to start a new {CHECKOUT_HOLD_MINUTES}-minute timer.
+        </p>
+      ) : null}
+
+      <section aria-labelledby={`${formId}-packages`}>
+        <h2 id={`${formId}-packages`} className="font-display text-2xl text-ink">
+          Choose a sponsorship
+        </h2>
+        <p className="mt-2 max-w-prose text-sm text-muted">
+          Selecting a package holds it for {CHECKOUT_HOLD_MINUTES} minutes while
+          you pay. If the timer runs out, that spot goes back in the pool.
+        </p>
+
+        <ul className="mt-6 divide-y divide-line border-y border-line">
+          {packages.map((pkg) => {
+            const active = selectedKey === pkg.key
+            const price = formatUsdFromCents(pkg.amountCents)
+            const qty =
+              pkg.quantity == null
+                ? "Unlimited"
+                : pkg.soldOut
+                  ? "Sold out"
+                  : pkg.remaining != null
+                    ? `${pkg.remaining} left · ${packageQuantityLabel(pkg)}`
+                    : packageQuantityLabel(pkg)
+            return (
+              <li key={pkg.key}>
+                <button
+                  type="button"
+                  disabled={pkg.soldOut || holdLoading}
+                  onClick={() => void selectPackage(pkg)}
+                  className={`motion-press flex w-full flex-col gap-1 px-1 py-5 text-left transition disabled:opacity-50 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 ${
+                    active ? "bg-accent-soft/60" : "hover:bg-surface"
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className="block font-display text-xl text-ink">
+                      {pkg.label}
+                    </span>
+                    <span className="mt-1 block text-sm text-muted">
+                      {pkg.blurb}
+                    </span>
+                    <span className="mt-1 block text-xs font-medium text-muted">
+                      {qty}
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-display text-2xl tabular-nums text-ink">
+                    {price}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+
+      {selected ? (
+        <section aria-labelledby={`${formId}-checkout`}>
+          <h2 id={`${formId}-checkout`} className="font-display text-2xl text-ink">
+            Reserve &amp; pay
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            {selected.label} · {formatUsdFromCents(selected.amountCents)}
+          </p>
+
+          {holdLoading ? (
+            <p className="mt-4 text-sm text-muted">Reserving your sponsorship…</p>
+          ) : null}
+
+          {holdError ? (
+            <div
+              className="mt-4 border border-danger/40 bg-danger/5 px-5 py-4"
+              role="alert"
+            >
+              <p className="text-sm font-medium text-danger">{holdError}</p>
+              <button
+                type="button"
+                className="motion-press mt-3 inline-flex min-h-11 items-center justify-center bg-accent px-6 text-sm font-medium text-accent-ink"
+                onClick={() => void startHold(selected.key, true)}
+              >
+                Try again
+              </button>
+            </div>
+          ) : null}
+
+          {remainingSec != null && !holdError ? (
+            <div
+              className={`mt-4 border px-5 py-4 ${
+                holdExpired
+                  ? "border-danger/40 bg-danger/5"
+                  : "border-line bg-surface"
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              <p className="text-sm font-medium text-muted">
+                {holdExpired
+                  ? "Time’s up — sponsorship released"
+                  : "Sponsorship reserved for you"}
+              </p>
+              <p
+                className="mt-1 font-display text-4xl tabular-nums tracking-tight text-ink"
+                aria-label={`${remainingSec} seconds remaining`}
+              >
+                {formatHoldCountdown(remainingSec)}
+              </p>
+              {holdExpired ? (
+                <>
+                  <p className="mt-2 text-sm text-muted">
+                    Your hold went back in the pool. Start over for a new{" "}
+                    {CHECKOUT_HOLD_MINUTES}-minute reservation.
+                  </p>
+                  <button
+                    type="button"
+                    className="motion-press mt-4 inline-flex min-h-11 items-center justify-center bg-accent px-6 text-sm font-medium text-accent-ink"
+                    onClick={() => void startHold(selected.key, true)}
+                  >
+                    Reserve again ({CHECKOUT_HOLD_MINUTES} min)
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+
+          {!holdExpired && !holdError && holdToken ? (
+            <form onSubmit={onSubmit} className="mt-6 space-y-5" noValidate>
+              <div>
+                <label
+                  htmlFor={`${formId}-name`}
+                  className="block text-sm font-medium text-ink"
+                >
+                  Business or sponsor name
+                </label>
+                <input
+                  id={`${formId}-name`}
+                  name="name"
+                  required
+                  maxLength={120}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="field-control mt-1.5 w-full"
+                  autoComplete="organization"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`${formId}-email`}
+                  className="block text-sm font-medium text-ink"
+                >
+                  Email for receipt
+                </label>
+                <input
+                  id={`${formId}-email`}
+                  name="email"
+                  type="email"
+                  required
+                  maxLength={200}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="field-control mt-1.5 w-full"
+                  autoComplete="email"
+                />
+                <p className="mt-1.5 text-xs text-muted">
+                  After payment you’ll add your logo, website, and point of
+                  contact.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={busy || !stripeReady || holdLoading}
+                className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink disabled:opacity-60 sm:w-auto"
+              >
+                {busy
+                  ? "Opening checkout…"
+                  : `Pay ${formatUsdFromCents(selected.amountCents)}`}
+              </button>
+              {!stripeReady ? (
+                <p className="text-sm text-muted">
+                  Card checkout is temporarily offline.
+                </p>
+              ) : null}
+              {formError ? (
+                <p className="text-sm text-danger" role="alert">
+                  {formError}
+                </p>
+              ) : null}
+            </form>
+          ) : null}
+        </section>
+      ) : null}
+    </div>
+  )
+}

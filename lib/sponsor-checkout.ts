@@ -3,17 +3,25 @@ import { audit } from "@/lib/events"
 import { formatUsdFromCents } from "@/lib/sponsor-levels"
 import { SAMPLE_SPONSOR_PAY_TOKEN } from "@/lib/sponsor-emails"
 import {
+  STRIPE_SESSION_EXPIRE_SECONDS,
+  holdExpiresAtUnix,
+} from "@/lib/sponsor-hold-shared"
+import { dropUnpaidPublicSponsor } from "@/lib/sponsor-hold"
+import {
   getSponsor,
   getSponsorByPayToken,
   markSponsorPaid,
   setSponsorStripeSession,
+  sponsorNeedsProfile,
   type Sponsor,
 } from "@/lib/sponsors"
 import { getStripe, publicSiteUrl, stripeConfigured } from "@/lib/stripe"
+import { sql } from "@/lib/db"
 
 export async function createSponsorCheckoutSession(opts: {
   sponsor: Sponsor
-}): Promise<{ url: string; sessionId: string } | null> {
+  holdExpiresAt?: number
+}): Promise<{ url: string; sessionId: string; holdExpiresAt: number } | null> {
   const { sponsor } = opts
   if (!stripeConfigured()) return null
   if (sponsor.payment_status === "paid") return null
@@ -21,12 +29,24 @@ export async function createSponsorCheckoutSession(opts: {
 
   const stripe = getStripe()
   const base = publicSiteUrl()
+  const holdUntil =
+    opts.holdExpiresAt && opts.holdExpiresAt > Math.floor(Date.now() / 1000)
+      ? opts.holdExpiresAt
+      : holdExpiresAtUnix()
 
+  const isPublic = sponsor.source === "public"
+  const successPath = isPublic
+    ? `/sponsor/complete/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`
+    : `/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`
+  const cancelPath = isPublic
+    ? `/sponsor?canceled=1&session_id={CHECKOUT_SESSION_ID}`
+    : `/sponsor/pay/${sponsor.pay_token}?canceled=1`
+
+  const packageLabel = sponsor.level_label || "Sponsorship"
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     customer_email: sponsor.contact_email || undefined,
     client_reference_id: String(sponsor.id),
-    // Card only — logo publishes via Stripe webhook after payment.
     payment_method_types: ["card"],
     line_items: [
       {
@@ -35,7 +55,7 @@ export async function createSponsorCheckoutSession(opts: {
           currency: "usd",
           unit_amount: sponsor.amount_cents,
           product_data: {
-            name: `Sponsorship — ${sponsor.name}`,
+            name: `${packageLabel} — ${sponsor.name}`,
             description: `Sponsor gift for Madalyn Robinson Foundation (${formatUsdFromCents(sponsor.amount_cents)})`,
           },
         },
@@ -46,13 +66,23 @@ export async function createSponsorCheckoutSession(opts: {
       sponsorId: String(sponsor.id),
       payToken: sponsor.pay_token || "",
       amountCents: String(sponsor.amount_cents),
+      packageKey: sponsor.level_key || "",
+      source: sponsor.source || "admin",
     },
-    success_url: `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${base}/sponsor/pay/${sponsor.pay_token}?canceled=1`,
+    success_url: `${base}${successPath}`,
+    cancel_url: `${base}${cancelPath}`,
+    // Stripe minimum is 30m; we expire the session ourselves at the 10m hold.
+    expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_EXPIRE_SECONDS,
   })
 
   if (!session.url) return null
   await setSponsorStripeSession(sponsor.id, session.id)
+  await sql.execute(
+    `UPDATE sponsors
+     SET hold_expires_at = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [holdUntil, sponsor.id],
+  )
   await audit(
     "stripe",
     "stripe_checkout",
@@ -61,7 +91,7 @@ export async function createSponsorCheckoutSession(opts: {
     `${formatUsdFromCents(sponsor.amount_cents)} · ${session.id}`,
   ).catch(() => undefined)
 
-  return { url: session.url, sessionId: session.id }
+  return { url: session.url, sessionId: session.id, holdExpiresAt: holdUntil }
 }
 
 export async function confirmSponsorFromCheckout(
@@ -104,6 +134,20 @@ export async function confirmSponsorFromCheckout(
   }
 }
 
+export async function dropPendingSponsorFromSession(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  if (session.metadata?.kind !== "sponsor_payment") return
+  if (session.metadata?.source !== "public") return
+  const sponsorId = Number(
+    session.metadata?.sponsorId || session.client_reference_id || 0,
+  )
+  await dropUnpaidPublicSponsor({
+    sponsorId: Number.isFinite(sponsorId) ? sponsorId : undefined,
+    checkoutSessionId: session.id,
+  })
+}
+
 export async function startCheckoutForPayToken(token: string) {
   if (token === SAMPLE_SPONSOR_PAY_TOKEN) {
     return {
@@ -126,9 +170,11 @@ export async function startCheckoutForPayToken(token: string) {
       status: 503 as const,
     }
   }
-  return { url: session.url }
+  return { url: session.url, holdExpiresAt: session.holdExpiresAt }
 }
 
 export async function getSponsorForAdminCheckout(id: number) {
   return getSponsor(id)
 }
+
+export { sponsorNeedsProfile }
