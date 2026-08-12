@@ -56,6 +56,18 @@ export function SponsorOnboardForm({
   const holdExpired =
     remainingSec != null && remainingSec <= 0 && Boolean(holdToken)
 
+  const refreshPackages = useCallback(async () => {
+    try {
+      const res = await fetch("/api/sponsor/packages", { cache: "no-store" })
+      const data = (await res.json()) as {
+        packages?: PublicPackageAvailability[]
+      }
+      if (data.packages) setPackages(data.packages)
+    } catch {
+      // ignore — keep last known list
+    }
+  }, [])
+
   const releaseHold = useCallback(async (token: string, packageKey: string) => {
     clearStoredSponsorHold(packageKey)
     try {
@@ -66,7 +78,8 @@ export function SponsorOnboardForm({
     } catch {
       // ignore
     }
-  }, [])
+    await refreshPackages()
+  }, [refreshPackages])
 
   const startHold = useCallback(
     async (packageKey: string, forceNew = false) => {
@@ -94,6 +107,7 @@ export function SponsorOnboardForm({
           setHoldToken(null)
           setHoldExpiresAt(null)
           clearStoredSponsorHold(packageKey)
+          await refreshPackages()
           return
         }
         writeStoredSponsorHold({
@@ -103,32 +117,19 @@ export function SponsorOnboardForm({
         })
         setHoldToken(data.token)
         setHoldExpiresAt(data.holdExpiresAt)
-        setPackages((prevPkgs) =>
-          prevPkgs.map((p) =>
-            p.key === packageKey && p.quantity != null
-              ? {
-                  ...p,
-                  remaining:
-                    data.remaining ??
-                    Math.max(0, (p.remaining ?? p.quantity) - 1),
-                  soldOut:
-                    (data.remaining ??
-                      Math.max(0, (p.remaining ?? p.quantity) - 1)) <= 0,
-                }
-              : p,
-          ),
-        )
+        await refreshPackages()
       } catch {
         setHoldError("Could not reserve this sponsorship.")
       } finally {
         setHoldLoading(false)
       }
     },
-    [],
+    [refreshPackages],
   )
 
   async function selectPackage(pkg: PublicPackageAvailability) {
-    if (pkg.soldOut) return
+    const mine = selectedKey === pkg.key && Boolean(holdToken)
+    if (pkg.soldOut || (pkg.salePending && !mine)) return
     if (selectedKey && holdToken && selectedKey !== pkg.key) {
       await releaseHold(holdToken, selectedKey)
       setHoldToken(null)
@@ -139,17 +140,71 @@ export function SponsorOnboardForm({
   }
 
   useEffect(() => {
-    if (holdExpiresAt == null) return
     const tick = () => setNowSec(Math.floor(Date.now() / 1000))
     tick()
     const id = window.setInterval(tick, 250)
     return () => window.clearInterval(id)
-  }, [holdExpiresAt])
+  }, [])
 
   useEffect(() => {
     if (!holdExpired || !holdToken || !selectedKey) return
-    void releaseHold(holdToken, selectedKey)
+    const token = holdToken
+    const key = selectedKey
+    void (async () => {
+      await releaseHold(token, key)
+      setHoldToken(null)
+      setHoldExpiresAt(null)
+    })()
   }, [holdExpired, holdToken, selectedKey, releaseHold])
+
+  // Refresh when any public pending countdown hits zero, and poll while pending.
+  useEffect(() => {
+    const hasPending = packages.some((p) => p.salePending)
+    if (!hasPending) return
+
+    const soonest = packages
+      .map((p) => p.pendingExpiresAt)
+      .filter((n): n is number => n != null && n > 0)
+      .sort((a, b) => a - b)[0]
+
+    const timers: number[] = []
+    if (soonest != null) {
+      const delay = Math.max(500, (soonest - Math.floor(Date.now() / 1000)) * 1000 + 400)
+      timers.push(window.setTimeout(() => void refreshPackages(), delay))
+    }
+    timers.push(window.setInterval(() => void refreshPackages(), 12_000))
+    return () => {
+      for (const t of timers) window.clearTimeout(t)
+      // clearInterval and clearTimeout share ids in browsers; clear both styles
+      for (const t of timers) {
+        window.clearInterval(t)
+        window.clearTimeout(t)
+      }
+    }
+  }, [packages, refreshPackages])
+
+  function packageStatusLabel(pkg: PublicPackageAvailability): string {
+    const mine = selectedKey === pkg.key && Boolean(holdToken) && !holdExpired
+    if (pkg.quantity == null) return "Unlimited"
+    if (pkg.soldOut) return "Sold out"
+    if (mine) return "Reserved for you"
+    if (pkg.salePending) {
+      const left =
+        pkg.pendingExpiresAt != null
+          ? Math.max(0, pkg.pendingExpiresAt - nowSec)
+          : null
+      return left != null
+        ? `Sale pending · ${formatHoldCountdown(left)}`
+        : "Sale pending"
+    }
+    if (pkg.pending > 0 && pkg.remaining != null) {
+      return `${pkg.remaining} left · ${pkg.pending} sale pending`
+    }
+    if (pkg.remaining != null) {
+      return `${pkg.remaining} left · ${packageQuantityLabel(pkg)}`
+    }
+    return packageQuantityLabel(pkg)
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -232,26 +287,23 @@ export function SponsorOnboardForm({
         </h2>
         <p className="mt-2 max-w-prose text-sm text-muted">
           Selecting a package holds it for {CHECKOUT_HOLD_MINUTES} minutes while
-          you pay. If the timer runs out, that spot goes back in the pool.
+          you pay. If someone else is checking out, you’ll see{" "}
+          <span className="font-medium text-ink">Sale pending</span> with a
+          countdown — it only shows sold out after payment clears.
         </p>
 
         <ul className="mt-6 divide-y divide-line border-y border-line">
           {packages.map((pkg) => {
             const active = selectedKey === pkg.key
+            const mine = active && Boolean(holdToken) && !holdExpired
+            const blocked = pkg.soldOut || (pkg.salePending && !mine)
             const price = formatUsdFromCents(pkg.amountCents)
-            const qty =
-              pkg.quantity == null
-                ? "Unlimited"
-                : pkg.soldOut
-                  ? "Sold out"
-                  : pkg.remaining != null
-                    ? `${pkg.remaining} left · ${packageQuantityLabel(pkg)}`
-                    : packageQuantityLabel(pkg)
+            const qty = packageStatusLabel(pkg)
             return (
               <li key={pkg.key}>
                 <button
                   type="button"
-                  disabled={pkg.soldOut || holdLoading}
+                  disabled={blocked || holdLoading}
                   onClick={() => void selectPackage(pkg)}
                   className={`motion-press flex w-full flex-col gap-1 px-1 py-5 text-left transition disabled:opacity-50 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 ${
                     active ? "bg-accent-soft/60" : "hover:bg-surface"
@@ -264,7 +316,15 @@ export function SponsorOnboardForm({
                     <span className="mt-1 block text-sm text-muted">
                       {pkg.blurb}
                     </span>
-                    <span className="mt-1 block text-xs font-medium text-muted">
+                    <span
+                      className={`mt-1 block text-xs font-medium ${
+                        pkg.soldOut
+                          ? "text-muted"
+                          : pkg.salePending && !mine
+                            ? "text-amber-800"
+                            : "text-muted"
+                      }`}
+                    >
                       {qty}
                     </span>
                   </span>

@@ -331,7 +331,11 @@ export function SponsorsAdmin({
     const spots =
       p.quantity == null
         ? "unlimited"
-        : `${p.remaining ?? 0} left of ${p.quantity}`
+        : p.soldOut
+          ? "sold out"
+          : p.salePending
+            ? `sale pending · ${p.claimed} claimed`
+            : `${p.remaining ?? 0} left of ${p.quantity}`
     return {
       key: p.key,
       label: `${p.label} · ${formatUsdFromCents(p.amountCents)} · ${spots}`,
@@ -364,7 +368,8 @@ export function SponsorsAdmin({
         <h2 className="font-display text-xl">Package inventory</h2>
         <p className="mt-1 text-sm text-muted">
           Spots control the public /sponsor page. Leave blank for unlimited.
-          Used counts paid sponsors and active 10-minute holds.
+          Claimed = paid or check/admin. Pending = someone is in the 10-minute
+          checkout hold (shows as “Sale pending” publicly, not sold out).
         </p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[36rem] text-left text-sm">
@@ -372,7 +377,8 @@ export function SponsorsAdmin({
               <tr className="border-b border-line text-muted">
                 <th className="py-2 pr-3 font-medium">Package</th>
                 <th className="py-2 pr-3 font-medium">Price</th>
-                <th className="py-2 pr-3 font-medium">Used</th>
+                <th className="py-2 pr-3 font-medium">Claimed</th>
+                <th className="py-2 pr-3 font-medium">Pending</th>
                 <th className="py-2 pr-3 font-medium">Spots</th>
                 <th className="py-2 font-medium" />
               </tr>
@@ -386,14 +392,21 @@ export function SponsorsAdmin({
                       <span className="ml-2 text-xs font-normal text-danger">
                         Sold out
                       </span>
+                    ) : p.salePending ? (
+                      <span className="ml-2 text-xs font-normal text-amber-800">
+                        Sale pending
+                      </span>
                     ) : null}
                   </td>
                   <td className="py-2.5 pr-3 align-middle tabular-nums text-muted">
                     {formatUsdFromCents(p.amountCents)}
                   </td>
                   <td className="py-2.5 pr-3 align-middle tabular-nums text-muted">
-                    {p.used}
+                    {p.claimed}
                     {p.quantity != null ? ` / ${p.quantity}` : ""}
+                  </td>
+                  <td className="py-2.5 pr-3 align-middle tabular-nums text-muted">
+                    {p.pending}
                   </td>
                   <td className="py-2.5 pr-3 align-middle">
                     <input

@@ -304,9 +304,20 @@ export function packageQuantityLabel(pkg: SponsorPackage): string {
 }
 
 export type PublicPackageAvailability = SponsorPackage & {
+  /** Spots still open to start a new hold (null = unlimited). */
   remaining: number | null
+  /** True only when paid/claimed count meets quantity. */
   soldOut: boolean
+  /** True when every remaining spot is on a temporary hold (not final). */
+  salePending: boolean
+  /** Paid + waived sponsors on this package. */
+  claimed: number
+  /** Active form holds + unpaid checkout drafts. */
+  pending: number
+  /** claimed + pending (admin “used” total). */
   used: number
+  /** Soonest pending hold expiry (unix seconds), if any. */
+  pendingExpiresAt: number | null
 }
 
 export { formatUsdFromCents }

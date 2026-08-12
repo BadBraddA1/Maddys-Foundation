@@ -59,28 +59,57 @@ export function ensureSponsorHoldSchema(): Promise<void> {
   return schemaReady
 }
 
-/** Slots currently occupying inventory for a package. */
+/** Slots currently occupying inventory for a package (claimed + pending). */
 export async function packageSlotsUsed(packageKey: string): Promise<number> {
+  const breakdown = await packageInventoryBreakdown(packageKey)
+  return breakdown.used
+}
+
+export type PackageInventoryBreakdown = {
+  claimed: number
+  pending: number
+  used: number
+  pendingExpiresAt: number | null
+}
+
+/** Paid/waived vs temporary holds for one package. */
+export async function packageInventoryBreakdown(
+  packageKey: string,
+): Promise<PackageInventoryBreakdown> {
   await ensureSponsorHoldSchema()
   const now = Math.floor(Date.now() / 1000)
-  const rows = await sql`
-    SELECT
-      (SELECT COUNT(*) FROM sponsors s
-        WHERE s.level_key = ${packageKey}
-          AND (
-            s.payment_status != 'unpaid'
-            OR (
-              s.payment_status = 'unpaid'
-              AND s.hold_expires_at IS NOT NULL
-              AND s.hold_expires_at > ${now}
-            )
-          )
-      )
-      + (SELECT COUNT(*) FROM sponsor_package_holds h
-          WHERE h.package_key = ${packageKey}
-            AND h.hold_expires_at > ${now}) AS c
+  const claimedRows = await sql`
+    SELECT COUNT(*) AS c FROM sponsors s
+    WHERE s.level_key = ${packageKey}
+      AND s.payment_status != 'unpaid'
   `
-  return Number(rows[0]?.c ?? 0)
+  const draftRows = await sql`
+    SELECT COUNT(*) AS c, MIN(hold_expires_at) AS exp FROM sponsors s
+    WHERE s.level_key = ${packageKey}
+      AND s.payment_status = 'unpaid'
+      AND s.hold_expires_at IS NOT NULL
+      AND s.hold_expires_at > ${now}
+  `
+  const holdRows = await sql`
+    SELECT COUNT(*) AS c, MIN(hold_expires_at) AS exp FROM sponsor_package_holds h
+    WHERE h.package_key = ${packageKey}
+      AND h.hold_expires_at > ${now}
+  `
+  const claimed = Number(claimedRows[0]?.c ?? 0)
+  const pendingDrafts = Number(draftRows[0]?.c ?? 0)
+  const pendingHolds = Number(holdRows[0]?.c ?? 0)
+  const pending = pendingDrafts + pendingHolds
+  const expCandidates = [draftRows[0]?.exp, holdRows[0]?.exp]
+    .map((v) => (v == null || v === "" ? null : Number(v)))
+    .filter((n): n is number => n != null && Number.isFinite(n) && n > now)
+  const pendingExpiresAt =
+    expCandidates.length > 0 ? Math.min(...expCandidates) : null
+  return {
+    claimed,
+    pending,
+    used: claimed + pending,
+    pendingExpiresAt,
+  }
 }
 
 /** Admin / check: ensure a package still has room before claiming a slot. */
@@ -93,14 +122,20 @@ export async function assertPackageHasRoom(
   await releaseExpiredSponsorHolds().catch(() => undefined)
   const pkg = await getSponsorPackage(packageKey)
   if (!pkg) return { ok: false, error: "Sponsorship package not found." }
-  const used = await packageSlotsUsed(pkg.key)
-  if (pkg.quantity != null && used >= pkg.quantity) {
+  const breakdown = await packageInventoryBreakdown(pkg.key)
+  if (pkg.quantity != null && breakdown.claimed >= pkg.quantity) {
     return {
       ok: false,
-      error: `${pkg.label} is sold out (${used}/${pkg.quantity}). Increase spots in Package inventory, or pick another package.`,
+      error: `${pkg.label} is sold out (${breakdown.claimed}/${pkg.quantity}). Increase spots in Package inventory, or pick another package.`,
     }
   }
-  return { ok: true, package: pkg, used }
+  if (pkg.quantity != null && breakdown.used >= pkg.quantity) {
+    return {
+      ok: false,
+      error: `${pkg.label} has a sale pending (checkout in progress). Wait for that hold to finish or expire, or increase spots.`,
+    }
+  }
+  return { ok: true, package: pkg, used: breakdown.used }
 }
 
 export async function listPackageAvailability(): Promise<
@@ -112,13 +147,33 @@ export async function listPackageAvailability(): Promise<
   const packages = await listResolvedSponsorPackages()
   const out: PublicPackageAvailability[] = []
   for (const pkg of packages) {
-    const used = await packageSlotsUsed(pkg.key)
+    const breakdown = await packageInventoryBreakdown(pkg.key)
     if (pkg.quantity == null) {
-      out.push({ ...pkg, remaining: null, soldOut: false, used })
+      out.push({
+        ...pkg,
+        remaining: null,
+        soldOut: false,
+        salePending: false,
+        claimed: breakdown.claimed,
+        pending: breakdown.pending,
+        used: breakdown.used,
+        pendingExpiresAt: breakdown.pendingExpiresAt,
+      })
       continue
     }
-    const remaining = Math.max(0, pkg.quantity - used)
-    out.push({ ...pkg, remaining, soldOut: remaining <= 0, used })
+    const open = Math.max(0, pkg.quantity - breakdown.used)
+    const soldOut = breakdown.claimed >= pkg.quantity
+    const salePending = !soldOut && open <= 0 && breakdown.pending > 0
+    out.push({
+      ...pkg,
+      remaining: open,
+      soldOut,
+      salePending,
+      claimed: breakdown.claimed,
+      pending: breakdown.pending,
+      used: breakdown.used,
+      pendingExpiresAt: breakdown.pendingExpiresAt,
+    })
   }
   return out
 }
@@ -194,11 +249,22 @@ export async function createSponsorPackageHold(opts: {
   }
 
   if (pkg.quantity != null) {
-    const used = await packageSlotsUsed(pkg.key)
-    if (used >= pkg.quantity) {
+    const breakdown = await packageInventoryBreakdown(pkg.key)
+    if (breakdown.claimed >= pkg.quantity) {
       return {
         ok: false,
         error: "This sponsorship is sold out.",
+        status: 409,
+      }
+    }
+    if (breakdown.used >= pkg.quantity) {
+      const wait =
+        breakdown.pendingExpiresAt != null
+          ? ` It may free up in a few minutes if checkout isn’t finished.`
+          : ""
+      return {
+        ok: false,
+        error: `Sale pending — someone else is finishing checkout.${wait}`,
         status: 409,
       }
     }
