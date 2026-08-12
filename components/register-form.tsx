@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { CheckoutHoldScreen } from "@/components/checkout-hold-screen"
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
+import { StripeEmbeddedCheckout } from "@/components/stripe-embedded-checkout"
 import { formatFee } from "@/lib/event-helpers"
 import { normalizeUsPhone } from "@/lib/phone"
 import {
@@ -68,17 +68,19 @@ export function RegisterForm({
   const [done, setDone] = useState(false)
   const [pending, setPending] = useState(false)
   const [awaitingPayment, setAwaitingPayment] = useState(false)
-  const [holdCheckout, setHoldCheckout] = useState<{
-    url: string
+  const [checkout, setCheckout] = useState<{
+    clientSecret: string
+    checkoutSessionId: string
     holdExpiresAt: number
   } | null>(null)
+  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000))
   const [holdExpiresAt, setHoldExpiresAt] = useState<number | null>(null)
   const [holdToken, setHoldToken] = useState<string | null>(null)
   const [remainingSec, setRemainingSec] = useState<number | null>(null)
   const [holdError, setHoldError] = useState<string | null>(null)
   const [holdLoading, setHoldLoading] = useState(requirePayment)
 
-  async function startServerHold(reset: boolean) {
+  const startServerHold = useCallback(async (reset: boolean) => {
     setHoldLoading(true)
     setHoldError(null)
     try {
@@ -125,34 +127,44 @@ export function RegisterForm({
     } finally {
       setHoldLoading(false)
     }
-  }
+  }, [eventSlug])
 
   useEffect(() => {
     if (!requirePayment) return
+    // Capacity hold bootstrap on mount/reset — startServerHold sets hold state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional hold bootstrap
     void startServerHold(resetHold)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- start once per open/reset
-  }, [eventSlug, requirePayment, resetHold])
+  }, [eventSlug, requirePayment, resetHold, startServerHold])
 
   useEffect(() => {
     if (!requirePayment || holdExpiresAt == null) return
     const tick = () => {
-      setRemainingSec(Math.max(0, holdExpiresAt - Math.floor(Date.now() / 1000)))
+      const now = Math.floor(Date.now() / 1000)
+      setNowSec(now)
+      setRemainingSec(Math.max(0, holdExpiresAt - now))
     }
     tick()
     const id = window.setInterval(tick, 250)
     return () => window.clearInterval(id)
   }, [requirePayment, holdExpiresAt])
 
+  // When the form-phase hold ends (before checkout), release capacity.
   useEffect(() => {
-    if (!requirePayment || remainingSec == null || remainingSec > 0) return
+    if (!requirePayment || holdExpiresAt == null) return
+    if (checkout) return
     if (!holdToken) return
-    void fetch(
-      `/api/register/hold?token=${encodeURIComponent(holdToken)}&eventSlug=${encodeURIComponent(eventSlug)}`,
-      { method: "DELETE" },
-    ).catch(() => undefined)
-    clearRegistrationHold(eventSlug)
-    setHoldToken(null)
-  }, [requirePayment, remainingSec, holdToken, eventSlug])
+    const token = holdToken
+    const ms = Math.max(0, holdExpiresAt * 1000 - Date.now()) + 100
+    const id = window.setTimeout(() => {
+      void fetch(
+        `/api/register/hold?token=${encodeURIComponent(token)}&eventSlug=${encodeURIComponent(eventSlug)}`,
+        { method: "DELETE" },
+      ).catch(() => undefined)
+      clearRegistrationHold(eventSlug)
+      setHoldToken(null)
+    }, ms)
+    return () => window.clearTimeout(id)
+  }, [requirePayment, holdExpiresAt, holdToken, eventSlug, checkout])
 
   const holdExpired = requirePayment && remainingSec != null && remainingSec <= 0
 
@@ -280,6 +292,8 @@ export function RegisterForm({
       let data: {
         error?: string
         status?: string
+        clientSecret?: string | null
+        checkoutSessionId?: string | null
         checkoutUrl?: string | null
         holdExpiresAt?: number | null
         holdMinutes?: number
@@ -305,12 +319,21 @@ export function RegisterForm({
         return
       }
 
-      if (data.checkoutUrl && data.holdExpiresAt) {
+      if (data.clientSecret && data.checkoutSessionId && data.holdExpiresAt) {
         clearRegistrationHold(eventSlug)
-        setHoldCheckout({
-          url: data.checkoutUrl,
+        setHoldExpiresAt(data.holdExpiresAt)
+        setCheckout({
+          clientSecret: data.clientSecret,
+          checkoutSessionId: data.checkoutSessionId,
           holdExpiresAt: data.holdExpiresAt,
         })
+        return
+      }
+
+      // Legacy hosted redirect fallback (should not run for embedded).
+      if (data.checkoutUrl && data.holdExpiresAt) {
+        clearRegistrationHold(eventSlug)
+        window.location.assign(data.checkoutUrl)
         return
       }
 
@@ -335,14 +358,53 @@ export function RegisterForm({
     }
   }
 
-  if (holdCheckout) {
+  const cancelEmbeddedCheckout = useCallback(async () => {
+    const current = checkout
+    if (!current) return
+    setCheckout(null)
+    setHoldToken(null)
+    setHoldExpiresAt(null)
+    setRemainingSec(null)
+    clearRegistrationHold(eventSlug)
+    try {
+      await fetch("/api/register/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          checkoutSessionId: current.checkoutSessionId,
+        }),
+      })
+    } catch {
+      // ignore
+    }
+    // Start a fresh hold so they can try again without a full page reload.
+    await startServerHold(true)
+  }, [checkout, eventSlug, startServerHold])
+
+  // If the 10-minute hold ends during embedded checkout, release the spot.
+  useEffect(() => {
+    if (!checkout) return
+    const ms = Math.max(0, checkout.holdExpiresAt * 1000 - Date.now()) + 100
+    const id = window.setTimeout(() => {
+      void cancelEmbeddedCheckout()
+    }, ms)
+    return () => window.clearTimeout(id)
+  }, [checkout, cancelEmbeddedCheckout])
+
+  if (checkout) {
+    const checkoutRemaining = Math.max(0, checkout.holdExpiresAt - nowSec)
     return (
-      <CheckoutHoldScreen
-        checkoutUrl={holdCheckout.url}
-        holdExpiresAt={holdCheckout.holdExpiresAt}
-        eventTitle={eventTitle}
-        isTeam={isTeam}
-      />
+      <div className="space-y-6">
+        <h2 className="font-display text-2xl text-ink">Checkout</h2>
+        <StripeEmbeddedCheckout
+          clientSecret={checkout.clientSecret}
+          label={eventTitle}
+          remainingSec={checkoutRemaining}
+          onCancel={() => void cancelEmbeddedCheckout()}
+          expiredTitle="Time’s up — spot released"
+          cancelLabel="Cancel and start over"
+        />
+      </div>
     )
   }
 
@@ -806,15 +868,20 @@ export function RegisterForm({
         {holdExpired
           ? "Timer expired"
           : pending
-          ? "Submitting…"
+          ? "Preparing payment…"
           : requirePayment && totalLabel
-            ? `Continue to pay ${totalLabel}`
+            ? `Pay ${totalLabel}`
             : requirePayment
-              ? "Continue to payment"
+              ? "Pay now"
               : isTeam
                 ? "Register team"
                 : "Register"}
       </button>
+      {requirePayment && !holdExpired ? (
+        <p className="text-sm text-muted">
+          Card payment stays on this page — no redirect to Stripe.
+        </p>
+      ) : null}
     </form>
   )
 }

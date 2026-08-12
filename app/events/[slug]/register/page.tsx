@@ -110,7 +110,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             <p className="text-ink">
               Checkout was canceled and your hold was released — that spot is
               back in the pool. Fill out the form again when you&apos;re ready
-              to pay within the {CHECKOUT_HOLD_MINUTES}-minute window.
+              to pay on this page within the {CHECKOUT_HOLD_MINUTES}-minute
+              window.
             </p>
           </div>
         ) : null}

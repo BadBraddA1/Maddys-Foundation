@@ -374,6 +374,8 @@ export async function POST(req: Request) {
   }
 
   let checkoutUrl: string | null = null
+  let clientSecret: string | null = null
+  let checkoutSessionId: string | null = null
   let holdExpiresAt: number | null = holdUntil
   if (requirePayment && stripeConfigured() && registrationId > 0) {
     try {
@@ -389,10 +391,13 @@ export async function POST(req: Request) {
         skins: Boolean(body.skins),
         coverCardFees: Boolean(body.coverCardFees),
         holdExpiresAt: holdUntil ?? undefined,
+        uiMode: "embedded",
       })
+      clientSecret = session?.clientSecret ?? null
+      checkoutSessionId = session?.sessionId ?? null
       checkoutUrl = session?.url ?? null
       if (session?.holdExpiresAt) holdExpiresAt = session.holdExpiresAt
-      if (!checkoutUrl) {
+      if (!clientSecret) {
         const { dropPendingRegistration } = await import("@/lib/stripe-checkout")
         await dropPendingRegistration({ registrationId })
         return NextResponse.json(
@@ -404,8 +409,10 @@ export async function POST(req: Request) {
       console.error("[register] stripe checkout", err)
       const { dropPendingRegistration } = await import("@/lib/stripe-checkout")
       await dropPendingRegistration({ registrationId })
+      const message =
+        err instanceof Error ? err.message : "Checkout could not be started."
       return NextResponse.json(
-        { error: "Checkout could not be started. Please try again." },
+        { error: message.startsWith("Could not") ? message : "Checkout could not be started. Please try again." },
         { status: 502 },
       )
     }
@@ -416,6 +423,8 @@ export async function POST(req: Request) {
     ok: true,
     status,
     registrationId,
+    clientSecret,
+    checkoutSessionId,
     checkoutUrl,
     holdExpiresAt,
     holdMinutes: CHECKOUT_HOLD_MINUTES,
