@@ -18,10 +18,21 @@ import {
 import { getStripe, publicSiteUrl, stripeConfigured } from "@/lib/stripe"
 import { sql } from "@/lib/db"
 
+export type SponsorCheckoutResult = {
+  sessionId: string
+  holdExpiresAt: number
+  /** Hosted Checkout URL (uiMode hosted only). */
+  url: string | null
+  /** Embedded Checkout client secret (uiMode embedded only). */
+  clientSecret: string | null
+}
+
 export async function createSponsorCheckoutSession(opts: {
   sponsor: Sponsor
   holdExpiresAt?: number
-}): Promise<{ url: string; sessionId: string; holdExpiresAt: number } | null> {
+  /** embedded = stay on /sponsor; hosted = Stripe-hosted page (admin pay links). */
+  uiMode?: "embedded" | "hosted"
+}): Promise<SponsorCheckoutResult | null> {
   const { sponsor } = opts
   if (!stripeConfigured()) return null
   if (sponsor.payment_status === "paid") return null
@@ -34,49 +45,70 @@ export async function createSponsorCheckoutSession(opts: {
       ? opts.holdExpiresAt
       : holdExpiresAtUnix()
 
+  const uiMode = opts.uiMode ?? "hosted"
   const isPublic = sponsor.source === "public"
-  // Profile is collected before pay — thank-you on /sponsor. Complete page remains a fallback.
-  const successPath = isPublic
-    ? `/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
-    : `/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`
-  const cancelPath = isPublic
-    ? `/sponsor?canceled=1&session_id={CHECKOUT_SESSION_ID}`
-    : `/sponsor/pay/${sponsor.pay_token}?canceled=1`
-
   const packageLabel = sponsor.level_label || "Sponsorship"
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: sponsor.contact_email || undefined,
-    client_reference_id: String(sponsor.id),
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: "usd",
-          unit_amount: sponsor.amount_cents,
-          product_data: {
-            name: `${packageLabel} — ${sponsor.name}`,
-            description: `Sponsor gift for Madalyn Robinson Foundation (${formatUsdFromCents(sponsor.amount_cents)})`,
-          },
+
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    {
+      quantity: 1,
+      price_data: {
+        currency: "usd",
+        unit_amount: sponsor.amount_cents,
+        product_data: {
+          name: `${packageLabel} — ${sponsor.name}`,
+          description: `Sponsor gift for Madalyn Robinson Foundation (${formatUsdFromCents(sponsor.amount_cents)})`,
         },
       },
-    ],
-    metadata: {
-      kind: "sponsor_payment",
-      sponsorId: String(sponsor.id),
-      payToken: sponsor.pay_token || "",
-      amountCents: String(sponsor.amount_cents),
-      packageKey: sponsor.level_key || "",
-      source: sponsor.source || "admin",
     },
-    success_url: `${base}${successPath}`,
-    cancel_url: `${base}${cancelPath}`,
+  ]
+
+  const metadata = {
+    kind: "sponsor_payment",
+    sponsorId: String(sponsor.id),
+    payToken: sponsor.pay_token || "",
+    amountCents: String(sponsor.amount_cents),
+    packageKey: sponsor.level_key || "",
+    source: sponsor.source || "admin",
+  }
+
+  const common = {
+    mode: "payment" as const,
+    customer_email: sponsor.contact_email || undefined,
+    client_reference_id: String(sponsor.id),
+    payment_method_types: ["card" as const],
+    line_items: lineItems,
+    metadata,
     // Stripe minimum is 30m; we expire the session ourselves at the 10m hold.
     expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_EXPIRE_SECONDS,
-  })
+  }
 
-  if (!session.url) return null
+  const session =
+    uiMode === "embedded"
+      ? await stripe.checkout.sessions.create({
+          ...common,
+          ui_mode: "embedded",
+          return_url: isPublic
+            ? `${base}/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
+            : `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
+        })
+      : await stripe.checkout.sessions.create({
+          ...common,
+          success_url: isPublic
+            ? `${base}/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
+            : `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: isPublic
+            ? `${base}/sponsor?canceled=1&session_id={CHECKOUT_SESSION_ID}`
+            : `${base}/sponsor/pay/${sponsor.pay_token}?canceled=1`,
+        })
+
+  const clientSecret =
+    uiMode === "embedded" ? session.client_secret ?? null : null
+  const url = uiMode === "hosted" ? session.url ?? null : null
+
+  if (uiMode === "embedded" && !clientSecret) return null
+  if (uiMode === "hosted" && !url) return null
+
   await setSponsorStripeSession(sponsor.id, session.id)
   await sql.execute(
     `UPDATE sponsors
@@ -89,10 +121,15 @@ export async function createSponsorCheckoutSession(opts: {
     "stripe_checkout",
     "sponsor",
     String(sponsor.id),
-    `${formatUsdFromCents(sponsor.amount_cents)} · ${session.id}`,
+    `${formatUsdFromCents(sponsor.amount_cents)} · ${session.id}${uiMode === "embedded" ? " · embedded" : ""}`,
   ).catch(() => undefined)
 
-  return { url: session.url, sessionId: session.id, holdExpiresAt: holdUntil }
+  return {
+    url,
+    clientSecret,
+    sessionId: session.id,
+    holdExpiresAt: holdUntil,
+  }
 }
 
 export async function confirmSponsorFromCheckout(
@@ -164,8 +201,11 @@ export async function startCheckoutForPayToken(token: string) {
   if (sponsor.amount_cents <= 0) {
     return { error: "No amount due on this link.", status: 400 as const }
   }
-  const session = await createSponsorCheckoutSession({ sponsor })
-  if (!session) {
+  const session = await createSponsorCheckoutSession({
+    sponsor,
+    uiMode: "hosted",
+  })
+  if (!session?.url) {
     return {
       error: "Card checkout is not available right now.",
       status: 503 as const,

@@ -37,7 +37,9 @@ export default async function SponsorPage({ searchParams }: Props) {
   }
 
   const packages = await listPackageAvailability().catch(() => [])
-  const stripeReady = stripeConfigured()
+  const stripeReady =
+    stripeConfigured() &&
+    Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim())
 
   return (
     <div className="flex flex-1 flex-col">
@@ -79,8 +81,8 @@ export default async function SponsorPage({ searchParams }: Props) {
             <p className="mt-4 max-w-prose text-ink/75">
               Support the Oak Valley Golf Scramble and Madalyn’s Foundation.
               Choose a package — we’ll hold it for {CHECKOUT_HOLD_MINUTES}{" "}
-              minutes while you enter your details and pay. Your logo goes live
-              after checkout.
+              minutes while you enter your details and pay on this page. Your
+              logo goes live after checkout.
             </p>
 
             <div className="mt-12">
