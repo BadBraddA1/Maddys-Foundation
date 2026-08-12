@@ -33,7 +33,8 @@ export function SponsorOnboardForm({
   canceled,
 }: Props) {
   const formId = useId()
-  const checkoutRef = useRef<HTMLElement>(null)
+  const checkoutRef = useRef<HTMLElement | null>(null)
+  const shouldScrollRef = useRef(false)
   const [packages, setPackages] = useState(initialPackages)
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [holdToken, setHoldToken] = useState<string | null>(null)
@@ -136,22 +137,24 @@ export function SponsorOnboardForm({
       setHoldToken(null)
       setHoldExpiresAt(null)
     }
+    shouldScrollRef.current = true
     setSelectedKey(pkg.key)
     await startHold(pkg.key)
-    // Wait for the reserve/pay section to mount, then jump there.
-    window.requestAnimationFrame(() => {
-      window.setTimeout(() => {
-        const el = checkoutRef.current
-        if (!el) return
-        el.scrollIntoView({ behavior: "smooth", block: "start" })
-        const heading = el.querySelector("h2")
-        if (heading instanceof HTMLElement) {
-          heading.setAttribute("tabindex", "-1")
-          heading.focus({ preventScroll: true })
-        }
-      }, 50)
-    })
   }
+
+  // After a package is chosen, jump to Reserve & pay once that section mounts.
+  useEffect(() => {
+    if (!selectedKey || !shouldScrollRef.current) return
+    const el = checkoutRef.current
+    if (!el) return
+    shouldScrollRef.current = false
+    el.scrollIntoView({ behavior: "smooth", block: "start" })
+    const heading = el.querySelector("h2")
+    if (heading instanceof HTMLElement) {
+      heading.setAttribute("tabindex", "-1")
+      heading.focus({ preventScroll: true })
+    }
+  }, [selectedKey, holdToken, holdLoading])
 
   useEffect(() => {
     const tick = () => setNowSec(Math.floor(Date.now() / 1000))
