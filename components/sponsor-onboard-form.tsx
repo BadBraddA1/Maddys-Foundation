@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useId, useState } from "react"
+import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { CheckoutHoldScreen } from "@/components/checkout-hold-screen"
 import {
   CHECKOUT_HOLD_MINUTES,
@@ -33,6 +33,8 @@ export function SponsorOnboardForm({
   canceled,
 }: Props) {
   const formId = useId()
+  const checkoutRef = useRef<HTMLElement | null>(null)
+  const shouldScrollRef = useRef(false)
   const [packages, setPackages] = useState(initialPackages)
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const [holdToken, setHoldToken] = useState<string | null>(null)
@@ -135,9 +137,24 @@ export function SponsorOnboardForm({
       setHoldToken(null)
       setHoldExpiresAt(null)
     }
+    shouldScrollRef.current = true
     setSelectedKey(pkg.key)
     await startHold(pkg.key)
   }
+
+  // After a package is chosen, jump to Reserve & pay once that section mounts.
+  useEffect(() => {
+    if (!selectedKey || !shouldScrollRef.current) return
+    const el = checkoutRef.current
+    if (!el) return
+    shouldScrollRef.current = false
+    el.scrollIntoView({ behavior: "smooth", block: "start" })
+    const heading = el.querySelector("h2")
+    if (heading instanceof HTMLElement) {
+      heading.setAttribute("tabindex", "-1")
+      heading.focus({ preventScroll: true })
+    }
+  }, [selectedKey, holdToken, holdLoading])
 
   useEffect(() => {
     const tick = () => setNowSec(Math.floor(Date.now() / 1000))
@@ -367,7 +384,11 @@ export function SponsorOnboardForm({
       </section>
 
       {selected ? (
-        <section aria-labelledby={`${formId}-checkout`}>
+        <section
+          ref={checkoutRef}
+          aria-labelledby={`${formId}-checkout`}
+          className="scroll-mt-24"
+        >
           <h2 id={`${formId}-checkout`} className="font-display text-2xl text-ink">
             Reserve &amp; pay
           </h2>
