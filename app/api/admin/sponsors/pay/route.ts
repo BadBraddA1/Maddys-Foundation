@@ -168,8 +168,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Already paid." }, { status: 400 })
     }
     sponsor = await updateSponsor(sponsorId, { ensurePayToken: true })
-    const session = await createSponsorCheckoutSession({ sponsor })
-    if (!session) {
+    const session = await createSponsorCheckoutSession({
+      sponsor,
+      uiMode: "hosted",
+    })
+    if (!session?.url) {
       return NextResponse.json(
         { error: "Stripe checkout unavailable." },
         { status: 503 },

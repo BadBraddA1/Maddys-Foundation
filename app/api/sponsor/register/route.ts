@@ -155,20 +155,21 @@ export async function POST(req: Request) {
   const session = await createSponsorCheckoutSession({
     sponsor,
     holdExpiresAt,
+    uiMode: "embedded",
   })
 
-  if (!session) {
+  if (!session?.clientSecret) {
     const { dropUnpaidPublicSponsor } = await import("@/lib/sponsor-hold")
     await dropUnpaidPublicSponsor({ sponsorId: sponsor.id }).catch(() => undefined)
     return NextResponse.json(
-      { error: "Could not open Stripe checkout. Try again." },
+      { error: "Could not open checkout. Try again." },
       { status: 503 },
     )
   }
 
   return NextResponse.json({
     ok: true,
-    checkoutUrl: session.url,
+    clientSecret: session.clientSecret,
     holdExpiresAt: session.holdExpiresAt,
     payToken: sponsor.pay_token,
   })

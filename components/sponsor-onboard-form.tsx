@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useId, useRef, useState } from "react"
-import { CheckoutHoldScreen } from "@/components/checkout-hold-screen"
+import { SponsorEmbeddedCheckout } from "@/components/sponsor-embedded-checkout"
 import {
   CHECKOUT_HOLD_MINUTES,
   clearStoredSponsorHold,
@@ -22,9 +22,10 @@ type Props = {
 }
 
 type CheckoutState = {
-  checkoutUrl: string
+  clientSecret: string
   holdExpiresAt: number
   label: string
+  payToken: string
 }
 
 export function SponsorOnboardForm({
@@ -249,10 +250,11 @@ export function SponsorOnboardForm({
       })
       const data = (await res.json()) as {
         error?: string
-        checkoutUrl?: string
+        clientSecret?: string
         holdExpiresAt?: number
+        payToken?: string
       }
-      if (!res.ok || !data.checkoutUrl || !data.holdExpiresAt) {
+      if (!res.ok || !data.clientSecret || !data.holdExpiresAt || !data.payToken) {
         setFormError(data.error || "Could not start checkout.")
         if (res.status === 409) {
           clearStoredSponsorHold(selected.key)
@@ -262,10 +264,12 @@ export function SponsorOnboardForm({
         return
       }
       clearStoredSponsorHold(selected.key)
+      setHoldExpiresAt(data.holdExpiresAt)
       setCheckout({
-        checkoutUrl: data.checkoutUrl,
+        clientSecret: data.clientSecret,
         holdExpiresAt: data.holdExpiresAt,
         label: selected.label,
+        payToken: data.payToken,
       })
     } catch {
       setFormError("Could not start checkout.")
@@ -274,15 +278,47 @@ export function SponsorOnboardForm({
     }
   }
 
+  const cancelEmbeddedCheckout = useCallback(async () => {
+    const current = checkout
+    if (!current) return
+    setCheckout(null)
+    setHoldToken(null)
+    setHoldExpiresAt(null)
+    setSelectedKey(null)
+    try {
+      await fetch("/api/sponsor/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payToken: current.payToken }),
+      })
+    } catch {
+      // ignore
+    }
+    await refreshPackages()
+  }, [checkout, refreshPackages])
+
+  // If the 10-minute hold ends during embedded checkout, release the package.
+  useEffect(() => {
+    if (!checkout) return
+    const ms = Math.max(0, checkout.holdExpiresAt * 1000 - Date.now()) + 100
+    const id = window.setTimeout(() => {
+      void cancelEmbeddedCheckout()
+    }, ms)
+    return () => window.clearTimeout(id)
+  }, [checkout, cancelEmbeddedCheckout])
+
   if (checkout) {
+    const checkoutRemaining = Math.max(0, checkout.holdExpiresAt - nowSec)
     return (
-      <CheckoutHoldScreen
-        checkoutUrl={checkout.checkoutUrl}
-        holdExpiresAt={checkout.holdExpiresAt}
-        eventTitle={checkout.label}
-        isTeam={false}
-        spotLabel="sponsorship"
-      />
+      <div className="space-y-6">
+        <h2 className="font-display text-2xl text-ink">Checkout</h2>
+        <SponsorEmbeddedCheckout
+          clientSecret={checkout.clientSecret}
+          label={checkout.label}
+          remainingSec={checkoutRemaining}
+          onCancel={() => void cancelEmbeddedCheckout()}
+        />
+      </div>
     )
   }
 
@@ -579,7 +615,7 @@ export function SponsorOnboardForm({
                 className="motion-press inline-flex min-h-11 w-full items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink disabled:opacity-60 sm:w-auto"
               >
                 {busy
-                  ? "Opening checkout…"
+                  ? "Preparing payment…"
                   : `Pay ${formatUsdFromCents(selected.amountCents)}`}
               </button>
               {!stripeReady ? (
