@@ -292,7 +292,7 @@ export function SponsorOnboardForm({
           countdown — it only shows sold out after payment clears.
         </p>
 
-        <ul className="mt-6 divide-y divide-line border-y border-line">
+        <ul className="mt-6 grid gap-3">
           {packages.map((pkg) => {
             const active = selectedKey === pkg.key
             const mine = active && Boolean(holdToken) && !holdExpired
@@ -304,32 +304,60 @@ export function SponsorOnboardForm({
                 <button
                   type="button"
                   disabled={blocked || holdLoading}
+                  aria-pressed={active && !blocked}
                   onClick={() => void selectPackage(pkg)}
-                  className={`motion-press flex w-full flex-col gap-1 px-1 py-5 text-left transition disabled:opacity-50 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 ${
-                    active ? "bg-accent-soft/60" : "hover:bg-surface"
+                  className={`motion-press group flex w-full min-h-[4.5rem] items-stretch gap-4 border px-4 py-4 text-left transition sm:px-5 ${
+                    blocked
+                      ? "cursor-not-allowed border-line/70 bg-bg opacity-55"
+                      : active
+                        ? "border-accent bg-accent-soft ring-2 ring-accent/35"
+                        : "border-line bg-surface hover:border-ink/25 hover:bg-accent-soft/40"
                   }`}
                 >
-                  <span className="min-w-0">
-                    <span className="block font-display text-xl text-ink">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-xl leading-snug text-ink sm:text-2xl">
                       {pkg.label}
                     </span>
-                    <span className="mt-1 block text-sm text-muted">
+                    <span className="mt-1 block text-sm text-ink/70">
                       {pkg.blurb}
                     </span>
                     <span
-                      className={`mt-1 block text-xs font-medium ${
+                      className={`mt-2 inline-block text-xs font-medium ${
                         pkg.soldOut
                           ? "text-muted"
                           : pkg.salePending && !mine
-                            ? "text-amber-800"
-                            : "text-muted"
+                            ? "text-amber-900"
+                            : mine
+                              ? "text-ink"
+                              : "text-muted"
                       }`}
                     >
                       {qty}
                     </span>
                   </span>
-                  <span className="shrink-0 font-display text-2xl tabular-nums text-ink">
-                    {price}
+                  <span className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch">
+                    <span className="font-display text-2xl tabular-nums tracking-tight text-ink sm:text-3xl">
+                      {price}
+                    </span>
+                    {!blocked ? (
+                      <span
+                        className={`text-sm font-medium ${
+                          active
+                            ? "text-accent-ink"
+                            : "text-muted group-hover:text-ink"
+                        }`}
+                      >
+                        {active ? "Selected" : "Select →"}
+                      </span>
+                    ) : pkg.soldOut ? (
+                      <span className="text-sm font-medium text-muted">
+                        Unavailable
+                      </span>
+                    ) : (
+                      <span className="text-sm font-medium text-amber-900">
+                        Wait…
+                      </span>
+                    )}
                   </span>
                 </button>
               </li>
