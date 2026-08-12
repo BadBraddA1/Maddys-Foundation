@@ -248,11 +248,17 @@ export function SponsorOnboardForm({
         method: "POST",
         body,
       })
-      const data = (await res.json()) as {
+      let data: {
         error?: string
         clientSecret?: string
         holdExpiresAt?: number
         payToken?: string
+      } = {}
+      try {
+        data = (await res.json()) as typeof data
+      } catch {
+        setFormError("Could not start checkout. Please try again.")
+        return
       }
       if (!res.ok || !data.clientSecret || !data.holdExpiresAt || !data.payToken) {
         setFormError(data.error || "Could not start checkout.")
@@ -272,7 +278,7 @@ export function SponsorOnboardForm({
         payToken: data.payToken,
       })
     } catch {
-      setFormError("Could not start checkout.")
+      setFormError("Could not start checkout. Please try again.")
     } finally {
       setBusy(false)
     }

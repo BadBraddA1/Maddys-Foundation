@@ -152,11 +152,20 @@ export async function POST(req: Request) {
 
   await consumeSponsorPackageHold(holdToken)
 
-  const session = await createSponsorCheckoutSession({
-    sponsor,
-    holdExpiresAt,
-    uiMode: "embedded",
-  })
+  let session
+  try {
+    session = await createSponsorCheckoutSession({
+      sponsor,
+      holdExpiresAt,
+      uiMode: "embedded",
+    })
+  } catch (err) {
+    const { dropUnpaidPublicSponsor } = await import("@/lib/sponsor-hold")
+    await dropUnpaidPublicSponsor({ sponsorId: sponsor.id }).catch(() => undefined)
+    const message =
+      err instanceof Error ? err.message : "Could not open checkout. Try again."
+    return NextResponse.json({ error: message }, { status: 503 })
+  }
 
   if (!session?.clientSecret) {
     const { dropUnpaidPublicSponsor } = await import("@/lib/sponsor-hold")

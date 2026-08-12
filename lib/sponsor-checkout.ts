@@ -83,24 +83,39 @@ export async function createSponsorCheckoutSession(opts: {
     expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_EXPIRE_SECONDS,
   }
 
-  const session =
-    uiMode === "embedded"
-      ? await stripe.checkout.sessions.create({
-          ...common,
-          ui_mode: "embedded",
-          return_url: isPublic
-            ? `${base}/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
-            : `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
-        })
-      : await stripe.checkout.sessions.create({
-          ...common,
-          success_url: isPublic
-            ? `${base}/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
-            : `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: isPublic
-            ? `${base}/sponsor?canceled=1&session_id={CHECKOUT_SESSION_ID}`
-            : `${base}/sponsor/pay/${sponsor.pay_token}?canceled=1`,
-        })
+  // Stripe API 2026-07-29.dahlia renamed ui_mode values:
+  // embedded → embedded_page, hosted → hosted_page.
+  let session: Stripe.Checkout.Session
+  try {
+    session =
+      uiMode === "embedded"
+        ? await stripe.checkout.sessions.create({
+            ...common,
+            ui_mode: "embedded_page",
+            return_url: isPublic
+              ? `${base}/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
+              : `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
+          })
+        : await stripe.checkout.sessions.create({
+            ...common,
+            ui_mode: "hosted_page",
+            success_url: isPublic
+              ? `${base}/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
+              : `${base}/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: isPublic
+              ? `${base}/sponsor?canceled=1&session_id={CHECKOUT_SESSION_ID}`
+              : `${base}/sponsor/pay/${sponsor.pay_token}?canceled=1`,
+          })
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Stripe checkout failed"
+    console.error("createSponsorCheckoutSession", message)
+    throw new Error(
+      message.startsWith("Could not")
+        ? message
+        : `Could not open checkout: ${message}`,
+    )
+  }
 
   const clientSecret =
     uiMode === "embedded" ? session.client_secret ?? null : null
@@ -204,6 +219,12 @@ export async function startCheckoutForPayToken(token: string) {
   const session = await createSponsorCheckoutSession({
     sponsor,
     uiMode: "hosted",
+  }).catch((err: unknown) => {
+    console.error(
+      "startCheckoutForPayToken",
+      err instanceof Error ? err.message : err,
+    )
+    return null
   })
   if (!session?.url) {
     return {
