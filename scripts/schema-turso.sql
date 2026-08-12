@@ -169,12 +169,37 @@ CREATE TABLE IF NOT EXISTS sponsors (
   stripe_checkout_session_id TEXT,
   paid_at TEXT,
   source TEXT NOT NULL DEFAULT 'admin',
+  /** Unix seconds — unpaid public draft holds package inventory (10 min). */
+  hold_expires_at INTEGER,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
   updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
 CREATE INDEX IF NOT EXISTS idx_sponsors_published_sort
   ON sponsors (is_published, sort_order, id);
+
+CREATE INDEX IF NOT EXISTS idx_sponsors_level_hold
+  ON sponsors (level_key, payment_status, hold_expires_at);
+
+-- Soft inventory holds while a public sponsor package timer is running (before pay).
+CREATE TABLE IF NOT EXISTS sponsor_package_holds (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  package_key TEXT NOT NULL,
+  token TEXT NOT NULL UNIQUE,
+  hold_expires_at INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sponsor_package_holds_pkg_expires
+  ON sponsor_package_holds (package_key, hold_expires_at);
+
+-- Admin overrides for package inventory (quantity null = unlimited).
+CREATE TABLE IF NOT EXISTS sponsor_package_config (
+  package_key TEXT PRIMARY KEY,
+  quantity INTEGER,
+  amount_cents INTEGER,
+  updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
 
 -- Public photo gallery — files in R2 bucket maddys-foundation-media.
 CREATE TABLE IF NOT EXISTS gallery_images (

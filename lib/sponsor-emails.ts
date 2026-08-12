@@ -38,6 +38,7 @@ export function sampleSponsorForEmail(): Sponsor {
     stripe_checkout_session_id: "",
     paid_at: "",
     source: "admin",
+    hold_expires_at: null,
     created_at: "",
     updated_at: "",
   }
@@ -52,22 +53,39 @@ export function buildSponsorEmailBodies(
   const greeting = sponsor.contact_name || sponsor.name
 
   if (kind === "sponsor_paid_thanks") {
-    const subject = "Thank you — your sponsorship is live"
+    const needsProfile = !sponsor.logo_url.trim() || !sponsor.is_published
+    const completeUrl = `${publicSiteUrl()}/sponsor/complete/${sponsor.pay_token}`
+    const subject = needsProfile
+      ? "Thank you — finish your sponsor profile"
+      : "Thank you — your sponsorship is live"
     const html = wrapEmailHtml({
-      preheader: "Your sponsorship is live — thank you!",
+      preheader: needsProfile
+        ? "Payment received — add your logo to go live"
+        : "Your sponsorship is live — thank you!",
       eyebrow: "Payment received",
-      headline: "You’re on the site",
-      bodyHtml: `
+      headline: needsProfile ? "One more step" : "You’re on the site",
+      bodyHtml: needsProfile
+        ? `
+      <p style="margin:0 0 14px">Thank you, ${escapeEmailHtml(sponsor.name)}!</p>
+      <p style="margin:0 0 14px">
+        We received your ${escapeEmailHtml(amount)} sponsorship. Add your logo,
+        website, and point of contact so we can feature you on
+        <a href="${escapeEmailHtml(publicSiteUrl())}">maddysfoundation.org</a>.
+      </p>
+    `
+        : `
       <p style="margin:0 0 14px">Thank you, ${escapeEmailHtml(sponsor.name)}!</p>
       <p style="margin:0 0 14px">
         We received your ${escapeEmailHtml(amount)} sponsorship. Your logo is now
         publishing on <a href="${escapeEmailHtml(publicSiteUrl())}">maddysfoundation.org</a>.
       </p>
     `,
-      ctaLabel: "Visit the site",
-      ctaUrl: publicSiteUrl(),
+      ctaLabel: needsProfile ? "Finish your profile" : "Visit the site",
+      ctaUrl: needsProfile ? completeUrl : publicSiteUrl(),
     })
-    const text = `Thank you, ${sponsor.name}! We received your ${amount} sponsorship. Your logo is now on ${publicSiteUrl()}.\n`
+    const text = needsProfile
+      ? `Thank you, ${sponsor.name}! We received your ${amount} sponsorship. Finish your profile (logo, website, contact): ${completeUrl}\n`
+      : `Thank you, ${sponsor.name}! We received your ${amount} sponsorship. Your logo is now on ${publicSiteUrl()}.\n`
     return { subject, html, text }
   }
 

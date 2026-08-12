@@ -25,6 +25,8 @@ export type Sponsor = {
   stripe_checkout_session_id: string
   paid_at: string
   source: string
+  /** Unix seconds — unpaid public draft holds package inventory. */
+  hold_expires_at: number | null
   created_at: string
   updated_at: string
 }
@@ -35,6 +37,11 @@ function mapSponsor(row: Record<string, unknown>): Sponsor {
     statusRaw === "unpaid" || statusRaw === "paid" || statusRaw === "waived"
       ? statusRaw
       : "waived"
+  const holdRaw = row.hold_expires_at
+  const hold_expires_at =
+    holdRaw == null || holdRaw === ""
+      ? null
+      : Number(holdRaw)
   return {
     id: Number(row.id),
     name: String(row.name ?? ""),
@@ -55,9 +62,20 @@ function mapSponsor(row: Record<string, unknown>): Sponsor {
     stripe_checkout_session_id: String(row.stripe_checkout_session_id ?? ""),
     paid_at: String(row.paid_at ?? ""),
     source: String(row.source ?? "admin"),
+    hold_expires_at:
+      hold_expires_at != null && Number.isFinite(hold_expires_at)
+        ? hold_expires_at
+        : null,
     created_at: String(row.created_at ?? ""),
     updated_at: String(row.updated_at ?? ""),
   }
+}
+
+/** Paid public sponsor still needs logo + contact before publishing. */
+export function sponsorNeedsProfile(sponsor: Sponsor): boolean {
+  if (sponsor.payment_status !== "paid") return false
+  if (sponsor.is_published) return false
+  return !sponsor.logo_url.trim()
 }
 
 /** Public footer payload — never includes contact fields. */
@@ -306,7 +324,11 @@ export async function updateSponsor(
   return updated
 }
 
-/** Mark paid (Stripe webhook or admin manual) and publish logo. */
+/**
+ * Mark paid (Stripe webhook or admin manual).
+ * Publishes only when a logo is already on file (admin pay links).
+ * Public package sponsors upload logo after payment.
+ */
 export async function markSponsorPaid(
   id: number,
   opts?: { stripeSessionId?: string; via?: string },
@@ -317,19 +339,129 @@ export async function markSponsorPaid(
     return current
   }
 
+  const publishNow = Boolean(current.logo_url.trim())
+
   await sql.execute(
     `UPDATE sponsors
      SET payment_status = 'paid',
-         is_published = 1,
-         paid_at = CURRENT_TIMESTAMP,
+         is_published = ?,
+         paid_at = COALESCE(paid_at, CURRENT_TIMESTAMP),
+         hold_expires_at = NULL,
          stripe_checkout_session_id = COALESCE(?, stripe_checkout_session_id),
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
-    [opts?.stripeSessionId ?? null, id],
+    [publishNow ? 1 : 0, opts?.stripeSessionId ?? null, id],
   )
 
   revalidateSponsors()
   return getSponsor(id)
+}
+
+/**
+ * Public post-pay profile: logo + website + point of contact, then publish.
+ */
+export async function completeSponsorProfile(
+  id: number,
+  opts: {
+    websiteUrl?: string
+    contactName: string
+    contactEmail?: string
+    contactPhone?: string
+    file: File
+  },
+): Promise<Sponsor> {
+  const current = await getSponsor(id)
+  if (!current) throw new Error("Sponsor not found")
+  if (current.payment_status !== "paid") {
+    throw new Error("Sponsorship must be paid before adding your logo.")
+  }
+
+  const contactName = opts.contactName.trim().slice(0, 120)
+  if (!contactName) throw new Error("Point of contact is required")
+
+  const uploaded = await uploadMediaFile({
+    file: opts.file,
+    folder: "sponsors",
+    filename: opts.file.name,
+  })
+
+  if (current.logo_key && current.logo_key !== uploaded.key) {
+    await deleteMediaKey(current.logo_key).catch(() => undefined)
+  }
+
+  await sql.execute(
+    `UPDATE sponsors
+     SET logo_url = ?, logo_key = ?,
+         website_url = ?,
+         contact_name = ?,
+         contact_email = COALESCE(NULLIF(?, ''), contact_email),
+         contact_phone = ?,
+         is_published = 1,
+         hold_expires_at = NULL,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [
+      uploaded.url,
+      uploaded.key,
+      (opts.websiteUrl ?? "").trim().slice(0, 500),
+      contactName,
+      opts.contactEmail ? normalizeEmail(opts.contactEmail) : "",
+      (opts.contactPhone ?? "").trim().slice(0, 40),
+      id,
+    ],
+  )
+
+  const updated = await getSponsor(id)
+  if (!updated) throw new Error("Sponsor not found")
+  revalidateSponsors()
+  return updated
+}
+
+/** Create unpaid public draft (no logo yet) during package checkout. */
+export async function createPublicSponsorDraft(opts: {
+  name: string
+  contactEmail: string
+  amountCents: number
+  levelKey: string
+  levelLabel: string
+  holdExpiresAt: number
+}): Promise<Sponsor> {
+  const name = opts.name.trim().slice(0, 120)
+  if (!name) throw new Error("Sponsor name is required")
+  const email = normalizeEmail(opts.contactEmail)
+  if (!email) throw new Error("Email is required")
+
+  const amountCents = Math.max(0, Math.round(opts.amountCents))
+  if (amountCents <= 0) throw new Error("Invalid sponsorship amount")
+
+  const payToken = newPayToken()
+  const maxRows = await sql`SELECT COALESCE(MAX(sort_order), 0) AS m FROM sponsors`
+  const sortOrder = Number(maxRows[0]?.m ?? 0) + 1
+
+  const result = await sql.execute(
+    `INSERT INTO sponsors
+      (name, logo_url, logo_key, website_url,
+       contact_name, contact_email, contact_phone, contact_notes,
+       sort_order, is_published,
+       amount_cents, payment_status, level_key, level_label, pay_token, source,
+       hold_expires_at)
+     VALUES (?, '', '', '', '', ?, '', '', ?, 0, ?, 'unpaid', ?, ?, ?, 'public', ?)`,
+    [
+      name,
+      email,
+      sortOrder,
+      amountCents,
+      opts.levelKey.trim().slice(0, 40),
+      opts.levelLabel.trim().slice(0, 80),
+      payToken,
+      opts.holdExpiresAt,
+    ],
+  )
+  const id = Number(result.lastInsertRowid ?? 0)
+  const sponsor = await getSponsor(id)
+  if (!sponsor) throw new Error("Could not create sponsorship")
+  revalidateSponsors()
+  return sponsor
 }
 
 export async function setSponsorStripeSession(
@@ -365,6 +497,7 @@ export async function ensureSponsorPaymentColumns(): Promise<void> {
     ["stripe_checkout_session_id", "TEXT"],
     ["paid_at", "TEXT"],
     ["source", "TEXT NOT NULL DEFAULT 'admin'"],
+    ["hold_expires_at", "INTEGER"],
   ] as const
   for (const [name, def] of cols) {
     try {

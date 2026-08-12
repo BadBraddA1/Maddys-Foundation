@@ -49,8 +49,8 @@ export function SponsorPayClient(props: Props) {
         <h1 className="text-2xl font-semibold text-[var(--ink)]">Thank you!</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">
           {props.name}’s sponsorship is paid
-          {props.paidFlag ? " (confirming now)" : ""}. Your logo publishes on the
-          site automatically once Stripe confirms payment.
+          {props.paidFlag ? " (confirming now)" : ""}. If you still need to add
+          a logo, open the link from your confirmation email.
         </p>
         <a href="/" className="mt-6 inline-block text-sm font-semibold text-[var(--deep)]">
           Back to home →
