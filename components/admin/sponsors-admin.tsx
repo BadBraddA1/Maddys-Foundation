@@ -604,12 +604,18 @@ export function SponsorsAdmin({
               <li key={s.id} className="space-y-4 p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex min-w-0 items-start gap-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={s.logo_url || "/brand/logo-mark.png"}
-                      alt=""
-                      className="h-12 w-24 shrink-0 object-contain bg-bg"
-                    />
+                    {s.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={s.logo_url}
+                        alt=""
+                        className="h-12 w-24 shrink-0 object-contain bg-bg"
+                      />
+                    ) : (
+                      <span className="inline-flex h-12 w-24 shrink-0 items-center justify-center bg-bg text-xs text-muted">
+                        No logo
+                      </span>
+                    )}
                     <div className="min-w-0">
                       <p className="font-medium text-ink">{s.name}</p>
                       <p className="text-sm text-muted">

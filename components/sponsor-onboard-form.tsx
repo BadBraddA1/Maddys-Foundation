@@ -42,6 +42,10 @@ export function SponsorOnboardForm({
   const [holdError, setHoldError] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [contactName, setContactName] = useState("")
+  const [contactPhone, setContactPhone] = useState("")
+  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [logoFile, setLogoFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [checkout, setCheckout] = useState<CheckoutState | null>(null)
@@ -150,19 +154,26 @@ export function SponsorOnboardForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (busy || !selected || !holdToken || holdExpired) return
+    if (!logoFile) {
+      setFormError("Please choose a logo file.")
+      return
+    }
     setBusy(true)
     setFormError(null)
     try {
+      const body = new FormData()
+      body.set("packageKey", selected.key)
+      body.set("holdToken", holdToken)
+      if (holdExpiresAt != null) body.set("holdExpiresAt", String(holdExpiresAt))
+      body.set("name", name)
+      body.set("email", email)
+      body.set("contactName", contactName)
+      body.set("contactPhone", contactPhone)
+      body.set("websiteUrl", websiteUrl)
+      body.set("logo", logoFile)
       const res = await fetch("/api/sponsor/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageKey: selected.key,
-          holdToken,
-          holdExpiresAt,
-          name,
-          email,
-        }),
+        body,
       })
       const data = (await res.json()) as {
         error?: string
@@ -357,6 +368,24 @@ export function SponsorOnboardForm({
               </div>
               <div>
                 <label
+                  htmlFor={`${formId}-contact`}
+                  className="block text-sm font-medium text-ink"
+                >
+                  Point of contact
+                </label>
+                <input
+                  id={`${formId}-contact`}
+                  name="contactName"
+                  required
+                  maxLength={120}
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  className="field-control mt-1.5 w-full"
+                  autoComplete="name"
+                />
+              </div>
+              <div>
+                <label
                   htmlFor={`${formId}-email`}
                   className="block text-sm font-medium text-ink"
                 >
@@ -373,9 +402,65 @@ export function SponsorOnboardForm({
                   className="field-control mt-1.5 w-full"
                   autoComplete="email"
                 />
+              </div>
+              <div>
+                <label
+                  htmlFor={`${formId}-phone`}
+                  className="block text-sm font-medium text-ink"
+                >
+                  Phone{" "}
+                  <span className="font-normal text-muted">(optional)</span>
+                </label>
+                <input
+                  id={`${formId}-phone`}
+                  name="contactPhone"
+                  type="tel"
+                  maxLength={40}
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  className="field-control mt-1.5 w-full"
+                  autoComplete="tel"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`${formId}-web`}
+                  className="block text-sm font-medium text-ink"
+                >
+                  Website{" "}
+                  <span className="font-normal text-muted">(optional)</span>
+                </label>
+                <input
+                  id={`${formId}-web`}
+                  name="websiteUrl"
+                  type="url"
+                  maxLength={500}
+                  placeholder="https://"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  className="field-control mt-1.5 w-full"
+                  autoComplete="url"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`${formId}-logo`}
+                  className="block text-sm font-medium text-ink"
+                >
+                  Logo
+                </label>
+                <input
+                  id={`${formId}-logo`}
+                  name="logo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                  required
+                  className="mt-1.5 block w-full text-sm text-ink file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent-ink"
+                  onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+                />
                 <p className="mt-1.5 text-xs text-muted">
-                  After payment you’ll add your logo, website, and point of
-                  contact.
+                  JPEG, PNG, WebP, GIF, or SVG · under 8 MB. Goes live on the
+                  site after payment.
                 </p>
               </div>
 

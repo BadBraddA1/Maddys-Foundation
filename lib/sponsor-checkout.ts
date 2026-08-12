@@ -35,8 +35,9 @@ export async function createSponsorCheckoutSession(opts: {
       : holdExpiresAtUnix()
 
   const isPublic = sponsor.source === "public"
+  // Profile is collected before pay — thank-you on /sponsor. Complete page remains a fallback.
   const successPath = isPublic
-    ? `/sponsor/complete/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`
+    ? `/sponsor?paid=1&session_id={CHECKOUT_SESSION_ID}`
     : `/sponsor/pay/${sponsor.pay_token}?paid=1&session_id={CHECKOUT_SESSION_ID}`
   const cancelPath = isPublic
     ? `/sponsor?canceled=1&session_id={CHECKOUT_SESSION_ID}`
