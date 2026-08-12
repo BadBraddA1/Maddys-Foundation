@@ -295,11 +295,15 @@ export async function releaseExpiredSponsorHolds(): Promise<number> {
       }
     }
 
-    await sql.execute(
-      `DELETE FROM sponsors
-       WHERE id = ? AND payment_status = 'unpaid' AND source = 'public'`,
-      [id],
-    )
+    const { deleteSponsor } = await import("@/lib/sponsors")
+    const current = await sql`
+      SELECT id FROM sponsors
+      WHERE id = ${id} AND payment_status = 'unpaid' AND source = 'public'
+      LIMIT 1
+    `
+    if (current[0]) {
+      await deleteSponsor(id)
+    }
     await audit(
       "system",
       "release_expired_sponsor_hold",
@@ -326,43 +330,48 @@ export async function dropUnpaidPublicSponsor(opts: {
   payToken?: string
 }): Promise<boolean> {
   await ensureSponsorHoldSchema()
-  let dropped = false
+  const { deleteSponsor, getSponsor, getSponsorByPayToken } = await import(
+    "@/lib/sponsors"
+  )
+
+  let sponsorId: number | null = null
 
   if (opts.checkoutSessionId) {
-    const result = await sql.execute(
-      `DELETE FROM sponsors
-       WHERE stripe_checkout_session_id = ?
-         AND payment_status = 'unpaid'
-         AND source = 'public'`,
-      [opts.checkoutSessionId],
-    )
-    dropped = result.rowsAffected > 0
+    const rows = await sql`
+      SELECT id FROM sponsors
+      WHERE stripe_checkout_session_id = ${opts.checkoutSessionId}
+        AND payment_status = 'unpaid'
+        AND source = 'public'
+      LIMIT 1
+    `
+    if (rows[0]) sponsorId = Number(rows[0].id)
   }
 
-  if (!dropped && opts.payToken) {
-    const result = await sql.execute(
-      `DELETE FROM sponsors
-       WHERE pay_token = ?
-         AND payment_status = 'unpaid'
-         AND source = 'public'`,
-      [opts.payToken],
-    )
-    dropped = result.rowsAffected > 0
+  if (sponsorId == null && opts.payToken) {
+    const sponsor = await getSponsorByPayToken(opts.payToken)
+    if (
+      sponsor &&
+      sponsor.payment_status === "unpaid" &&
+      sponsor.source === "public"
+    ) {
+      sponsorId = sponsor.id
+    }
   }
 
-  if (!dropped && opts.sponsorId && opts.sponsorId > 0) {
-    const result = await sql.execute(
-      `DELETE FROM sponsors
-       WHERE id = ?
-         AND payment_status = 'unpaid'
-         AND source = 'public'`,
-      [opts.sponsorId],
-    )
-    dropped = result.rowsAffected > 0
+  if (sponsorId == null && opts.sponsorId && opts.sponsorId > 0) {
+    const sponsor = await getSponsor(opts.sponsorId)
+    if (
+      sponsor &&
+      sponsor.payment_status === "unpaid" &&
+      sponsor.source === "public"
+    ) {
+      sponsorId = sponsor.id
+    }
   }
 
-  if (dropped) revalidateSponsors()
-  return dropped
+  if (sponsorId == null) return false
+  await deleteSponsor(sponsorId)
+  return true
 }
 
 export { CHECKOUT_HOLD_MINUTES }

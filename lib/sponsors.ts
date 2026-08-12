@@ -417,10 +417,14 @@ export async function completeSponsorProfile(
   return updated
 }
 
-/** Create unpaid public draft (no logo yet) during package checkout. */
+/** Create unpaid public draft with full profile during package checkout. */
 export async function createPublicSponsorDraft(opts: {
   name: string
   contactEmail: string
+  contactName: string
+  contactPhone?: string
+  websiteUrl?: string
+  file: File
   amountCents: number
   levelKey: string
   levelLabel: string
@@ -430,9 +434,17 @@ export async function createPublicSponsorDraft(opts: {
   if (!name) throw new Error("Sponsor name is required")
   const email = normalizeEmail(opts.contactEmail)
   if (!email) throw new Error("Email is required")
+  const contactName = opts.contactName.trim().slice(0, 120)
+  if (!contactName) throw new Error("Point of contact is required")
 
   const amountCents = Math.max(0, Math.round(opts.amountCents))
   if (amountCents <= 0) throw new Error("Invalid sponsorship amount")
+
+  const uploaded = await uploadMediaFile({
+    file: opts.file,
+    folder: "sponsors",
+    filename: opts.file.name,
+  })
 
   const payToken = newPayToken()
   const maxRows = await sql`SELECT COALESCE(MAX(sort_order), 0) AS m FROM sponsors`
@@ -445,10 +457,15 @@ export async function createPublicSponsorDraft(opts: {
        sort_order, is_published,
        amount_cents, payment_status, level_key, level_label, pay_token, source,
        hold_expires_at)
-     VALUES (?, '', '', '', '', ?, '', '', ?, 0, ?, 'unpaid', ?, ?, ?, 'public', ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, 0, ?, 'unpaid', ?, ?, ?, 'public', ?)`,
     [
       name,
+      uploaded.url,
+      uploaded.key,
+      (opts.websiteUrl ?? "").trim().slice(0, 500),
+      contactName,
       email,
+      (opts.contactPhone ?? "").trim().slice(0, 40),
       sortOrder,
       amountCents,
       opts.levelKey.trim().slice(0, 40),

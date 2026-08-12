@@ -14,21 +14,14 @@ import {
   createPublicSponsorDraft,
   ensureSponsorPaymentColumns,
 } from "@/lib/sponsors"
+import { ALLOWED_MEDIA_TYPES, MAX_MEDIA_BYTES, r2Configured } from "@/lib/r2"
 import { stripeConfigured } from "@/lib/stripe"
 
 export const runtime = "nodejs"
 
-type Body = {
-  packageKey?: string
-  holdToken?: string
-  holdExpiresAt?: number
-  name?: string
-  email?: string
-}
-
 /**
  * Public sponsorship checkout:
- * consume 10-minute package hold → unpaid draft → Stripe Checkout.
+ * full profile (logo + contacts) → consume 10-minute hold → unpaid draft → Stripe.
  */
 export async function POST(req: Request) {
   await ensureSponsorPaymentColumns().catch(() => undefined)
@@ -41,18 +34,23 @@ export async function POST(req: Request) {
       { status: 503 },
     )
   }
-
-  let body: Body
-  try {
-    body = (await req.json()) as Body
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+  if (!r2Configured()) {
+    return NextResponse.json(
+      { error: "Logo upload is temporarily unavailable." },
+      { status: 503 },
+    )
   }
 
-  const packageKey = String(body.packageKey ?? "").trim()
-  const holdToken = String(body.holdToken ?? "").trim()
-  const name = String(body.name ?? "").trim()
-  const email = String(body.email ?? "").trim()
+  const form = await req.formData()
+  const packageKey = String(form.get("packageKey") ?? "").trim()
+  const holdToken = String(form.get("holdToken") ?? "").trim()
+  const holdExpiresAtRaw = form.get("holdExpiresAt")
+  const name = String(form.get("name") ?? "").trim()
+  const email = String(form.get("email") ?? "").trim()
+  const contactName = String(form.get("contactName") ?? "").trim()
+  const contactPhone = String(form.get("contactPhone") ?? "").trim()
+  const websiteUrl = String(form.get("websiteUrl") ?? "").trim()
+  const file = form.get("logo")
 
   if (!packageKey || !holdToken) {
     return NextResponse.json(
@@ -72,8 +70,26 @@ export async function POST(req: Request) {
       { status: 400 },
     )
   }
+  if (!contactName) {
+    return NextResponse.json(
+      { error: "Point of contact is required." },
+      { status: 400 },
+    )
+  }
+  if (!(file instanceof File) || file.size <= 0) {
+    return NextResponse.json({ error: "Logo file is required." }, { status: 400 })
+  }
+  if (!ALLOWED_MEDIA_TYPES.has(file.type)) {
+    return NextResponse.json(
+      { error: "Logo must be JPEG, PNG, WebP, GIF, or SVG." },
+      { status: 400 },
+    )
+  }
+  if (file.size > MAX_MEDIA_BYTES) {
+    return NextResponse.json({ error: "Logo must be under 8 MB." }, { status: 400 })
+  }
 
-  const holdResolved = resolveHoldExpiresAt(body.holdExpiresAt)
+  const holdResolved = resolveHoldExpiresAt(holdExpiresAtRaw)
   if (!holdResolved.ok) {
     await releaseSponsorPackageHold(holdToken).catch(() => undefined)
     return NextResponse.json({ error: holdResolved.error }, { status: 409 })
@@ -99,7 +115,6 @@ export async function POST(req: Request) {
   }
 
   if (pkg.quantity != null) {
-    // Hold already counts toward used; ensure capacity still allows this slot.
     const used = await packageSlotsUsed(pkg.key)
     if (used > pkg.quantity) {
       await releaseSponsorPackageHold(holdToken).catch(() => undefined)
@@ -120,6 +135,10 @@ export async function POST(req: Request) {
     sponsor = await createPublicSponsorDraft({
       name,
       contactEmail: email,
+      contactName,
+      contactPhone,
+      websiteUrl,
+      file,
       amountCents: pkg.amountCents,
       levelKey: pkg.key,
       levelLabel: pkg.label,

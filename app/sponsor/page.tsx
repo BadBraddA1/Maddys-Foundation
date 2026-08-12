@@ -16,13 +16,18 @@ export const metadata: Metadata = {
 }
 
 type Props = {
-  searchParams: Promise<{ canceled?: string; session_id?: string }>
+  searchParams: Promise<{
+    canceled?: string
+    paid?: string
+    session_id?: string
+  }>
 }
 
 export default async function SponsorPage({ searchParams }: Props) {
   await ensureSponsorPaymentColumns().catch(() => undefined)
   const query = await searchParams
   const canceled = query.canceled === "1"
+  const paid = query.paid === "1"
   const sessionId = query.session_id?.trim()
 
   if (canceled && sessionId) {
@@ -47,30 +52,53 @@ export default async function SponsorPage({ searchParams }: Props) {
         >
           ← Home
         </Link>
-        <h1 className="mt-6 font-display text-4xl tracking-tight text-ink md:text-5xl">
-          Become a sponsor
-        </h1>
-        <p className="mt-4 max-w-prose text-ink/75">
-          Support the Oak Valley Golf Scramble and Madalyn’s Foundation. Choose a
-          package below — we’ll hold it for {CHECKOUT_HOLD_MINUTES} minutes while
-          you pay. After checkout, you’ll add your logo, website, and point of
-          contact for the site.
-        </p>
 
-        <div className="mt-12">
-          {packages.length === 0 ? (
-            <p className="text-sm text-muted">
-              Sponsorship packages are unavailable right now. Please try again
-              later.
+        {paid ? (
+          <div
+            className="mt-6 border border-success/30 bg-success/5 px-6 py-8"
+            role="status"
+          >
+            <h1 className="font-display text-3xl text-ink">Thank you</h1>
+            <p className="mt-3 text-sm text-ink/75">
+              Your sponsorship payment is confirmed
+              {sessionId ? " (finalizing now)" : ""}. Your logo publishes on the
+              foundation site automatically.
             </p>
-          ) : (
-            <SponsorOnboardForm
-              packages={packages}
-              stripeReady={stripeReady}
-              canceled={canceled}
-            />
-          )}
-        </div>
+            <Link
+              href="/"
+              className="motion-press mt-6 inline-flex min-h-11 items-center justify-center bg-accent px-8 text-sm font-medium text-accent-ink"
+            >
+              Back to home
+            </Link>
+          </div>
+        ) : (
+          <>
+            <h1 className="mt-6 font-display text-4xl tracking-tight text-ink md:text-5xl">
+              Become a sponsor
+            </h1>
+            <p className="mt-4 max-w-prose text-ink/75">
+              Support the Oak Valley Golf Scramble and Madalyn’s Foundation.
+              Choose a package — we’ll hold it for {CHECKOUT_HOLD_MINUTES}{" "}
+              minutes while you enter your details and pay. Your logo goes live
+              after checkout.
+            </p>
+
+            <div className="mt-12">
+              {packages.length === 0 ? (
+                <p className="text-sm text-muted">
+                  Sponsorship packages are unavailable right now. Please try
+                  again later.
+                </p>
+              ) : (
+                <SponsorOnboardForm
+                  packages={packages}
+                  stripeReady={stripeReady}
+                  canceled={canceled}
+                />
+              )}
+            </div>
+          </>
+        )}
       </main>
     </div>
   )
