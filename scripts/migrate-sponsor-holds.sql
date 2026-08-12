@@ -16,3 +16,10 @@ CREATE TABLE IF NOT EXISTS sponsor_package_holds (
 
 CREATE INDEX IF NOT EXISTS idx_sponsor_package_holds_pkg_expires
   ON sponsor_package_holds (package_key, hold_expires_at);
+
+CREATE TABLE IF NOT EXISTS sponsor_package_config (
+  package_key TEXT PRIMARY KEY,
+  quantity INTEGER,
+  amount_cents INTEGER,
+  updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);

@@ -8,7 +8,7 @@ import {
 } from "@/lib/sponsor-hold-shared"
 import {
   getSponsorPackage,
-  SPONSOR_PACKAGES,
+  listResolvedSponsorPackages,
   type PublicPackageAvailability,
   type SponsorPackage,
 } from "@/lib/sponsor-packages"
@@ -68,7 +68,7 @@ export async function packageSlotsUsed(packageKey: string): Promise<number> {
       (SELECT COUNT(*) FROM sponsors s
         WHERE s.level_key = ${packageKey}
           AND (
-            s.payment_status = 'paid'
+            s.payment_status != 'unpaid'
             OR (
               s.payment_status = 'unpaid'
               AND s.hold_expires_at IS NOT NULL
@@ -83,21 +83,42 @@ export async function packageSlotsUsed(packageKey: string): Promise<number> {
   return Number(rows[0]?.c ?? 0)
 }
 
+/** Admin / check: ensure a package still has room before claiming a slot. */
+export async function assertPackageHasRoom(
+  packageKey: string,
+): Promise<
+  | { ok: true; package: SponsorPackage; used: number }
+  | { ok: false; error: string }
+> {
+  await releaseExpiredSponsorHolds().catch(() => undefined)
+  const pkg = await getSponsorPackage(packageKey)
+  if (!pkg) return { ok: false, error: "Sponsorship package not found." }
+  const used = await packageSlotsUsed(pkg.key)
+  if (pkg.quantity != null && used >= pkg.quantity) {
+    return {
+      ok: false,
+      error: `${pkg.label} is sold out (${used}/${pkg.quantity}). Increase spots in Package inventory, or pick another package.`,
+    }
+  }
+  return { ok: true, package: pkg, used }
+}
+
 export async function listPackageAvailability(): Promise<
   PublicPackageAvailability[]
 > {
   await ensureSponsorHoldSchema()
   await releaseExpiredSponsorHolds().catch(() => undefined)
 
+  const packages = await listResolvedSponsorPackages()
   const out: PublicPackageAvailability[] = []
-  for (const pkg of SPONSOR_PACKAGES) {
+  for (const pkg of packages) {
+    const used = await packageSlotsUsed(pkg.key)
     if (pkg.quantity == null) {
-      out.push({ ...pkg, remaining: null, soldOut: false })
+      out.push({ ...pkg, remaining: null, soldOut: false, used })
       continue
     }
-    const used = await packageSlotsUsed(pkg.key)
     const remaining = Math.max(0, pkg.quantity - used)
-    out.push({ ...pkg, remaining, soldOut: remaining <= 0 })
+    out.push({ ...pkg, remaining, soldOut: remaining <= 0, used })
   }
   return out
 }
@@ -149,7 +170,7 @@ export async function createSponsorPackageHold(opts: {
   await ensureSponsorHoldSchema()
   await releaseExpiredSponsorHolds().catch(() => undefined)
 
-  const pkg = getSponsorPackage(opts.packageKey)
+  const pkg = await getSponsorPackage(opts.packageKey)
   if (!pkg) {
     return { ok: false, error: "Sponsorship package not found.", status: 404 }
   }

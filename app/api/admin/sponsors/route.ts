@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth"
 import { ALLOWED_MEDIA_TYPES, MAX_MEDIA_BYTES, r2Configured } from "@/lib/r2"
+import { assertPackageHasRoom } from "@/lib/sponsor-hold"
+import { getSponsorPackage } from "@/lib/sponsor-packages"
 import {
   createSponsor,
   deleteSponsor,
@@ -42,6 +44,9 @@ export async function POST(req: Request) {
   const contactEmail = String(form.get("contactEmail") ?? "")
   const contactPhone = String(form.get("contactPhone") ?? "")
   const contactNotes = String(form.get("contactNotes") ?? "")
+  const packageKey = String(form.get("packageKey") ?? "").trim()
+  const paymentMethod = String(form.get("paymentMethod") ?? "waived").trim()
+  // waived | card | check
   const file = form.get("logo")
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Logo file is required." }, { status: 400 })
@@ -56,6 +61,58 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Logo must be under 8 MB." }, { status: 400 })
   }
 
+  if (
+    paymentMethod !== "waived" &&
+    paymentMethod !== "card" &&
+    paymentMethod !== "check"
+  ) {
+    return NextResponse.json({ error: "Invalid payment method." }, { status: 400 })
+  }
+
+  if ((paymentMethod === "check" || paymentMethod === "card") && !packageKey) {
+    return NextResponse.json(
+      { error: "Choose which sponsorship package they took." },
+      { status: 400 },
+    )
+  }
+
+  let levelKey = ""
+  let levelLabel = ""
+  let amountCents = 0
+  let paymentStatus: "unpaid" | "paid" | "waived" = "waived"
+  let publishNow = true
+  let source = "admin"
+  let notes = contactNotes
+
+  if (packageKey) {
+    const room = await assertPackageHasRoom(packageKey)
+    if (!room.ok) {
+      // Re-assigning same package on edit is handled in PATCH; create always needs room.
+      return NextResponse.json({ error: room.error }, { status: 409 })
+    }
+    levelKey = room.package.key
+    levelLabel = room.package.label
+    amountCents = room.package.amountCents
+  }
+
+  if (paymentMethod === "card") {
+    paymentStatus = "unpaid"
+    publishNow = false
+    source = "admin"
+  } else if (paymentMethod === "check") {
+    paymentStatus = "paid"
+    publishNow = true
+    source = "admin_check"
+    const checkNote = "Paid by check"
+    notes = notes.trim()
+      ? `${notes.trim()}\n${checkNote}`
+      : checkNote
+  } else {
+    paymentStatus = "waived"
+    publishNow = true
+    source = "admin"
+  }
+
   try {
     const sponsor = await createSponsor({
       name,
@@ -63,8 +120,14 @@ export async function POST(req: Request) {
       contactName,
       contactEmail,
       contactPhone,
-      contactNotes,
+      contactNotes: notes,
       file,
+      amountCents: paymentMethod === "waived" && !packageKey ? 0 : amountCents,
+      paymentStatus,
+      levelKey,
+      levelLabel,
+      publishNow,
+      source,
     })
     return NextResponse.json({ sponsor }, { status: 201 })
   } catch (err) {
@@ -102,6 +165,30 @@ export async function PATCH(req: Request) {
 
   const publishedRaw = form.get("isPublished")
   const sortRaw = form.get("sortOrder")
+  const packageKeyRaw = form.get("packageKey")
+
+  let levelKey: string | undefined
+  let levelLabel: string | undefined
+  let amountCents: number | undefined
+
+  if (packageKeyRaw != null) {
+    const packageKey = String(packageKeyRaw).trim()
+    if (packageKey) {
+      const pkg = await getSponsorPackage(packageKey)
+      if (!pkg) {
+        return NextResponse.json(
+          { error: "Sponsorship package not found." },
+          { status: 404 },
+        )
+      }
+      levelKey = pkg.key
+      levelLabel = pkg.label
+      amountCents = pkg.amountCents
+    } else {
+      levelKey = ""
+      levelLabel = ""
+    }
+  }
 
   try {
     const sponsor = await updateSponsor(id, {
@@ -126,6 +213,9 @@ export async function PATCH(req: Request) {
       sortOrder:
         sortRaw == null || sortRaw === "" ? undefined : Number(sortRaw),
       file: logo,
+      levelKey,
+      levelLabel,
+      amountCents,
     })
     return NextResponse.json({ sponsor })
   } catch (err) {

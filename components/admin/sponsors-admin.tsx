@@ -2,10 +2,13 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import type { PublicPackageAvailability } from "@/lib/sponsor-packages"
+import { formatUsdFromCents } from "@/lib/sponsor-levels"
 import type { Sponsor } from "@/lib/sponsors"
 
 type Props = {
   initialSponsors: Sponsor[]
+  initialPackages: PublicPackageAvailability[]
   r2Ready: boolean
 }
 
@@ -16,31 +19,116 @@ const emptyForm = {
   contactEmail: "",
   contactPhone: "",
   contactNotes: "",
-  amountUsd: "",
+  packageKey: "",
+  paymentMethod: "waived" as "waived" | "card" | "check",
 }
 
-export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
+export function SponsorsAdmin({
+  initialSponsors,
+  initialPackages,
+  r2Ready,
+}: Props) {
   const router = useRouter()
   const [sponsors, setSponsors] = useState(initialSponsors)
+  const [packages, setPackages] = useState(initialPackages)
+  const [qtyDrafts, setQtyDrafts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      initialPackages.map((p) => [
+        p.key,
+        p.quantity == null ? "" : String(p.quantity),
+      ]),
+    ),
+  )
   const [form, setForm] = useState(emptyForm)
   const [file, setFile] = useState<File | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editDraft, setEditDraft] = useState(emptyForm)
   const [amountDrafts, setAmountDrafts] = useState<Record<number, string>>({})
+  const [checkPackageDrafts, setCheckPackageDrafts] = useState<
+    Record<number, string>
+  >({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
   async function refresh() {
-    const res = await fetch("/api/admin/sponsors")
-    const data = (await res.json()) as { sponsors?: Sponsor[] }
-    if (data.sponsors) setSponsors(data.sponsors)
+    const [sponsorsRes, packagesRes] = await Promise.all([
+      fetch("/api/admin/sponsors"),
+      fetch("/api/admin/sponsor-packages"),
+    ])
+    const sponsorsData = (await sponsorsRes.json()) as { sponsors?: Sponsor[] }
+    const packagesData = (await packagesRes.json()) as {
+      packages?: PublicPackageAvailability[]
+    }
+    if (sponsorsData.sponsors) setSponsors(sponsorsData.sponsors)
+    if (packagesData.packages) {
+      setPackages(packagesData.packages)
+      setQtyDrafts((prev) => {
+        const next = { ...prev }
+        for (const p of packagesData.packages!) {
+          if (next[p.key] === undefined) {
+            next[p.key] = p.quantity == null ? "" : String(p.quantity)
+          }
+        }
+        return next
+      })
+    }
     router.refresh()
+  }
+
+  async function savePackageQuantity(packageKey: string) {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    setMessage(null)
+    try {
+      const raw = (qtyDrafts[packageKey] ?? "").trim()
+      const res = await fetch("/api/admin/sponsor-packages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageKey,
+          quantity: raw === "" ? null : raw,
+        }),
+      })
+      const data = (await res.json()) as {
+        error?: string
+        packages?: PublicPackageAvailability[]
+      }
+      if (!res.ok) {
+        setError(data.error || "Could not update spots.")
+        return
+      }
+      if (data.packages) {
+        setPackages(data.packages)
+        setQtyDrafts(
+          Object.fromEntries(
+            data.packages.map((p) => [
+              p.key,
+              p.quantity == null ? "" : String(p.quantity),
+            ]),
+          ),
+        )
+      }
+      setMessage("Package spots updated.")
+      router.refresh()
+    } catch {
+      setError("Could not update spots.")
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault()
     if (!file || busy) return
+    if (
+      (form.paymentMethod === "check" || form.paymentMethod === "card") &&
+      !form.packageKey
+    ) {
+      setError("Choose which sponsorship package they took.")
+      return
+    }
     setBusy(true)
     setError(null)
     setMessage(null)
@@ -52,6 +140,8 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
       body.set("contactEmail", form.contactEmail)
       body.set("contactPhone", form.contactPhone)
       body.set("contactNotes", form.contactNotes)
+      body.set("packageKey", form.packageKey)
+      body.set("paymentMethod", form.paymentMethod)
       body.set("logo", file)
       const res = await fetch("/api/admin/sponsors", { method: "POST", body })
       const data = (await res.json()) as { error?: string; sponsor?: { id: number } }
@@ -59,23 +149,14 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
         setError(data.error || "Could not add sponsor.")
         return
       }
-      if (form.amountUsd.trim() && data.sponsor?.id) {
-        await fetch("/api/admin/sponsors/pay", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "set_amount",
-            sponsorId: data.sponsor.id,
-            amountUsd: form.amountUsd,
-          }),
-        })
-      }
       setForm(emptyForm)
       setFile(null)
       setMessage(
-        form.amountUsd.trim()
-          ? "Sponsor added as unpaid draft — send pay link when ready."
-          : "Sponsor added.",
+        form.paymentMethod === "check"
+          ? "Sponsor added — package claimed as paid by check."
+          : form.paymentMethod === "card"
+            ? "Sponsor added as unpaid draft — email the Stripe pay link when ready."
+            : "Sponsor added.",
       )
       await refresh()
     } catch {
@@ -94,7 +175,8 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
       contactEmail: sponsor.contact_email,
       contactPhone: sponsor.contact_phone,
       contactNotes: sponsor.contact_notes,
-      amountUsd: "",
+      packageKey: sponsor.level_key,
+      paymentMethod: "waived",
     })
     setError(null)
     setMessage(null)
@@ -113,6 +195,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
       body.set("contactEmail", editDraft.contactEmail)
       body.set("contactPhone", editDraft.contactPhone)
       body.set("contactNotes", editDraft.contactNotes)
+      body.set("packageKey", editDraft.packageKey)
       const res = await fetch("/api/admin/sponsors", { method: "PATCH", body })
       const data = (await res.json()) as { error?: string }
       if (!res.ok) {
@@ -120,7 +203,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
         return
       }
       setEditingId(null)
-      setMessage("Sponsor contacts saved.")
+      setMessage("Sponsor saved.")
       await refresh()
     } catch {
       setError("Could not save contacts.")
@@ -174,8 +257,9 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
 
   async function payAction(
     sponsorId: number,
-    action: "set_amount" | "send_invite" | "mark_paid",
+    action: "set_amount" | "send_invite" | "mark_paid" | "mark_paid_check",
     amountUsd?: string,
+    packageKey?: string,
   ) {
     if (busy) return
     setBusy(true)
@@ -185,7 +269,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
       const res = await fetch("/api/admin/sponsors/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, sponsorId, amountUsd }),
+        body: JSON.stringify({ action, sponsorId, amountUsd, packageKey }),
       })
       const data = (await res.json()) as {
         error?: string
@@ -208,6 +292,8 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
             ? `Amount saved. Pay link: ${data.payUrl}`
             : "Amount saved.",
         )
+      } else if (action === "mark_paid_check") {
+        setMessage("Marked paid by check — package claimed, logo published.")
       } else {
         setMessage("Marked paid — logo published.")
       }
@@ -241,6 +327,18 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
     }
   }
 
+  const packageOptions = packages.map((p) => {
+    const spots =
+      p.quantity == null
+        ? "unlimited"
+        : `${p.remaining ?? 0} left of ${p.quantity}`
+    return {
+      key: p.key,
+      label: `${p.label} · ${formatUsdFromCents(p.amountCents)} · ${spots}`,
+      soldOut: p.soldOut,
+    }
+  })
+
   return (
     <div className="space-y-10">
       {!r2Ready ? (
@@ -262,19 +360,79 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
         </p>
       ) : null}
 
+      <section className="border border-line bg-surface p-5">
+        <h2 className="font-display text-xl">Package inventory</h2>
+        <p className="mt-1 text-sm text-muted">
+          Spots control the public /sponsor page. Leave blank for unlimited.
+          Used counts paid sponsors and active 10-minute holds.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[36rem] text-left text-sm">
+            <thead>
+              <tr className="border-b border-line text-muted">
+                <th className="py-2 pr-3 font-medium">Package</th>
+                <th className="py-2 pr-3 font-medium">Price</th>
+                <th className="py-2 pr-3 font-medium">Used</th>
+                <th className="py-2 pr-3 font-medium">Spots</th>
+                <th className="py-2 font-medium" />
+              </tr>
+            </thead>
+            <tbody>
+              {packages.map((p) => (
+                <tr key={p.key} className="border-b border-line/70">
+                  <td className="py-2.5 pr-3 align-middle font-medium text-ink">
+                    {p.label}
+                    {p.soldOut ? (
+                      <span className="ml-2 text-xs font-normal text-danger">
+                        Sold out
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="py-2.5 pr-3 align-middle tabular-nums text-muted">
+                    {formatUsdFromCents(p.amountCents)}
+                  </td>
+                  <td className="py-2.5 pr-3 align-middle tabular-nums text-muted">
+                    {p.used}
+                    {p.quantity != null ? ` / ${p.quantity}` : ""}
+                  </td>
+                  <td className="py-2.5 pr-3 align-middle">
+                    <input
+                      className="field-control min-h-10 w-24"
+                      inputMode="numeric"
+                      placeholder="∞"
+                      aria-label={`Spots for ${p.label}`}
+                      value={qtyDrafts[p.key] ?? ""}
+                      onChange={(e) =>
+                        setQtyDrafts((d) => ({
+                          ...d,
+                          [p.key]: e.target.value,
+                        }))
+                      }
+                    />
+                  </td>
+                  <td className="py-2.5 align-middle">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="inline-flex min-h-10 items-center border border-line px-3 text-sm disabled:opacity-60"
+                      onClick={() => void savePackageQuantity(p.key)}
+                    >
+                      Save
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <form onSubmit={(e) => void onCreate(e)} className="border border-line bg-surface p-5 space-y-4">
         <h2 className="font-display text-xl">Add sponsor</h2>
         <p className="text-sm text-muted">
-          Logo shows in the footer after publish / payment. Contact details stay
-          staff-only. After create, set amount owed and use{" "}
-          <strong>Email pay link</strong> — or test templates at{" "}
-          <a
-            href="/admin/email"
-            className="text-accent-ink underline underline-offset-4"
-          >
-            /admin/email
-          </a>
-          .
+          For check payments, pick the package they took — it claims that
+          inventory spot and publishes the logo. Card drafts stay hidden until
+          Stripe confirms.
         </p>
         <div>
           <label htmlFor="sponsor-name" className="block text-sm font-medium">
@@ -288,6 +446,55 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
             required
             maxLength={120}
           />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="sponsor-package" className="block text-sm font-medium">
+              Sponsorship package
+            </label>
+            <select
+              id="sponsor-package"
+              className="field-control mt-1.5 min-h-11 w-full"
+              value={form.packageKey}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, packageKey: e.target.value }))
+              }
+              required={
+                form.paymentMethod === "check" || form.paymentMethod === "card"
+              }
+            >
+              <option value="">— None / complimentary —</option>
+              {packageOptions.map((o) => (
+                <option key={o.key} value={o.key} disabled={o.soldOut}>
+                  {o.label}
+                  {o.soldOut ? " (sold out)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="sponsor-pay-method" className="block text-sm font-medium">
+              Payment
+            </label>
+            <select
+              id="sponsor-pay-method"
+              className="field-control mt-1.5 min-h-11 w-full"
+              value={form.paymentMethod}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  paymentMethod: e.target.value as
+                    | "waived"
+                    | "card"
+                    | "check",
+                }))
+              }
+            >
+              <option value="waived">Complimentary / publish now</option>
+              <option value="check">Paid by check (claim package)</option>
+              <option value="card">Card — unpaid Stripe link</option>
+            </select>
+          </div>
         </div>
         <div>
           <label htmlFor="sponsor-url" className="block text-sm font-medium">
@@ -317,7 +524,6 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                 setForm((f) => ({ ...f, contactName: e.target.value }))
               }
               maxLength={120}
-              autoComplete="name"
             />
           </div>
           <div>
@@ -333,12 +539,11 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                 setForm((f) => ({ ...f, contactEmail: e.target.value }))
               }
               maxLength={200}
-              autoComplete="email"
             />
           </div>
           <div>
             <label htmlFor="sponsor-phone" className="block text-sm font-medium">
-              Contact phone (optional)
+              Contact phone
             </label>
             <input
               id="sponsor-phone"
@@ -349,7 +554,6 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                 setForm((f) => ({ ...f, contactPhone: e.target.value }))
               }
               maxLength={40}
-              autoComplete="tel"
             />
           </div>
           <div>
@@ -368,7 +572,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
         </div>
         <div>
           <label htmlFor="sponsor-notes" className="block text-sm font-medium">
-            Staff notes (optional)
+            Staff notes
           </label>
           <textarea
             id="sponsor-notes"
@@ -378,25 +582,8 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
               setForm((f) => ({ ...f, contactNotes: e.target.value }))
             }
             maxLength={1000}
-            placeholder="Package level, last event, follow-up reminders…"
+            placeholder="Check #, follow-up reminders…"
           />
-        </div>
-        <div>
-          <label htmlFor="sponsor-amount" className="block text-sm font-medium">
-            Amount owed (optional)
-          </label>
-          <input
-            id="sponsor-amount"
-            inputMode="decimal"
-            className="field-control mt-1.5 min-h-11 w-full max-w-xs"
-            value={form.amountUsd}
-            onChange={(e) => setForm((f) => ({ ...f, amountUsd: e.target.value }))}
-            placeholder="500 — leave blank to publish now"
-          />
-          <p className="mt-1 text-xs text-muted">
-            If set, sponsor stays hidden until Stripe payment confirms (logo
-            publishes automatically).
-          </p>
         </div>
         <button
           type="submit"
@@ -419,16 +606,19 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                   <div className="flex min-w-0 items-start gap-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={s.logo_url}
+                      src={s.logo_url || "/brand/logo-mark.png"}
                       alt=""
                       className="h-12 w-24 shrink-0 object-contain bg-bg"
                     />
                     <div className="min-w-0">
                       <p className="font-medium text-ink">{s.name}</p>
                       <p className="text-sm text-muted">
+                        {s.level_label ? `${s.level_label} · ` : ""}
                         {s.is_published ? "Published" : "Hidden"}
                         {s.payment_status
                           ? ` · ${s.payment_status}${
+                              s.source === "admin_check" ? " (check)" : ""
+                            }${
                               s.amount_cents
                                 ? ` · $${(s.amount_cents / 100).toFixed(
                                     s.amount_cents % 100 === 0 ? 0 : 2,
@@ -490,7 +680,7 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                           : startEdit(s)
                       }
                     >
-                      {editingId === s.id ? "Cancel" : "Edit contact"}
+                      {editingId === s.id ? "Cancel" : "Edit"}
                     </button>
                     <button
                       type="button"
@@ -525,6 +715,28 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                         }
                         maxLength={120}
                       />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-sm font-medium">
+                        Sponsorship package
+                      </label>
+                      <select
+                        className="field-control mt-1.5 min-h-11 w-full"
+                        value={editDraft.packageKey}
+                        onChange={(e) =>
+                          setEditDraft((d) => ({
+                            ...d,
+                            packageKey: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">— None —</option>
+                        {packageOptions.map((o) => (
+                          <option key={o.key} value={o.key}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium">
@@ -615,12 +827,14 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                         className="btn-deep inline-flex min-h-11 items-center px-5 text-sm font-medium disabled:opacity-60"
                         onClick={() => void saveEdit(s.id)}
                       >
-                        {busy ? "Saving…" : "Save contacts"}
+                        {busy ? "Saving…" : "Save"}
                       </button>
                     </div>
                   </div>
                 ) : s.contact_notes ? (
-                  <p className="text-sm text-muted">{s.contact_notes}</p>
+                  <p className="text-sm text-muted whitespace-pre-wrap">
+                    {s.contact_notes}
+                  </p>
                 ) : null}
 
                 <div className="flex flex-wrap items-end gap-2 border border-line bg-bg p-3">
@@ -651,7 +865,9 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                       void payAction(
                         s.id,
                         "set_amount",
-                        amountDrafts[s.id] || String(s.amount_cents / 100 || ""),
+                        amountDrafts[s.id] ||
+                          String(s.amount_cents / 100 || ""),
+                        s.level_key || undefined,
                       )
                     }
                   >
@@ -662,19 +878,66 @@ export function SponsorsAdmin({ initialSponsors, r2Ready }: Props) {
                     disabled={busy || !s.contact_email}
                     className="inline-flex min-h-10 items-center border border-line px-3 text-sm disabled:opacity-40"
                     onClick={() => void payAction(s.id, "send_invite")}
-                    title={!s.contact_email ? "Add contact email first" : undefined}
+                    title={
+                      !s.contact_email ? "Add contact email first" : undefined
+                    }
                   >
                     Email pay link
                   </button>
                   {s.payment_status === "unpaid" ? (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      className="btn-deep inline-flex min-h-10 items-center px-3 text-sm"
-                      onClick={() => void payAction(s.id, "mark_paid")}
-                    >
-                      Mark paid (manual)
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        className="inline-flex min-h-10 items-center border border-line px-3 text-sm"
+                        onClick={() => void payAction(s.id, "mark_paid")}
+                      >
+                        Mark paid (manual)
+                      </button>
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div>
+                          <label className="block text-xs font-medium text-muted">
+                            Package for check
+                          </label>
+                          <select
+                            className="field-control mt-1 min-h-10 max-w-[14rem]"
+                            value={
+                              checkPackageDrafts[s.id] ?? s.level_key ?? ""
+                            }
+                            onChange={(e) =>
+                              setCheckPackageDrafts((d) => ({
+                                ...d,
+                                [s.id]: e.target.value,
+                              }))
+                            }
+                          >
+                            <option value="">— Select package —</option>
+                            {packageOptions.map((o) => (
+                              <option key={o.key} value={o.key}>
+                                {o.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className="btn-deep inline-flex min-h-10 items-center px-3 text-sm"
+                          onClick={() =>
+                            void payAction(
+                              s.id,
+                              "mark_paid_check",
+                              undefined,
+                              checkPackageDrafts[s.id] ||
+                                s.level_key ||
+                                undefined,
+                            )
+                          }
+                        >
+                          Mark paid by check
+                        </button>
+                      </div>
+                    </>
                   ) : null}
                   {s.pay_token ? (
                     <a

@@ -193,6 +193,14 @@ CREATE TABLE IF NOT EXISTS sponsor_package_holds (
 CREATE INDEX IF NOT EXISTS idx_sponsor_package_holds_pkg_expires
   ON sponsor_package_holds (package_key, hold_expires_at);
 
+-- Admin overrides for package inventory (quantity null = unlimited).
+CREATE TABLE IF NOT EXISTS sponsor_package_config (
+  package_key TEXT PRIMARY KEY,
+  quantity INTEGER,
+  amount_cents INTEGER,
+  updated_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
 -- Public photo gallery — files in R2 bucket maddys-foundation-media.
 CREATE TABLE IF NOT EXISTS gallery_images (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

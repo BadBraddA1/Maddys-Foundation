@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     )
   }
 
-  const pkg = getSponsorPackage(packageKey)
+  const pkg = await getSponsorPackage(packageKey)
   if (!pkg) {
     return NextResponse.json(
       { error: "Sponsorship package not found." },
