@@ -23,6 +23,13 @@ const emptyForm = {
   paymentMethod: "waived" as "waived" | "card" | "check",
 }
 
+/** Editable dollars string for admin price inputs (e.g. 850 or 850.50). */
+function dollarsInputFromCents(cents: number): string {
+  if (!Number.isFinite(cents) || cents <= 0) return ""
+  const dollars = cents / 100
+  return dollars % 1 === 0 ? String(dollars) : dollars.toFixed(2)
+}
+
 export function SponsorsAdmin({
   initialSponsors,
   initialPackages,
@@ -37,6 +44,11 @@ export function SponsorsAdmin({
         p.key,
         p.quantity == null ? "" : String(p.quantity),
       ]),
+    ),
+  )
+  const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      initialPackages.map((p) => [p.key, dollarsInputFromCents(p.amountCents)]),
     ),
   )
   const [form, setForm] = useState(emptyForm)
@@ -72,23 +84,38 @@ export function SponsorsAdmin({
         }
         return next
       })
+      setPriceDrafts((prev) => {
+        const next = { ...prev }
+        for (const p of packagesData.packages!) {
+          if (next[p.key] === undefined) {
+            next[p.key] = dollarsInputFromCents(p.amountCents)
+          }
+        }
+        return next
+      })
     }
     router.refresh()
   }
 
-  async function savePackageQuantity(packageKey: string) {
+  async function savePackage(packageKey: string) {
     if (busy) return
     setBusy(true)
     setError(null)
     setMessage(null)
     try {
-      const raw = (qtyDrafts[packageKey] ?? "").trim()
+      const rawQty = (qtyDrafts[packageKey] ?? "").trim()
+      const rawPrice = (priceDrafts[packageKey] ?? "").trim()
+      if (!rawPrice) {
+        setError("Enter a dollar price for this package.")
+        return
+      }
       const res = await fetch("/api/admin/sponsor-packages", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           packageKey,
-          quantity: raw === "" ? null : raw,
+          quantity: rawQty === "" ? null : rawQty,
+          amountUsd: rawPrice,
         }),
       })
       const data = (await res.json()) as {
@@ -96,7 +123,7 @@ export function SponsorsAdmin({
         packages?: PublicPackageAvailability[]
       }
       if (!res.ok) {
-        setError(data.error || "Could not update spots.")
+        setError(data.error || "Could not update package.")
         return
       }
       if (data.packages) {
@@ -109,11 +136,19 @@ export function SponsorsAdmin({
             ]),
           ),
         )
+        setPriceDrafts(
+          Object.fromEntries(
+            data.packages.map((p) => [
+              p.key,
+              dollarsInputFromCents(p.amountCents),
+            ]),
+          ),
+        )
       }
-      setMessage("Package spots updated.")
+      setMessage("Package updated.")
       router.refresh()
     } catch {
-      setError("Could not update spots.")
+      setError("Could not update package.")
     } finally {
       setBusy(false)
     }
@@ -367,16 +402,17 @@ export function SponsorsAdmin({
       <section className="border border-line bg-surface p-5">
         <h2 className="font-display text-xl">Package inventory</h2>
         <p className="mt-1 text-sm text-muted">
-          Spots control the public /sponsor page. Leave blank for unlimited.
-          Claimed = paid or check/admin. Pending = someone is in the 10-minute
-          checkout hold (shows as “Sale pending” publicly, not sold out).
+          Price and spots control the public /sponsor page. Leave spots blank for
+          unlimited. Claimed = paid or check/admin. Pending = someone is in the
+          10-minute checkout hold (shows as “Sale pending” publicly, not sold
+          out).
         </p>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[36rem] text-left text-sm">
+          <table className="w-full min-w-[40rem] text-left text-sm">
             <thead>
               <tr className="border-b border-line text-muted">
                 <th className="py-2 pr-3 font-medium">Package</th>
-                <th className="py-2 pr-3 font-medium">Price</th>
+                <th className="py-2 pr-3 font-medium">Price ($)</th>
                 <th className="py-2 pr-3 font-medium">Claimed</th>
                 <th className="py-2 pr-3 font-medium">Pending</th>
                 <th className="py-2 pr-3 font-medium">Spots</th>
@@ -398,8 +434,20 @@ export function SponsorsAdmin({
                       </span>
                     ) : null}
                   </td>
-                  <td className="py-2.5 pr-3 align-middle tabular-nums text-muted">
-                    {formatUsdFromCents(p.amountCents)}
+                  <td className="py-2.5 pr-3 align-middle">
+                    <input
+                      className="field-control min-h-10 w-24 tabular-nums"
+                      inputMode="decimal"
+                      placeholder={dollarsInputFromCents(p.amountCents)}
+                      aria-label={`Price for ${p.label}`}
+                      value={priceDrafts[p.key] ?? ""}
+                      onChange={(e) =>
+                        setPriceDrafts((d) => ({
+                          ...d,
+                          [p.key]: e.target.value,
+                        }))
+                      }
+                    />
                   </td>
                   <td className="py-2.5 pr-3 align-middle tabular-nums text-muted">
                     {p.claimed}
@@ -428,7 +476,7 @@ export function SponsorsAdmin({
                       type="button"
                       disabled={busy}
                       className="inline-flex min-h-10 items-center border border-line px-3 text-sm disabled:opacity-60"
-                      onClick={() => void savePackageQuantity(p.key)}
+                      onClick={() => void savePackage(p.key)}
                     >
                       Save
                     </button>

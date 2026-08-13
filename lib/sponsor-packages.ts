@@ -59,7 +59,7 @@ export const SPONSOR_PACKAGES: SponsorPackage[] = [
   {
     key: "cannon-driver",
     label: "Cannon Driver",
-    amountCents: 80_000,
+    amountCents: 85_000,
     quantity: 1,
     blurb: "Headline sponsorship for the cannon drive.",
     sortOrder: 60,
