@@ -12,6 +12,18 @@ import {
 
 export const runtime = "nodejs"
 
+function collectPackageKeys(form: FormData): string[] {
+  const keys = new Set<string>()
+  for (const value of form.getAll("packageKeys")) {
+    const key = String(value ?? "").trim()
+    if (key) keys.add(key)
+  }
+  // Back-compat single select
+  const single = String(form.get("packageKey") ?? "").trim()
+  if (single) keys.add(single)
+  return [...keys]
+}
+
 export async function GET() {
   try {
     await requireAdmin()
@@ -44,7 +56,7 @@ export async function POST(req: Request) {
   const contactEmail = String(form.get("contactEmail") ?? "")
   const contactPhone = String(form.get("contactPhone") ?? "")
   const contactNotes = String(form.get("contactNotes") ?? "")
-  const packageKey = String(form.get("packageKey") ?? "").trim()
+  const packageKeys = collectPackageKeys(form)
   const paymentMethod = String(form.get("paymentMethod") ?? "waived").trim()
   // waived | card | check
   const file = form.get("logo")
@@ -69,31 +81,46 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid payment method." }, { status: 400 })
   }
 
-  if ((paymentMethod === "check" || paymentMethod === "card") && !packageKey) {
+  if (
+    (paymentMethod === "check" || paymentMethod === "card") &&
+    packageKeys.length === 0
+  ) {
     return NextResponse.json(
-      { error: "Choose which sponsorship package they took." },
+      { error: "Choose at least one sponsorship package." },
       { status: 400 },
     )
   }
 
-  let levelKey = ""
-  let levelLabel = ""
-  let amountCents = 0
+  // Complimentary with no package → one published row.
+  const keysToCreate =
+    packageKeys.length > 0 ? packageKeys : paymentMethod === "waived" ? [""] : []
+
+  const resolved: {
+    key: string
+    label: string
+    amountCents: number
+  }[] = []
+
+  for (const packageKey of keysToCreate) {
+    if (!packageKey) {
+      resolved.push({ key: "", label: "", amountCents: 0 })
+      continue
+    }
+    const room = await assertPackageHasRoom(packageKey)
+    if (!room.ok) {
+      return NextResponse.json({ error: room.error }, { status: 409 })
+    }
+    resolved.push({
+      key: room.package.key,
+      label: room.package.label,
+      amountCents: room.package.amountCents,
+    })
+  }
+
   let paymentStatus: "unpaid" | "paid" | "waived" = "waived"
   let publishNow = true
   let source = "admin"
   let notes = contactNotes
-
-  if (packageKey) {
-    const room = await assertPackageHasRoom(packageKey)
-    if (!room.ok) {
-      // Re-assigning same package on edit is handled in PATCH; create always needs room.
-      return NextResponse.json({ error: room.error }, { status: 409 })
-    }
-    levelKey = room.package.key
-    levelLabel = room.package.label
-    amountCents = room.package.amountCents
-  }
 
   if (paymentMethod === "card") {
     paymentStatus = "unpaid"
@@ -114,22 +141,60 @@ export async function POST(req: Request) {
   }
 
   try {
-    const sponsor = await createSponsor({
-      name,
-      websiteUrl,
-      contactName,
-      contactEmail,
-      contactPhone,
-      contactNotes: notes,
-      file,
-      amountCents: paymentMethod === "waived" && !packageKey ? 0 : amountCents,
-      paymentStatus,
-      levelKey,
-      levelLabel,
-      publishNow,
-      source,
-    })
-    return NextResponse.json({ sponsor }, { status: 201 })
+    const sponsors = []
+    let sharedLogoUrl = ""
+    let sharedLogoKey = ""
+
+    for (let i = 0; i < resolved.length; i++) {
+      const pkg = resolved[i]!
+      const amountCents =
+        paymentMethod === "waived" && !pkg.key ? 0 : pkg.amountCents
+
+      const sponsor =
+        i === 0
+          ? await createSponsor({
+              name,
+              websiteUrl,
+              contactName,
+              contactEmail,
+              contactPhone,
+              contactNotes: notes,
+              file,
+              amountCents,
+              paymentStatus,
+              levelKey: pkg.key,
+              levelLabel: pkg.label,
+              publishNow,
+              source,
+            })
+          : await createSponsor({
+              name,
+              websiteUrl,
+              contactName,
+              contactEmail,
+              contactPhone,
+              contactNotes: notes,
+              logoUrl: sharedLogoUrl,
+              logoKey: sharedLogoKey,
+              amountCents,
+              paymentStatus,
+              levelKey: pkg.key,
+              levelLabel: pkg.label,
+              publishNow,
+              source,
+            })
+
+      if (i === 0) {
+        sharedLogoUrl = sponsor.logo_url
+        sharedLogoKey = sponsor.logo_key
+      }
+      sponsors.push(sponsor)
+    }
+
+    return NextResponse.json(
+      { sponsor: sponsors[0], sponsors, count: sponsors.length },
+      { status: 201 },
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : "Could not save sponsor."
     return NextResponse.json({ error: message }, { status: 400 })

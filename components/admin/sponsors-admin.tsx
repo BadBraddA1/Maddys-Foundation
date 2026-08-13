@@ -19,7 +19,7 @@ const emptyForm = {
   contactEmail: "",
   contactPhone: "",
   contactNotes: "",
-  packageKey: "",
+  packageKeys: [] as string[],
   paymentMethod: "waived" as "waived" | "card" | "check",
 }
 
@@ -57,6 +57,9 @@ export function SponsorsAdmin({
   const [editDraft, setEditDraft] = useState(emptyForm)
   const [amountDrafts, setAmountDrafts] = useState<Record<number, string>>({})
   const [checkPackageDrafts, setCheckPackageDrafts] = useState<
+    Record<number, string>
+  >({})
+  const [extraPackageDrafts, setExtraPackageDrafts] = useState<
     Record<number, string>
   >({})
   const [busy, setBusy] = useState(false)
@@ -159,9 +162,9 @@ export function SponsorsAdmin({
     if (!file || busy) return
     if (
       (form.paymentMethod === "check" || form.paymentMethod === "card") &&
-      !form.packageKey
+      form.packageKeys.length === 0
     ) {
-      setError("Choose which sponsorship package they took.")
+      setError("Choose at least one sponsorship package.")
       return
     }
     setBusy(true)
@@ -175,23 +178,35 @@ export function SponsorsAdmin({
       body.set("contactEmail", form.contactEmail)
       body.set("contactPhone", form.contactPhone)
       body.set("contactNotes", form.contactNotes)
-      body.set("packageKey", form.packageKey)
+      for (const key of form.packageKeys) {
+        body.append("packageKeys", key)
+      }
       body.set("paymentMethod", form.paymentMethod)
       body.set("logo", file)
       const res = await fetch("/api/admin/sponsors", { method: "POST", body })
-      const data = (await res.json()) as { error?: string; sponsor?: { id: number } }
+      const data = (await res.json()) as {
+        error?: string
+        count?: number
+      }
       if (!res.ok) {
         setError(data.error || "Could not add sponsor.")
         return
       }
+      const count = data.count ?? 1
       setForm(emptyForm)
       setFile(null)
       setMessage(
         form.paymentMethod === "check"
-          ? "Sponsor added — package claimed as paid by check."
+          ? count > 1
+            ? `Sponsor added — ${count} packages claimed as paid by check.`
+            : "Sponsor added — package claimed as paid by check."
           : form.paymentMethod === "card"
-            ? "Sponsor added as unpaid draft — email the Stripe pay link when ready."
-            : "Sponsor added.",
+            ? count > 1
+              ? `Sponsor added — ${count} unpaid drafts (email Stripe links when ready).`
+              : "Sponsor added as unpaid draft — email the Stripe pay link when ready."
+            : count > 1
+              ? `Sponsor added — ${count} complimentary packages.`
+              : "Sponsor added.",
       )
       await refresh()
     } catch {
@@ -199,6 +214,18 @@ export function SponsorsAdmin({
     } finally {
       setBusy(false)
     }
+  }
+
+  function togglePackageKey(key: string) {
+    setForm((f) => {
+      const has = f.packageKeys.includes(key)
+      return {
+        ...f,
+        packageKeys: has
+          ? f.packageKeys.filter((k) => k !== key)
+          : [...f.packageKeys, key],
+      }
+    })
   }
 
   function startEdit(sponsor: Sponsor) {
@@ -210,7 +237,7 @@ export function SponsorsAdmin({
       contactEmail: sponsor.contact_email,
       contactPhone: sponsor.contact_phone,
       contactNotes: sponsor.contact_notes,
-      packageKey: sponsor.level_key,
+      packageKeys: sponsor.level_key ? [sponsor.level_key] : [],
       paymentMethod: "waived",
     })
     setError(null)
@@ -230,7 +257,7 @@ export function SponsorsAdmin({
       body.set("contactEmail", editDraft.contactEmail)
       body.set("contactPhone", editDraft.contactPhone)
       body.set("contactNotes", editDraft.contactNotes)
-      body.set("packageKey", editDraft.packageKey)
+      body.set("packageKey", editDraft.packageKeys[0] ?? "")
       const res = await fetch("/api/admin/sponsors", { method: "PATCH", body })
       const data = (await res.json()) as { error?: string }
       if (!res.ok) {
@@ -292,7 +319,12 @@ export function SponsorsAdmin({
 
   async function payAction(
     sponsorId: number,
-    action: "set_amount" | "send_invite" | "mark_paid" | "mark_paid_check",
+    action:
+      | "set_amount"
+      | "send_invite"
+      | "mark_paid"
+      | "mark_paid_check"
+      | "claim_another_package",
     amountUsd?: string,
     packageKey?: string,
   ) {
@@ -329,6 +361,15 @@ export function SponsorsAdmin({
         )
       } else if (action === "mark_paid_check") {
         setMessage("Marked paid by check — package claimed, logo published.")
+      } else if (action === "claim_another_package") {
+        setExtraPackageDrafts((d) => {
+          const next = { ...d }
+          delete next[sponsorId]
+          return next
+        })
+        setMessage(
+          "Additional package claimed (check) — same logo, new inventory row.",
+        )
       } else {
         setMessage("Marked paid — logo published.")
       }
@@ -491,9 +532,9 @@ export function SponsorsAdmin({
       <form onSubmit={(e) => void onCreate(e)} className="border border-line bg-surface p-5 space-y-4">
         <h2 className="font-display text-xl">Add sponsor</h2>
         <p className="text-sm text-muted">
-          For check payments, pick the package they took — it claims that
-          inventory spot and publishes the logo. Card drafts stay hidden until
-          Stripe confirms.
+          For check payments, select one or more packages — one logo upload
+          claims each spot and publishes. Card drafts stay hidden until Stripe
+          confirms.
         </p>
         <div>
           <label htmlFor="sponsor-name" className="block text-sm font-medium">
@@ -508,54 +549,68 @@ export function SponsorsAdmin({
             maxLength={120}
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="sponsor-package" className="block text-sm font-medium">
-              Sponsorship package
-            </label>
-            <select
-              id="sponsor-package"
-              className="field-control mt-1.5 min-h-11 w-full"
-              value={form.packageKey}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, packageKey: e.target.value }))
-              }
-              required={
-                form.paymentMethod === "check" || form.paymentMethod === "card"
-              }
-            >
-              <option value="">— None / complimentary —</option>
-              {packageOptions.map((o) => (
-                <option key={o.key} value={o.key} disabled={o.soldOut}>
-                  {o.label}
-                  {o.soldOut ? " (sold out)" : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="sponsor-pay-method" className="block text-sm font-medium">
-              Payment
-            </label>
-            <select
-              id="sponsor-pay-method"
-              className="field-control mt-1.5 min-h-11 w-full"
-              value={form.paymentMethod}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  paymentMethod: e.target.value as
-                    | "waived"
-                    | "card"
-                    | "check",
-                }))
-              }
-            >
-              <option value="waived">Complimentary / publish now</option>
-              <option value="check">Paid by check (claim package)</option>
-              <option value="card">Card — unpaid Stripe link</option>
-            </select>
-          </div>
+        <div>
+          <p className="block text-sm font-medium">Sponsorship packages</p>
+          <p className="mt-1 text-xs text-muted">
+            Select multiple if they paid for more than one (e.g. men’s and
+            women’s longest drive).
+          </p>
+          <ul className="mt-2 max-h-56 space-y-1.5 overflow-y-auto border border-line p-3">
+            {packageOptions.map((o) => {
+              const checked = form.packageKeys.includes(o.key)
+              return (
+                <li key={o.key}>
+                  <label
+                    className={`flex min-h-10 cursor-pointer items-start gap-2 text-sm ${
+                      o.soldOut && !checked ? "opacity-50" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={checked}
+                      disabled={o.soldOut && !checked}
+                      onChange={() => togglePackageKey(o.key)}
+                    />
+                    <span>
+                      <span className="font-medium text-ink">{o.label}</span>
+                      {o.soldOut ? (
+                        <span className="text-muted"> (sold out)</span>
+                      ) : null}
+                    </span>
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+          {form.packageKeys.length > 0 ? (
+            <p className="mt-2 text-xs text-muted">
+              {form.packageKeys.length} selected
+            </p>
+          ) : null}
+        </div>
+        <div>
+          <label htmlFor="sponsor-pay-method" className="block text-sm font-medium">
+            Payment
+          </label>
+          <select
+            id="sponsor-pay-method"
+            className="field-control mt-1.5 min-h-11 w-full max-w-md"
+            value={form.paymentMethod}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                paymentMethod: e.target.value as
+                  | "waived"
+                  | "card"
+                  | "check",
+              }))
+            }
+          >
+            <option value="waived">Complimentary / publish now</option>
+            <option value="check">Paid by check (claim package)</option>
+            <option value="card">Card — unpaid Stripe link</option>
+          </select>
         </div>
         <div>
           <label htmlFor="sponsor-url" className="block text-sm font-medium">
@@ -789,11 +844,11 @@ export function SponsorsAdmin({
                       </label>
                       <select
                         className="field-control mt-1.5 min-h-11 w-full"
-                        value={editDraft.packageKey}
+                        value={editDraft.packageKeys[0] ?? ""}
                         onChange={(e) =>
                           setEditDraft((d) => ({
                             ...d,
-                            packageKey: e.target.value,
+                            packageKeys: e.target.value ? [e.target.value] : [],
                           }))
                         }
                       >
@@ -1005,7 +1060,56 @@ export function SponsorsAdmin({
                         </button>
                       </div>
                     </>
-                  ) : null}
+                  ) : (
+                    <div className="flex flex-wrap items-end gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-muted">
+                          Add another package (check)
+                        </label>
+                        <select
+                          className="field-control mt-1 min-h-10 max-w-[14rem]"
+                          value={extraPackageDrafts[s.id] ?? ""}
+                          onChange={(e) =>
+                            setExtraPackageDrafts((d) => ({
+                              ...d,
+                              [s.id]: e.target.value,
+                            }))
+                          }
+                        >
+                          <option value="">— Select package —</option>
+                          {packageOptions.map((o) => (
+                            <option
+                              key={o.key}
+                              value={o.key}
+                              disabled={o.soldOut || o.key === s.level_key}
+                            >
+                              {o.label}
+                              {o.key === s.level_key
+                                ? " (this row)"
+                                : o.soldOut
+                                  ? " (sold out)"
+                                  : ""}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={busy || !extraPackageDrafts[s.id]}
+                        className="inline-flex min-h-10 items-center border border-line px-3 text-sm disabled:opacity-40"
+                        onClick={() =>
+                          void payAction(
+                            s.id,
+                            "claim_another_package",
+                            undefined,
+                            extraPackageDrafts[s.id],
+                          )
+                        }
+                      >
+                        Claim package
+                      </button>
+                    </div>
+                  )}
                   {s.pay_token ? (
                     <a
                       href={`/sponsor/pay/${s.pay_token}`}
