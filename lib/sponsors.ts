@@ -110,7 +110,17 @@ export async function listPublishedSponsorsPublic(): Promise<PublicSponsor[]> {
     WHERE is_published = 1
     ORDER BY sort_order ASC, id ASC
   `
-  return rows.map(mapPublicSponsor)
+  // One logo per company on the public strip when they buy multiple packages.
+  const seen = new Set<string>()
+  const out: PublicSponsor[] = []
+  for (const row of rows) {
+    const mapped = mapPublicSponsor(row)
+    const dedupeKey = (mapped.logo_url || mapped.name).trim().toLowerCase()
+    if (!dedupeKey || seen.has(dedupeKey)) continue
+    seen.add(dedupeKey)
+    out.push(mapped)
+  }
+  return out
 }
 
 export async function listSponsors(opts?: {
@@ -156,7 +166,10 @@ export async function createSponsor(opts: {
   contactEmail?: string
   contactPhone?: string
   contactNotes?: string
-  file: File
+  /** Upload a new logo file, or reuse an existing logo from another row. */
+  file?: File
+  logoUrl?: string
+  logoKey?: string
   /** When set + unpaid, logo stays off the public strip until paid (or waived). */
   amountCents?: number
   paymentStatus?: SponsorPaymentStatus
@@ -178,11 +191,18 @@ export async function createSponsor(opts: {
   const payToken =
     paymentStatus === "unpaid" && amountCents > 0 ? newPayToken() : ""
 
-  const uploaded = await uploadMediaFile({
-    file: opts.file,
-    folder: "sponsors",
-    filename: opts.file.name,
-  })
+  let logoUrl = (opts.logoUrl ?? "").trim()
+  let logoKey = (opts.logoKey ?? "").trim()
+  if (opts.file) {
+    const uploaded = await uploadMediaFile({
+      file: opts.file,
+      folder: "sponsors",
+      filename: opts.file.name,
+    })
+    logoUrl = uploaded.url
+    logoKey = uploaded.key
+  }
+  if (!logoUrl) throw new Error("Logo is required")
 
   const maxRows = await sql`SELECT COALESCE(MAX(sort_order), 0) AS m FROM sponsors`
   const sortOrder = Number(maxRows[0]?.m ?? 0) + 1
@@ -192,12 +212,13 @@ export async function createSponsor(opts: {
       (name, logo_url, logo_key, website_url,
        contact_name, contact_email, contact_phone, contact_notes,
        sort_order, is_published,
-       amount_cents, payment_status, level_key, level_label, pay_token, source)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       amount_cents, payment_status, level_key, level_label, pay_token, source,
+       paid_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       name,
-      uploaded.url,
-      uploaded.key,
+      logoUrl,
+      logoKey,
       (opts.websiteUrl ?? "").trim().slice(0, 500),
       (opts.contactName ?? "").trim().slice(0, 120),
       normalizeEmail(opts.contactEmail ?? ""),
@@ -211,6 +232,7 @@ export async function createSponsor(opts: {
       (opts.levelLabel ?? "").trim().slice(0, 80),
       payToken,
       (opts.source ?? "admin").slice(0, 40),
+      paymentStatus === "paid" ? new Date().toISOString() : null,
     ],
   )
   const id = Number(result.lastInsertRowid ?? 0)
@@ -218,6 +240,72 @@ export async function createSponsor(opts: {
   if (!sponsor) throw new Error("Could not create sponsor")
   revalidateSponsors()
   return sponsor
+}
+
+async function logoKeyInUseElsewhere(
+  logoKey: string,
+  exceptId: number,
+): Promise<boolean> {
+  if (!logoKey) return false
+  const rows = await sql`
+    SELECT id FROM sponsors
+    WHERE logo_key = ${logoKey} AND id != ${exceptId}
+    LIMIT 1
+  `
+  return Boolean(rows[0])
+}
+
+/**
+ * Claim another package for an existing company (reuse logo + contacts).
+ * Used when one sponsor pays for multiple packages (e.g. check for two contests).
+ */
+export async function claimAdditionalPackage(opts: {
+  fromSponsorId: number
+  packageKey: string
+  via?: "admin_check" | "admin_manual" | "waived"
+}): Promise<Sponsor> {
+  const source = await getSponsor(opts.fromSponsorId)
+  if (!source) throw new Error("Sponsor not found")
+  if (!source.logo_url.trim()) {
+    throw new Error("Add a logo on the original sponsor before claiming another package.")
+  }
+
+  const { assertPackageHasRoom } = await import("@/lib/sponsor-hold")
+  const room = await assertPackageHasRoom(opts.packageKey)
+  if (!room.ok) throw new Error(room.error)
+
+  const via = opts.via ?? "admin_check"
+  const paymentStatus: SponsorPaymentStatus =
+    via === "waived" ? "waived" : "paid"
+  const checkNote =
+    via === "admin_check"
+      ? "Paid by check"
+      : via === "waived"
+        ? "Complimentary"
+        : "Paid (admin)"
+  const priorNotes = source.contact_notes.trim()
+  const notes = priorNotes
+    ? priorNotes.includes(checkNote)
+      ? priorNotes
+      : `${priorNotes}\n${checkNote}`
+    : checkNote
+
+  return createSponsor({
+    name: source.name,
+    websiteUrl: source.website_url,
+    contactName: source.contact_name,
+    contactEmail: source.contact_email,
+    contactPhone: source.contact_phone,
+    contactNotes: notes,
+    logoUrl: source.logo_url,
+    logoKey: source.logo_key,
+    amountCents: room.package.amountCents,
+    paymentStatus,
+    levelKey: room.package.key,
+    levelLabel: room.package.label,
+    publishNow: true,
+    source: via === "admin_check" ? "admin_check" : "admin",
+  })
 }
 
 export async function updateSponsor(
@@ -252,7 +340,11 @@ export async function updateSponsor(
     })
     logoUrl = uploaded.url
     logoKey = uploaded.key
-    if (current.logo_key && current.logo_key !== logoKey) {
+    if (
+      current.logo_key &&
+      current.logo_key !== logoKey &&
+      !(await logoKeyInUseElsewhere(current.logo_key, id))
+    ) {
       await deleteMediaKey(current.logo_key).catch(() => undefined)
     }
   }
@@ -497,7 +589,10 @@ export async function deleteSponsor(id: number): Promise<void> {
   const current = await getSponsor(id)
   if (!current) return
   await sql.execute(`DELETE FROM sponsors WHERE id = ?`, [id])
-  if (current.logo_key) {
+  if (
+    current.logo_key &&
+    !(await logoKeyInUseElsewhere(current.logo_key, id))
+  ) {
     await deleteMediaKey(current.logo_key).catch(() => undefined)
   }
   revalidateSponsors()

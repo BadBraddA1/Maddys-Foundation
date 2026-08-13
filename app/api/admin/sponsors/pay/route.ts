@@ -6,6 +6,7 @@ import { createSponsorCheckoutSession } from "@/lib/sponsor-checkout"
 import { assertPackageHasRoom } from "@/lib/sponsor-hold"
 import { getSponsorPackage } from "@/lib/sponsor-packages"
 import {
+  claimAdditionalPackage,
   ensureSponsorPaymentColumns,
   getSponsor,
   markSponsorPaid,
@@ -106,6 +107,38 @@ export async function POST(req: Request) {
       ok: true,
       payUrl: `${publicSiteUrl()}/sponsor/pay/${sponsor.pay_token}`,
     })
+  }
+
+  if (action === "claim_another_package") {
+    const packageKey = String(body?.packageKey ?? "").trim()
+    if (!packageKey) {
+      return NextResponse.json(
+        { error: "Choose which sponsorship package to add." },
+        { status: 400 },
+      )
+    }
+    if (packageKey === sponsor.level_key) {
+      return NextResponse.json(
+        {
+          error:
+            "That package is already on this sponsor row. Pick a different package.",
+        },
+        { status: 400 },
+      )
+    }
+    try {
+      const created = await claimAdditionalPackage({
+        fromSponsorId: sponsorId,
+        packageKey,
+        via: "admin_check",
+      })
+      return NextResponse.json({ sponsor: created, ok: true })
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not claim package."
+      const status = message.toLowerCase().includes("sold out") ? 409 : 400
+      return NextResponse.json({ error: message }, { status })
+    }
   }
 
   if (action === "mark_paid" || action === "mark_paid_check") {
