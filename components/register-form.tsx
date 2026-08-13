@@ -877,11 +877,6 @@ export function RegisterForm({
                 ? "Register team"
                 : "Register"}
       </button>
-      {requirePayment && !holdExpired ? (
-        <p className="text-sm text-muted">
-          Card payment stays on this page — no redirect to Stripe.
-        </p>
-      ) : null}
     </form>
   )
 }
