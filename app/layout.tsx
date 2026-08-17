@@ -16,6 +16,7 @@ import {
   twitterImagePath,
 } from "@/lib/site-metadata"
 import "./globals.css"
+import "./clerk-auth.css"
 
 export const viewport: Viewport = {
   width: "device-width",

@@ -33,7 +33,7 @@ export function StaffAuthShell({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-deep px-5 py-12 text-on-deep">
+    <div className="flex min-h-screen flex-col bg-bg px-5 py-12 text-ink">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8">
         <div className="text-center">
           <Link href="/" className="inline-flex">
@@ -45,23 +45,19 @@ export function StaffAuthShell({
               className="mx-auto size-[72px] rounded-full"
             />
           </Link>
-          <p className="mt-5 text-sm font-medium uppercase tracking-wide text-on-deep-muted">
+          <p className="mt-5 text-sm font-medium uppercase tracking-wide text-muted">
             Madalyn Robinson Foundation
           </p>
-          <h1 className="mt-2 font-display text-3xl text-on-deep text-balance">
-            {title}
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-on-deep-muted">
-            {description}
-          </p>
+          <h1 className="mt-2 text-balance font-display text-3xl text-ink">{title}</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted">{description}</p>
         </div>
 
-        <div className="text-ink">{children}</div>
+        {children}
 
-        <p className="text-center text-sm text-on-deep-muted">
+        <p className="text-center text-sm text-muted">
           <Link
             href={altHref}
-            className="font-medium text-on-deep underline-offset-4 hover:underline"
+            className="font-medium text-accent-ink underline-offset-4 hover:underline"
           >
             {altLabel}
           </Link>
@@ -69,12 +65,12 @@ export function StaffAuthShell({
 
         <Link
           href="/"
-          className="inline-flex min-h-11 items-center justify-center text-sm font-medium text-on-deep-muted underline-offset-4 hover:text-on-deep hover:underline"
+          className="inline-flex min-h-11 items-center justify-center text-sm font-medium text-muted underline-offset-4 hover:text-ink hover:underline"
         >
           ← Home
         </Link>
 
-        <PoweredByBraddcorp onDark />
+        <PoweredByBraddcorp />
       </div>
     </div>
   )

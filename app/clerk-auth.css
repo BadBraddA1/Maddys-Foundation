@@ -1,0 +1,16 @@
+/* Clerk infers OS dark mode and paints a black footer. Lock auth widgets to light. */
+.cl-rootBox,
+.cl-cardBox,
+.cl-card {
+  color-scheme: light;
+}
+.cl-footer,
+.cl-footerPages,
+.cl-internal-1dauvp9,
+.cl-footerAction {
+  display: none !important;
+}
+.cl-cardBox,
+.cl-card {
+  box-shadow: none !important;
+}

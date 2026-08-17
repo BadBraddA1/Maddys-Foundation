@@ -20,7 +20,7 @@ export const clerkAppearance = {
     fontSize: "16px",
   },
   elements: {
-    rootBox: { width: "100%" },
+    rootBox: { width: "100%", colorScheme: "light" },
     cardBox: { width: "100%", boxShadow: "none" },
     card: {
       boxShadow: "none",
@@ -35,6 +35,7 @@ export const clerkAppearance = {
     footerAction: { display: "none" },
     footer: { display: "none" },
     footerItem: { display: "none" },
+    socialButtons: { display: "none" },
     formButtonPrimary: {
       backgroundColor: "#1c3d32",
       color: "#f8f5ea",
@@ -57,13 +58,6 @@ export const clerkAppearance = {
       fontWeight: "500",
     },
     formFieldHintText: { color: "#4e4735", fontSize: "13px" },
-    socialButtonsBlockButton: {
-      height: "44px",
-      backgroundColor: "#ffffff",
-      color: "#261e0e",
-      border: "1px solid #d9d8cd",
-      boxShadow: "none",
-    },
     dividerLine: { backgroundColor: "#d9d8cd" },
     dividerText: { color: "#4e4735" },
     identityPreviewText: { color: "#261e0e" },
