@@ -5,6 +5,7 @@ import { Literata, Source_Sans_3 } from "next/font/google"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteFooterGate } from "@/components/site-footer-gate"
 import { clerkConfigured } from "@/lib/auth"
+import { clerkAppearance } from "@/lib/clerk-appearance"
 import {
   ogImageAlt,
   ogImagePath,
@@ -83,7 +84,7 @@ function Providers({ children }: { children: React.ReactNode }) {
   if (!clerkConfigured()) {
     return <>{children}</>
   }
-  return <ClerkProvider>{children}</ClerkProvider>
+  return <ClerkProvider appearance={clerkAppearance}>{children}</ClerkProvider>
 }
 
 export default function RootLayout({
