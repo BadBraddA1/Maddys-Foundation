@@ -56,9 +56,7 @@ export function StaffAuthShell({
           </p>
         </div>
 
-        <div className="rounded-lg border border-on-deep-border bg-surface p-6 text-ink shadow-sm">
-          {children}
-        </div>
+        <div className="text-ink">{children}</div>
 
         <p className="text-center text-sm text-on-deep-muted">
           <Link
