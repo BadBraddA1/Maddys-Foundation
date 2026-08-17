@@ -1,0 +1,319 @@
+/*
+  BraddCorp auth kit — one stylesheet, zero Clerk chrome.
+  Import once in app/layout.tsx:  import "@/styles/auth.css"
+
+  EDIT ONLY THE :root BLOCK PER SITE. Map these to the site's brand.
+  Hex/oklch literals only — no var() indirection into framework tokens,
+  so the auth pages render right even before the design system loads.
+*/
+
+:root {
+  /* Maddys memorial palette — deep evergreen on warm parchment */
+  --auth-bg: #fdfcf7;
+  --auth-card: #ffffff;
+  --auth-ink: #261e0e;
+  --auth-muted: #4e4735;
+  --auth-border: #d9d8cd;
+  --auth-primary: #1c3d32;
+  --auth-primary-ink: #f8f5ea;
+  --auth-danger: #9b2c2c;
+  --auth-radius: 8px;
+  --auth-font: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+
+.ba-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 3rem 1rem;
+  background: var(--auth-bg);
+  color: var(--auth-ink);
+  font-family: var(--auth-font);
+  color-scheme: light;
+}
+
+.ba-shell {
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.ba-header {
+  text-align: center;
+}
+
+.ba-home-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--auth-muted);
+  text-decoration: none;
+}
+
+.ba-home-link:hover {
+  color: var(--auth-ink);
+}
+
+.ba-title {
+  margin: 0.75rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.ba-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--auth-muted);
+}
+
+.ba-card {
+  background: var(--auth-card);
+  border: 1px solid var(--auth-border);
+  border-radius: calc(var(--auth-radius) + 4px);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ba-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ba-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  /* Let fields shrink inside grid/flex rows instead of overflowing. */
+  min-width: 0;
+}
+
+.ba-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.ba-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.ba-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.ba-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 0.75rem;
+  font-size: 1rem;
+  color: var(--auth-ink);
+  background: var(--auth-card);
+  border: 1px solid var(--auth-border);
+  border-radius: var(--auth-radius);
+  outline: none;
+}
+
+.ba-input:focus {
+  border-color: var(--auth-primary);
+  box-shadow: 0 0 0 1px var(--auth-primary);
+}
+
+.ba-input[aria-invalid="true"] {
+  border-color: var(--auth-danger);
+}
+
+.ba-button {
+  height: 44px;
+  border: 0;
+  border-radius: var(--auth-radius);
+  background: var(--auth-primary);
+  color: var(--auth-primary-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ba-button:hover {
+  filter: brightness(1.08);
+}
+
+.ba-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ba-button-secondary {
+  background: transparent;
+  color: var(--auth-primary);
+  border: 1px solid var(--auth-border);
+}
+
+.ba-button-secondary:hover {
+  filter: none;
+  border-color: var(--auth-primary);
+}
+
+.ba-social {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ba-social-button {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  border: 1px solid var(--auth-border);
+  border-radius: var(--auth-radius);
+  background: var(--auth-card);
+  color: var(--auth-ink);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ba-social-button:hover {
+  border-color: var(--auth-primary);
+}
+
+.ba-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--auth-muted);
+}
+
+.ba-divider::before,
+.ba-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--auth-border);
+}
+
+.ba-link {
+  color: var(--auth-primary);
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ba-link:hover {
+  text-decoration: underline;
+}
+
+.ba-error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--auth-danger);
+}
+
+.ba-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--auth-muted);
+}
+
+.ba-greeting {
+  margin: 0;
+  text-align: center;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.ba-identity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.ba-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--auth-border);
+}
+
+.ba-identity-email {
+  color: var(--auth-muted);
+}
+
+.ba-pending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.ba-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 3px solid var(--auth-border);
+  border-top-color: var(--auth-primary);
+  animation: ba-spin 0.8s linear infinite;
+}
+
+@keyframes ba-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ba-spinner {
+    animation: ba-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes ba-pulse {
+    50% {
+      opacity: 0.4;
+    }
+  }
+}
+
+.ba-footer {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--auth-muted);
+}
+
+.ba-footer a {
+  color: var(--auth-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ba-footer a:hover {
+  text-decoration: underline;
+}
