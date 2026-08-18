@@ -711,7 +711,17 @@ export function SponsorsAdmin({
       </form>
 
       <div>
-        <h2 className="font-display text-xl">Sponsors</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-xl">Sponsors</h2>
+          {sponsors.some((s) => s.logo_url) ? (
+            <a
+              href="/api/admin/sponsors/logos"
+              className="inline-flex min-h-10 items-center border border-line px-3 text-sm"
+            >
+              Download all logos (.zip)
+            </a>
+          ) : null}
+        </div>
         {sponsors.length === 0 ? (
           <p className="mt-4 text-muted">No sponsors yet.</p>
         ) : (
@@ -776,6 +786,15 @@ export function SponsorsAdmin({
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 text-sm">
+                    {s.logo_url ? (
+                      <a
+                        href={`/api/admin/sponsors/logos?id=${s.id}`}
+                        className="inline-flex min-h-11 items-center border border-line px-3"
+                        title={`Download ${s.name} logo`}
+                      >
+                        Download logo
+                      </a>
+                    ) : null}
                     <button
                       type="button"
                       disabled={busy || i === 0}
