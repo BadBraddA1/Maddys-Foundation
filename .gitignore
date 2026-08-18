@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local dev database (created by .cursor/install.sh / scripts/dev-setup.mjs)
+/data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
