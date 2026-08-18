@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:schema": "turso db shell maddys-foundation < scripts/schema-turso.sql",
-    "db:seed-checkin": "node scripts/seed-check-in.mjs"
+    "db:seed-checkin": "node scripts/seed-check-in.mjs",
+    "photo-booth": "node scripts/build-photo-booth-overlays.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.6.3",

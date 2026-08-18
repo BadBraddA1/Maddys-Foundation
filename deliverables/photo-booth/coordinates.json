@@ -1,0 +1,305 @@
+{
+  "event": "2nd Annual Golf Scramble",
+  "organization": "Madalyn Robinson Foundation",
+  "date": "September 25, 2026",
+  "venue": "Oak Valley Golf Course, Pevely, Missouri",
+  "site": "https://maddysfoundation.org",
+  "generatedAt": "2026-08-18T00:28:20.952Z",
+  "notes": "PNG overlays are transparent in the photo windows. Import the matching overlay, then set capture boxes to the coordinates below (pixels from the top-left of the overlay).",
+  "files": [
+    {
+      "file": "overlays/4x6-landscape-1up.png",
+      "preview": "previews/4x6-landscape-1up.jpg",
+      "print": "4×6 in landscape (1 photo)",
+      "pixels": [
+        1800,
+        1200
+      ],
+      "dpi": 300,
+      "photos": [
+        {
+          "index": 1,
+          "x": 52,
+          "y": 156,
+          "width": 1696,
+          "height": 868
+        }
+      ]
+    },
+    {
+      "file": "overlays/4x6-portrait-1up.png",
+      "preview": "previews/4x6-portrait-1up.jpg",
+      "print": "4×6 in portrait (1 photo)",
+      "pixels": [
+        1200,
+        1800
+      ],
+      "dpi": 300,
+      "photos": [
+        {
+          "index": 1,
+          "x": 56,
+          "y": 210,
+          "width": 1088,
+          "height": 1360
+        }
+      ]
+    },
+    {
+      "file": "overlays/4x6-landscape-2up.png",
+      "preview": "previews/4x6-landscape-2up.jpg",
+      "print": "4×6 in landscape (2 photos)",
+      "pixels": [
+        1800,
+        1200
+      ],
+      "dpi": 300,
+      "photos": [
+        {
+          "index": 1,
+          "x": 40,
+          "y": 140,
+          "width": 842,
+          "height": 912
+        },
+        {
+          "index": 2,
+          "x": 918,
+          "y": 140,
+          "width": 842,
+          "height": 912
+        }
+      ]
+    },
+    {
+      "file": "overlays/4x6-portrait-3up.png",
+      "preview": "previews/4x6-portrait-3up.jpg",
+      "print": "4×6 in portrait (3 photos)",
+      "pixels": [
+        1200,
+        1800
+      ],
+      "dpi": 300,
+      "photos": [
+        {
+          "index": 1,
+          "x": 48,
+          "y": 188,
+          "width": 1104,
+          "height": 458
+        },
+        {
+          "index": 2,
+          "x": 48,
+          "y": 662,
+          "width": 1104,
+          "height": 458
+        },
+        {
+          "index": 3,
+          "x": 48,
+          "y": 1136,
+          "width": 1104,
+          "height": 458
+        }
+      ]
+    },
+    {
+      "file": "overlays/2x6-strip-3up.png",
+      "preview": "previews/2x6-strip-3up.jpg",
+      "print": "2×6 in strip (3 photos)",
+      "pixels": [
+        600,
+        1800
+      ],
+      "dpi": 300,
+      "photos": [
+        {
+          "index": 1,
+          "x": 18,
+          "y": 168,
+          "width": 564,
+          "height": 480
+        },
+        {
+          "index": 2,
+          "x": 18,
+          "y": 662,
+          "width": 564,
+          "height": 480
+        },
+        {
+          "index": 3,
+          "x": 18,
+          "y": 1156,
+          "width": 564,
+          "height": 480
+        }
+      ]
+    },
+    {
+      "file": "overlays/2x6-strip-4up.png",
+      "preview": "previews/2x6-strip-4up.jpg",
+      "print": "2×6 in strip (4 photos)",
+      "pixels": [
+        600,
+        1800
+      ],
+      "dpi": 300,
+      "photos": [
+        {
+          "index": 1,
+          "x": 16,
+          "y": 128,
+          "width": 568,
+          "height": 380
+        },
+        {
+          "index": 2,
+          "x": 16,
+          "y": 520,
+          "width": 568,
+          "height": 380
+        },
+        {
+          "index": 3,
+          "x": 16,
+          "y": 912,
+          "width": 568,
+          "height": 380
+        },
+        {
+          "index": 4,
+          "x": 16,
+          "y": 1304,
+          "width": 568,
+          "height": 380
+        }
+      ]
+    },
+    {
+      "file": "overlays/social-square-1up.png",
+      "preview": "previews/social-square-1up.jpg",
+      "print": "1080×1080 square (GIFs / 360 / sharing)",
+      "pixels": [
+        1080,
+        1080
+      ],
+      "dpi": 72,
+      "photos": [
+        {
+          "index": 1,
+          "x": 48,
+          "y": 148,
+          "width": 984,
+          "height": 776
+        }
+      ]
+    },
+    {
+      "file": "overlays/story-portrait-1up.png",
+      "preview": "previews/story-portrait-1up.jpg",
+      "print": "1080×1920 story / iPad (1 photo)",
+      "pixels": [
+        1080,
+        1920
+      ],
+      "dpi": 72,
+      "photos": [
+        {
+          "index": 1,
+          "x": 48,
+          "y": 220,
+          "width": 984,
+          "height": 1460
+        }
+      ]
+    },
+    {
+      "file": "overlays/4x6-double-strip-3up.png",
+      "preview": "previews/4x6-double-strip-3up.jpg",
+      "print": "4×6 in (two identical 2×6 strips side by side)",
+      "pixels": [
+        1200,
+        1800
+      ],
+      "dpi": 300,
+      "photos": [
+        {
+          "index": 1,
+          "x": 18,
+          "y": 168,
+          "width": 564,
+          "height": 480
+        },
+        {
+          "index": 2,
+          "x": 18,
+          "y": 662,
+          "width": 564,
+          "height": 480
+        },
+        {
+          "index": 3,
+          "x": 18,
+          "y": 1156,
+          "width": 564,
+          "height": 480
+        },
+        {
+          "index": 4,
+          "x": 618,
+          "y": 168,
+          "width": 564,
+          "height": 480
+        },
+        {
+          "index": 5,
+          "x": 618,
+          "y": 662,
+          "width": 564,
+          "height": 480
+        },
+        {
+          "index": 6,
+          "x": 618,
+          "y": 1156,
+          "width": 564,
+          "height": 480
+        }
+      ]
+    },
+    {
+      "file": "screens/welcome-1920x1080.jpg",
+      "print": "Booth start / thanks screen (not an overlay)",
+      "pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "file": "screens/welcome-1080x1920.jpg",
+      "print": "Booth start / thanks screen (not an overlay)",
+      "pixels": [
+        1080,
+        1920
+      ]
+    },
+    {
+      "file": "screens/thanks-1920x1080.jpg",
+      "print": "Booth start / thanks screen (not an overlay)",
+      "pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "file": "screens/thanks-1080x1920.jpg",
+      "print": "Booth start / thanks screen (not an overlay)",
+      "pixels": [
+        1080,
+        1920
+      ]
+    }
+  ]
+}
