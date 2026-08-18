@@ -11,7 +11,10 @@ const exploreLinks = [
   { href: "/donate", label: "Donate" },
 ]
 
-const utilityLinks = [{ href: "/privacy", label: "Privacy" }]
+const utilityLinks = [
+  { href: "/brand", label: "Logos" },
+  { href: "/privacy", label: "Privacy" },
+]
 
 /** Site footer — playbook 05 / LECYC-style columns + BraddCorp credit. */
 export async function SiteFooter() {

@@ -4,7 +4,7 @@ Public foundation site + custom event registration for **[maddysfoundation.org](
 
 ## What this is
 
-- Marketing site (home, Maddy’s story, donate, privacy, **gallery**)
+- Marketing site (home, Maddy’s story, donate, **logos**, privacy, **gallery**)
 - Published events list + detail pages (Google / Apple Maps links from location)
 - Public registration — individual RSVP or team events (e.g. 4-person scramble); **capacity is team-based** when team size is set; opening the register form **reserves a capacity slot** for **10 minutes** (assumes they’ll pay); unpaid / expired holds return to the pool; roster only shows paid teams
 - Staff admin (`/admin`) to create/edit/delete events, **add/edit/delete roster registrations** (and team player lists), confirm payment, **release unpaid holds**, **day-of player check-in**, **sponsors** (footer marquee), **gallery** photos, **email template tests** (`/admin/email`), **staff invites / roles** (`/admin/staff`), and **audit log** (`/admin/audit`)
@@ -126,7 +126,8 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 
 ## Brand assets
 
-- Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` source
+- Logo: `public/brand/logo-96.webp` (chrome) · `logo.jpg` / `logo.webp` / `logo.png` source · transparent + white PNGs from `node scripts/export-logo-downloads.mjs`
+- Public downloads: [`/brand`](https://maddysfoundation.org/brand) (footer **Logos**, linked from `/sponsor`)
 - Maddy photo: responsive WebP (`maddy-640/960.webp` + `maddy.webp`) with JPEG fallback
 - Favicon / apple-touch: `app/favicon.ico` (16/32/48 from brand logo), `app/icon.png` **192**, `app/apple-icon.png` **180**
 - Open Graph: fairway-green plate (`#1c3d32`) with a full-head Maddy cutout on the right (source JPEG clips her crown, so `maddy-og-fullhead.png` restores it); no rectangular “photo box” / double green — rebuild with `node scripts/rebuild-og-cutout.mjs`; logo/name on the left; event covers use photo + tent

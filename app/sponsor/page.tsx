@@ -84,6 +84,16 @@ export default async function SponsorPage({ searchParams }: Props) {
               minutes while you enter your details and pay on this page. Your
               logo goes live after checkout.
             </p>
+            <p className="mt-4 max-w-prose text-ink/75">
+              Need our mark for your site or a flyer?{" "}
+              <Link
+                href="/brand"
+                className="font-medium text-ink underline underline-offset-4 hover:text-accent-ink"
+              >
+                Download foundation logos
+              </Link>
+              .
+            </p>
 
             <div className="mt-12">
               {packages.length === 0 ? (

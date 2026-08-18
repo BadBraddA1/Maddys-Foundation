@@ -3,7 +3,15 @@ import { listPublishedEvents } from "@/lib/events"
 import { siteUrl } from "@/lib/site-metadata"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticRoutes = ["", "/story", "/events", "/gallery", "/donate", "/privacy"].map(
+  const staticRoutes = [
+    "",
+    "/story",
+    "/events",
+    "/gallery",
+    "/donate",
+    "/brand",
+    "/privacy",
+  ].map(
     (path) => ({
       url: `${siteUrl}${path}`,
       lastModified: new Date(),
