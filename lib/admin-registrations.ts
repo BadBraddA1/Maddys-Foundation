@@ -198,7 +198,7 @@ export async function createAdminRegistration(
       return {
         ok: false,
         status: 409,
-        error: "That email is already registered for this event.",
+        error: "Could not save registration (duplicate code). Try again.",
       }
     }
     console.error("[admin create registration]", err)
@@ -305,7 +305,7 @@ export async function updateAdminRegistration(
       return {
         ok: false,
         status: 409,
-        error: "That email is already registered for this event.",
+        error: "Could not save registration (duplicate code). Try again.",
       }
     }
     console.error("[admin update registration]", err)

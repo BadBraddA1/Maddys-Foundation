@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS registrations (
   check_in_code TEXT,
   confirmation_email_sent_at TEXT,
   reminder_email_sent_at TEXT,
-  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
-  UNIQUE (event_id, email)
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+  -- Multiple teams may share one captain email (no UNIQUE on event_id, email).
 );
 
 CREATE INDEX IF NOT EXISTS idx_registrations_event

@@ -306,10 +306,10 @@ export function RegisterForm({
       }
 
       if (!res.ok) {
-        if (res.status === 409) {
+          if (res.status === 409) {
           setError(
             data.error ||
-              "That email is already registered for this event. Try a different email or contact the foundation.",
+              "Registration could not be saved. Please try again or contact the foundation.",
           )
         } else if (res.status === 404) {
           setError("This event is no longer available.")

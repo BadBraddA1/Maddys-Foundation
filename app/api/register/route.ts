@@ -280,12 +280,16 @@ export async function POST(req: Request) {
     }
   }
 
-  // Replace any abandoned unpaid draft for this email so they can start over.
+  // Replace expired unpaid drafts for this email so a restart works.
+  // Active (unexpired) pending rows are kept — same email can register
+  // multiple teams, and we must not wipe a teammate's open checkout.
   if (requirePayment) {
+    const nowSec = Math.floor(Date.now() / 1000)
     await sql.execute(
       `DELETE FROM registrations
-       WHERE event_id = ? AND email = ? AND status = 'pending' AND paid = 0`,
-      [event.id, email],
+       WHERE event_id = ? AND email = ? AND status = 'pending' AND paid = 0
+         AND (hold_expires_at IS NULL OR hold_expires_at < ?)`,
+      [event.id, email, nowSec],
     )
   }
 
@@ -339,7 +343,7 @@ export async function POST(req: Request) {
     const message = err instanceof Error ? err.message : String(err)
     if (message.includes("UNIQUE") || message.includes("unique")) {
       return NextResponse.json(
-        { error: "That email is already registered for this event." },
+        { error: "Could not save registration. Please try again." },
         { status: 409 },
       )
     }
