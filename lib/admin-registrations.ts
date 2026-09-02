@@ -15,6 +15,7 @@ import type { EventRow } from "@/lib/event-helpers"
 import { isTeamEvent } from "@/lib/event-helpers"
 import { getEventById } from "@/lib/events"
 import { revalidatePublicEvents } from "@/lib/revalidate-public"
+import { parsePrepaidAddons } from "@/lib/roster-parse"
 
 export type AdminPlayerInput = {
   id?: number
@@ -34,6 +35,9 @@ export type AdminRegistrationInput = {
   /** When true (default for admin create), mark paid + confirmed. */
   paid?: boolean
   send_confirmation?: boolean
+  /** Cash/prepaid team add-ons — written into notes like online checkout. */
+  mulligans?: boolean
+  skins?: boolean
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -47,6 +51,8 @@ function buildNotes(opts: {
   captainName: string
   players: string[]
   extraNotes: string
+  mulligans?: boolean
+  skins?: boolean
 }): string {
   const lines: string[] = []
   if (opts.teamName) lines.push(`Team: ${opts.teamName}`)
@@ -55,9 +61,17 @@ function buildNotes(opts: {
     if (i === 0) return
     lines.push(`Player ${i + 1}: ${name}`)
   })
-  if (opts.extraNotes.trim()) {
+  if (opts.mulligans || opts.skins) {
+    const addOns = [
+      opts.mulligans ? "Mulligans: yes (+$20)" : "Mulligans: no",
+      opts.skins ? "Skins: yes (+$20)" : "Skins: no",
+    ].join(" · ")
+    lines.push(`Add-ons (whole team): ${addOns}`)
+  }
+  const extra = extractExtraNotes(opts.extraNotes)
+  if (extra) {
     if (lines.length) lines.push("")
-    lines.push(opts.extraNotes.trim())
+    lines.push(extra)
   }
   return lines.join("\n")
 }
@@ -133,6 +147,8 @@ export async function createAdminRegistration(
     captainName: name,
     players: rosterNames,
     extraNotes: input.notes ?? "",
+    mulligans: Boolean(input.mulligans),
+    skins: Boolean(input.skins),
   })
 
   const paid = input.paid !== false ? 1 : 0
@@ -262,19 +278,40 @@ export async function updateAdminRegistration(
         input.notes !== undefined
           ? extractExtraNotes(input.notes)
           : extractExtraNotes(String(existing.notes ?? ""))
+      const prepaid =
+        input.mulligans !== undefined || input.skins !== undefined
+          ? {
+              mulligans: Boolean(input.mulligans),
+              skins: Boolean(input.skins),
+            }
+          : parsePrepaidAddons(String(existing.notes ?? ""))
       notes = buildNotes({
         teamName,
         captainName: name,
         players: playerInputs.map((p) => p.display_name),
         extraNotes: extra,
+        mulligans: prepaid.mulligans,
+        skins: prepaid.skins,
       })
       await replacePlayers(registrationId, eventId, prefix, playerInputs)
-    } else if (input.notes !== undefined) {
+    } else if (input.notes !== undefined || input.mulligans !== undefined || input.skins !== undefined) {
+      const prepaid =
+        input.mulligans !== undefined || input.skins !== undefined
+          ? {
+              mulligans: Boolean(input.mulligans),
+              skins: Boolean(input.skins),
+            }
+          : parsePrepaidAddons(String(existing.notes ?? ""))
       notes = buildNotes({
         teamName,
         captainName: name,
         players: [name],
-        extraNotes: extractExtraNotes(input.notes),
+        extraNotes:
+          input.notes !== undefined
+            ? extractExtraNotes(input.notes)
+            : extractExtraNotes(String(existing.notes ?? "")),
+        mulligans: prepaid.mulligans,
+        skins: prepaid.skins,
       })
     }
 
@@ -287,6 +324,7 @@ export async function updateAdminRegistration(
 
     await ensureRegistrationCheckInCode(registrationId, prefix)
     if (Number(existing.paid) === 1) {
+      await ensureCheckInRosterForRegistration(registrationId).catch(() => undefined)
       await syncPlayersForRegistration(registrationId, actor).catch(() => 0)
     }
 
@@ -316,7 +354,12 @@ export async function updateAdminRegistration(
 export function extractExtraNotes(notes: string): string {
   return notes
     .split("\n")
-    .filter((line) => !/^\s*(Team|Captain|Player\s+\d+)\s*:/i.test(line))
+    .filter(
+      (line) =>
+        !/^\s*(Team|Captain|Player\s+\d+|Add-ons|Total due|Mulligans|Skins|Cover card fees)\s*:/i.test(
+          line,
+        ),
+    )
     .join("\n")
     .replace(/^\n+/, "")
     .trim()

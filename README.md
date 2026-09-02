@@ -153,7 +153,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 - Day-of check-in: `/admin/check-in` (search paid teams, per-player check-in/undo, desk add-ons, QR); **player QR auto check-in**; `/admin/check-in/dashboard` totals + CSV; players synced from roster notes on paid confirm
 - Registration email: confirmation on paid confirm (Stripe webhook + admin Mark paid) via **SendKit**; Pew Packer–style branded HTML (cream page, circular logo, gold→fairway stripe, rounded card, pill CTA); team ticket `/ticket/[code]` (captain enters teammate emails → personal `/ticket/p/[code]` QRs); daily cron (`vercel.json` 14:00 UTC) sends a 7-day teammate reminder; roster/check-in can **Resend confirmation**
 - Admin events: create / edit / **delete** + optional cover image URL for event OG cards
-- Admin roster: **Add registration**, **Edit roster** (captain + player names/emails), **Delete registration** on `/admin/events/[id]/registrations`
+- Admin roster: **Add registration**, **Edit roster** (captain + player names/emails + **cash-paid Skins/Mulligans** checkboxes), **Delete registration** on `/admin/events/[id]/registrations`
 - Sponsors: `/admin/sponsors` uploads logos to R2 + staff-only contact (name/email/phone/notes) for later outreach; published logos scroll in the footer (contacts never public)
 - **Sponsor payments (Option 2 only):** `/admin/sponsors` set amount owed → **Email pay link** (`/sponsor/pay/[token]`, Stripe card). No package levels — just “sponsor” + amount. Logo publishes automatically after Stripe webhook (admin **Mark paid (manual)** only for comps). Test invite + thanks at `/admin/email`. Preview pay UI (no Stripe): `/sponsor/pay/test-sponsor-pay-token`. Public `/sponsor` removed (redirects home). See `scripts/migrate-sponsor-payments.sql`
 - Gallery: `/admin/gallery` creates freeform **tags**, bulk-uploads photos to R2 (shared tags + caption; progress + per-file errors); public `/gallery` filters by `?tag=slug` and shows tags/captions only (no filenames/titles under photos)
@@ -175,7 +175,7 @@ Cursor rule: `.cursor/rules/domain-cutover-cloudflare.mdc` (fires when you ask t
 7. Local test data: `pnpm db:seed-checkin` seeds 5 paid Oak Valley teams (`*@checkin-seed.test`) with codes, players, mixed desk add-ons, and a few already checked in. Mailer skips `*.test` addresses.
 8. Schema note: existing Turso DBs need `event_players.email`, `check_in_code`, `ticket_email_sent_at`, `mulligans` (applied automatically on sync, or via comments in `scripts/schema-turso.sql`). Desk add-ons are **Skins** and **Mulligans** only.
 
-**Prepaid Mulligans/Skins** (bought on the registration form) are parsed from registration notes when the team loads on the desk. Staff see green **Prepaid** tabs (e.g. “Skins prepaid”, “Mulligans prepaid”) and **$0 due** for those items — they are not included in “Due today.” Day-of skins without prepay are **$5 per person**; mulligans day-of (and online) are **whole team only**.
+**Prepaid Mulligans/Skins** (bought on the registration form **or marked cash-paid when staff add/edit a roster team**) are parsed from registration notes when the team loads on the desk. Staff see green **Prepaid** tabs (e.g. “Skins prepaid”, “Mulligans prepaid”) and **$0 due** for those items — they are not included in “Due today.” Day-of skins without prepay are **$5 per person**; mulligans day-of (and online) are **whole team only**.
 
 ## Apple Wallet (ops)
 

@@ -51,6 +51,8 @@ export async function POST(req: Request, ctx: Ctx) {
       players,
       paid: body.paid !== false,
       send_confirmation: body.send_confirmation !== false,
+      mulligans: Boolean(body.mulligans),
+      skins: Boolean(body.skins),
     },
     admin.email,
   )

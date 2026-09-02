@@ -6,6 +6,7 @@ import {
   getAdminRegistrationDetail,
 } from "@/lib/admin-registrations"
 import { adminAvailable, getAdminOrNull } from "@/lib/auth"
+import { parsePrepaidAddons } from "@/lib/roster-parse"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +25,7 @@ export default async function EditRegistrationPage({ params }: Props) {
   if (!detail) notFound()
 
   const { event, registration, players } = detail
+  const prepaid = parsePrepaidAddons(registration.notes)
 
   return (
     <div>
@@ -53,6 +55,8 @@ export default async function EditRegistrationPage({ params }: Props) {
             team_name: registration.team_name,
             guests: registration.guests,
             notes: extractExtraNotes(registration.notes),
+            mulligans: prepaid.mulligans,
+            skins: prepaid.skins,
             players: players.map((p) => ({
               id: p.id,
               display_name: p.display_name,

@@ -75,6 +75,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
       guests: body.guests != null ? Number(body.guests) : undefined,
       notes: body.notes != null ? String(body.notes) : undefined,
       players,
+      mulligans: Boolean(body.mulligans),
+      skins: Boolean(body.skins),
     },
     admin.email,
   )

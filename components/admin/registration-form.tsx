@@ -24,6 +24,8 @@ type Props = {
     guests: number
     notes: string
     players: RegistrationFormPlayer[]
+    mulligans?: boolean
+    skins?: boolean
   }
 }
 
@@ -47,6 +49,8 @@ export function RegistrationForm({
     initial?.guests != null ? String(initial.guests) : String(slotCount),
   )
   const [notes, setNotes] = useState(initial?.notes ?? "")
+  const [mulligans, setMulligans] = useState(Boolean(initial?.mulligans))
+  const [skins, setSkins] = useState(Boolean(initial?.skins))
   const [players, setPlayers] = useState<RegistrationFormPlayer[]>(() => {
     if (initial?.players?.length) {
       const list = [...initial.players]
@@ -120,6 +124,8 @@ export function RegistrationForm({
       players: playerPayload,
       send_confirmation: sendConfirmation,
       paid: true,
+      mulligans,
+      skins,
     }
 
     try {
@@ -338,6 +344,34 @@ export function RegistrationForm({
           >
             Add player
           </button>
+        </fieldset>
+      ) : null}
+
+      {isTeam ? (
+        <fieldset className="space-y-3 border border-line px-4 py-4">
+          <legend className="px-1 text-sm font-medium">
+            Skins / mulligans (cash prepaid)
+          </legend>
+          <p className="text-sm text-muted">
+            Check if this team already paid cash for these add-ons. Check-in
+            will treat them as prepaid ($0 due).
+          </p>
+          <label className="flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={mulligans}
+              onChange={(e) => setMulligans(e.target.checked)}
+            />
+            Mulligans paid (team, $20)
+          </label>
+          <label className="flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={skins}
+              onChange={(e) => setSkins(e.target.checked)}
+            />
+            Skins paid (team, $20)
+          </label>
         </fieldset>
       ) : null}
 
