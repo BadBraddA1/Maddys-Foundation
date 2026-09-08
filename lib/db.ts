@@ -1,4 +1,5 @@
 import { createClient, type Client, type InValue } from "@libsql/client"
+import * as Sentry from "@sentry/nextjs"
 
 export type SqlRow = Record<string, unknown>
 
@@ -58,11 +59,21 @@ function buildTemplateQuery(
 
 async function executeQuery(query: string, args: unknown[] = []): Promise<SqlRow[]> {
   const client = getClient()
-  const result = await client.execute({
-    sql: normalizeSql(query),
-    args: args as InValue[],
-  })
-  return result.rows as SqlRow[]
+  const sql = normalizeSql(query)
+  return Sentry.startSpan(
+    {
+      op: "db",
+      name: sql.length > 180 ? `${sql.slice(0, 180)}…` : sql,
+      attributes: { "db.system": "sqlite", "db.operation": "query" },
+    },
+    async () => {
+      const result = await client.execute({
+        sql,
+        args: args as InValue[],
+      })
+      return result.rows as SqlRow[]
+    },
+  )
 }
 
 async function executeMutation(
@@ -83,8 +94,17 @@ async function executeMutation(
 async function sqlTag(strings: TemplateStringsArray, ...values: unknown[]): Promise<SqlRow[]> {
   const { sql, args } = buildTemplateQuery(strings, values)
   const client = getClient()
-  const result = await client.execute({ sql, args })
-  return result.rows as SqlRow[]
+  return Sentry.startSpan(
+    {
+      op: "db",
+      name: sql.length > 180 ? `${sql.slice(0, 180)}…` : sql,
+      attributes: { "db.system": "sqlite", "db.operation": "query" },
+    },
+    async () => {
+      const result = await client.execute({ sql, args })
+      return result.rows as SqlRow[]
+    },
+  )
 }
 
 export const sql = new Proxy(function () {} as unknown as SqlClient, {
