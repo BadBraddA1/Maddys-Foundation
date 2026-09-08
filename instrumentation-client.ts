@@ -4,11 +4,14 @@ import posthog from "posthog-js"
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  profileSessionSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  profileLifecycle: "trace",
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
   enableLogs: true,
   environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || "development",
-  integrations: [Sentry.replayIntegration({
+  integrations: [Sentry.browserProfilingIntegration(),
+    Sentry.replayIntegration({
     // Default masks all text (PII). Unmask UI chrome so replays stay readable.
     maskAllText: true,
     maskAllInputs: true,

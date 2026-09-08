@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
   // Faster cold starts for marketing pages that don't need Node APIs.
   // Gallery/sponsor uploads allow up to 8 MB (see MAX_MEDIA_BYTES in lib/r2.ts).
   experimental: {
+    serverComponentsExternalPackages: ["@sentry/profiling-node"],
     optimizePackageImports: ["@clerk/nextjs"],
     proxyClientMaxBodySize: "8mb",
     serverActions: {
@@ -25,6 +26,10 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: "/:path*",
+        headers: [{ key: "Document-Policy", value: "js-profiling" }],
+      },
       {
         source: "/brand/:path*",
         headers: [
