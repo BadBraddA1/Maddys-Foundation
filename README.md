@@ -76,6 +76,10 @@ For testing events/rosters before Clerk is wired:
 
 A yellow banner shows when bypass is active. It only works in **development** or **Vercel Preview** — never on Vercel Production, even if the env var is set.
 
+## Sentry
+
+`@sentry/nextjs` (project `maddys-foundation`). Env: `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_DSN`. Error spikes → OpenStatus degrade path (BraddCorp).
+
 ## Environment
 
 | Var | Required | Purpose |
