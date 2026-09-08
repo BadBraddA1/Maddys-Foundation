@@ -8,7 +8,32 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   enableLogs: true,
   environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || "development",
-  integrations: [Sentry.replayIntegration()],
+  integrations: [Sentry.replayIntegration({
+    // Default masks all text (PII). Unmask UI chrome so replays stay readable.
+    maskAllText: true,
+    maskAllInputs: true,
+    blockAllMedia: true,
+    unmask: [
+      "button",
+      "[type='button']",
+      "[type='submit']",
+      "[role='button']",
+      "nav",
+      "nav a",
+      "nav button",
+      "[role='navigation']",
+      "[role='navigation'] a",
+      "[role='navigation'] button",
+      "h1",
+      "h2",
+      "h3",
+      "label",
+      ".sentry-unmask",
+      "[data-sentry-unmask]",
+    ],
+    unblock: [".sentry-unblock", "[data-sentry-unblock]"],
+    mask: [".sentry-mask", "[data-sentry-mask]", "[data-pii]"],
+  })],
 })
 
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
