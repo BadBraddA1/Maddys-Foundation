@@ -45,7 +45,8 @@ Sentry.init({
 const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
 if (posthogKey) {
   posthog.init(posthogKey, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://n.braddcorp.com",
+    ui_host: process.env.NEXT_PUBLIC_POSTHOG_UI_HOST || "https://us.posthog.com",
     defaults: "2026-05-30",
     capture_exceptions: false,
     capture_pageview: "history_change",
