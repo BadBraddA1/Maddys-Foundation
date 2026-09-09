@@ -11,6 +11,9 @@ Sentry.init({
   enableLogs: true,
   environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || "development",
   integrations: [Sentry.browserProfilingIntegration(),
+    Sentry.feedbackIntegration({
+      colorScheme: "system",
+    }),
     Sentry.replayIntegration({
     // Default masks all text (PII). Unmask UI chrome so replays stay readable.
     maskAllText: true,
