@@ -4,6 +4,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useId, useRef, useState } from "react"
 
+import { MenuIcon, type MenuIconHandle } from "@/components/icons"
+
 const links = [
   { href: "/story", label: "Her Story" },
   { href: "/events", label: "Events" },
@@ -20,6 +22,7 @@ export function MobileNav({
 }) {
   const pathname = usePathname()
   const detailsRef = useRef<HTMLDetailsElement>(null)
+  const menuIconRef = useRef<MenuIconHandle>(null)
   const menuId = useId()
   const [expanded, setExpanded] = useState(false)
 
@@ -30,6 +33,14 @@ export function MobileNav({
       setExpanded(false)
     }
   }, [pathname])
+
+  useEffect(() => {
+    if (expanded) {
+      menuIconRef.current?.startAnimation()
+    } else {
+      menuIconRef.current?.stopAnimation()
+    }
+  }, [expanded])
 
   const panel =
     tone === "light"
@@ -59,11 +70,7 @@ export function MobileNav({
         aria-expanded={expanded}
       >
         <span className="sr-only">Menu</span>
-        <span aria-hidden="true" className="flex flex-col gap-1.5">
-          <span className="block h-0.5 w-4 bg-current" />
-          <span className="block h-0.5 w-4 bg-current" />
-          <span className="block h-0.5 w-4 bg-current" />
-        </span>
+        <MenuIcon ref={menuIconRef} size={20} aria-hidden />
       </summary>
       <ul
         id={menuId}

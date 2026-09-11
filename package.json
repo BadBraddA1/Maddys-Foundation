@@ -19,9 +19,11 @@
     "@stripe/react-stripe-js": "^6.8.1",
     "@stripe/stripe-js": "^9.13.0",
     "@vercel/analytics": "^2.0.1",
+    "clsx": "^2.1.1",
     "html5-qrcode": "^2.3.8",
     "jsonwebtoken": "^9.0.3",
     "jszip": "^3.10.1",
+    "motion": "^13.2.0",
     "next": "16.2.12",
     "passkit-generator": "^3.5.7",
     "posthog-js": "^1.428.7",
@@ -29,7 +31,8 @@
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "stripe": "^22.4.0"
+    "stripe": "^22.4.0",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@imgly/background-removal-node": "^1.4.5",

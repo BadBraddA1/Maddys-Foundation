@@ -14,6 +14,8 @@ Inspired in tone by Mighty Maddy — original brand, copy, and design.
 
 ## Stack
 
+BraddCorp animated icon kit (`components/icons/`, `lib/icon-kit.ts`) — mobile nav uses Motion `MenuIcon` (hamburger ↔ close) via `startAnimation` / `stopAnimation` on menu open.
+
 | Piece | Detail |
 | --- | --- |
 | App | Next.js 16 + Tailwind 4 |
